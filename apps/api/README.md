@@ -16,6 +16,6 @@ Run `composer ide-helper` after changing models, migrations, service container b
 
 ## Environment
 
-Copy `.env.example` to `.env` for local development. The example file uses future Docker Compose service names for PostgreSQL, Redis, and Mailpit; local values can be adjusted until the infrastructure story adds those services.
+Copy `.env.example` to `.env` for local development. The default example uses SQLite and log mail so the API can boot before Docker Compose exists. The local infrastructure setup will add PostgreSQL, Redis, Mailpit, and host alias values.
 
 Do not commit `.env`, generated SQLite databases, `vendor`, logs, or local secrets.
