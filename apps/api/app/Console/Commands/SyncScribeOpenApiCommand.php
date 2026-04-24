@@ -2,17 +2,24 @@
 
 namespace App\Console\Commands;
 
+use App\Support\OpenApi\OpenApiDocumentCleaner;
 use Illuminate\Console\Command;
-use Illuminate\Support\Arr;
 use Symfony\Component\Yaml\Yaml;
 
 class SyncScribeOpenApiCommand extends Command
 {
     protected $signature = 'leverly:openapi:sync-scribe
         {--source= : Source Scribe OpenAPI YAML path}
-        {--target= : Target OpenAPI YAML path}';
+        {--target= : Target OpenAPI YAML path}
+        {--remove-root-key=* : Remove a root-level OpenAPI key before writing the stable spec}
+        {--dedupe-inline-response-schemas : Deduplicate repeated inline JSON response schemas}';
 
     protected $description = 'Sync Scribe OpenAPI output into the stable repository contract path.';
+
+    public function __construct(private readonly OpenApiDocumentCleaner $cleaner)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -33,7 +40,11 @@ class SyncScribeOpenApiCommand extends Command
             return self::FAILURE;
         }
 
-        $document = $this->normalize($document);
+        $document = $this->cleaner->clean(
+            document: $document,
+            rootKeysToRemove: $this->rootKeysToRemove(),
+            deduplicateInlineResponseSchemas: (bool) $this->option('dedupe-inline-response-schemas'),
+        );
         $yaml = Yaml::dump($document, 12, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE);
 
         $targetDirectory = dirname($target);
@@ -50,51 +61,16 @@ class SyncScribeOpenApiCommand extends Command
     }
 
     /**
-     * @param  array<string, mixed>  $document
-     * @return array<string, mixed>
+     * @return list<string>
      */
-    private function normalize(array $document): array
+    private function rootKeysToRemove(): array
     {
-        Arr::set($document, 'info.title', 'Leverly API');
-        Arr::set($document, 'info.version', '0.1.0');
-        Arr::set($document, 'info.description', 'Versioned JSON API for Leverly.');
-        Arr::set($document, 'servers', [['url' => '/api/v1']]);
+        $rootKeys = $this->option('remove-root-key');
 
-        $paths = Arr::get($document, 'paths', []);
-
-        if (is_array($paths)) {
-            $normalizedPaths = [];
-
-            foreach ($paths as $path => $definition) {
-                $normalizedPath = is_string($path) && str_starts_with($path, '/api/v1/')
-                    ? substr($path, strlen('/api/v1'))
-                    : $path;
-
-                $normalizedPaths[$normalizedPath] = $definition;
-            }
-
-            Arr::set($document, 'paths', $normalizedPaths);
+        if (! is_array($rootKeys)) {
+            return [];
         }
 
-        return $this->removeExampleFields($document);
-    }
-
-    private function removeExampleFields(mixed $value): mixed
-    {
-        if (! is_array($value)) {
-            return $value;
-        }
-
-        $cleaned = [];
-
-        foreach ($value as $key => $childValue) {
-            if ($key === 'example' || $key === 'examples') {
-                continue;
-            }
-
-            $cleaned[$key] = $this->removeExampleFields($childValue);
-        }
-
-        return $cleaned;
+        return array_values(array_filter($rootKeys, is_string(...)));
     }
 }

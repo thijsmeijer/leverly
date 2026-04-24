@@ -1,0 +1,10 @@
+openapi: 3.1.0
+info:
+  title: Scribe API
+  version: '1.0'
+servers:
+  - url: http://localhost
+tags:
+  - name: System
+x-generated-at: '2026-04-24T12:00:00+00:00'
+paths: {}

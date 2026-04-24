@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: Scribe API
+  version: '1.0'
+servers:
+  - url: http://localhost
+tags:
+  - name: System
+x-generated-at: '2026-04-24T12:00:00+00:00'
+paths:
+  /api/v1/health:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                  meta:
+                    type: object
+  /api/v1/status:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                properties:
+                  meta:
+                    type: object
+                  status:
+                    type: string
+                required:
+                  - status
+                type: object
+  /api/v1/version:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
