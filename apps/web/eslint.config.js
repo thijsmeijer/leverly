@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import eslintConfigPrettier from '@vue/eslint-config-prettier'
 import pluginVue from 'eslint-plugin-vue'
 import tseslint from 'typescript-eslint'
+import architecture from './eslint-rules/architecture.js'
 
 export default [
   {
@@ -21,6 +22,17 @@ export default [
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
   eslintConfigPrettier,
+  {
+    plugins: {
+      'leverly-architecture': architecture,
+    },
+    rules: {
+      'leverly-architecture/no-generated-openapi-internals': 'error',
+      'leverly-architecture/no-shared-upstream-imports': 'error',
+      'leverly-architecture/no-feature-app-imports': 'error',
+      'leverly-architecture/no-cross-feature-deep-imports': 'error',
+    },
+  },
   {
     files: ['**/*.vue'],
     languageOptions: {

@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: false
+  commands:
+    api-format:
+      glob: "apps/api/**/*.php"
+      run: cd apps/api && ./vendor/bin/pint --test
+    web-lint:
+      glob: "apps/web/**/*.{js,ts,vue}"
+      run: corepack pnpm --dir apps/web lint
+    web-format:
+      glob: "apps/web/**/*.{css,html,js,json,md,ts,vue}"
+      run: corepack pnpm --dir apps/web format:test

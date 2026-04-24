@@ -34,6 +34,12 @@ lint:
 		else \
 			printf "Web lint skipped: no lint script exists yet.\n"; \
 		fi; \
+		if grep -q '"format:test"' "$(WEB_DIR)/package.json"; then \
+			ran=1; \
+			cd "$(WEB_DIR)" && $(PNPM) format:test; \
+		else \
+			printf "Web format check skipped: no format:test script exists yet.\n"; \
+		fi; \
 	fi; \
 	if [ "$$ran" = "0" ]; then \
 		printf "No lint commands are available yet.\n"; \

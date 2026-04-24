@@ -46,3 +46,5 @@ The root command surface is intentionally small:
 - `make types`: run available type and contract checks
 
 Commands that depend on scaffolded apps will fail with an actionable message until the relevant app exists.
+
+Development tooling, lint boundaries, and optional git hooks are documented in `docs/development/tooling.md`.
