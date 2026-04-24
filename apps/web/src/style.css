@@ -6,7 +6,10 @@
   --color-lab-surface: #151812;
   --color-lab-overlay: #1c1a12;
   --color-lab-paper: #ebe7dc;
+  --color-lab-paper-soft: #f4efe4;
+  --color-lab-paper-deep: #e3ddcf;
   --color-lab-card: #f8f4ea;
+  --color-lab-card-high: #fffaf0;
   --color-lab-line: #242820;
   --color-lab-copy: #4b5047;
   --color-lab-muted: #555b51;
@@ -16,6 +19,10 @@
   --color-lab-emerald-strong: #0f3321;
   --color-lab-amber: #5c4316;
   --color-lab-shadow: #332c1a;
+  --shadow-lab-shell: 0 28px 80px rgb(0 0 0 / 0.34);
+  --shadow-lab-panel: 0 20px 48px rgb(51 44 26 / 0.14), 0 1px 0 rgb(255 255 255 / 0.72) inset;
+  --shadow-lab-panel-soft: 0 14px 34px rgb(51 44 26 / 0.1), 0 1px 0 rgb(255 255 255 / 0.74) inset;
+  --shadow-lab-control: 0 12px 24px rgb(20 63 42 / 0.18);
 }
 
 :root {

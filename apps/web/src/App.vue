@@ -70,7 +70,7 @@ const progressionSignals = [
   <main class="min-h-screen bg-lab-void text-stone-100">
     <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col lg:flex-row">
       <aside
-        class="flex border-b border-white/10 bg-lab-shell/95 px-5 py-4 shadow-2xl shadow-black/25 backdrop-blur lg:w-72 lg:flex-col lg:border-b-0 lg:border-r lg:px-6 lg:py-8"
+        class="flex border-b border-white/10 bg-lab-shell/95 px-5 py-4 shadow-lab-shell backdrop-blur lg:w-72 lg:flex-col lg:border-b-0 lg:border-r lg:px-6 lg:py-8"
         aria-label="Application navigation"
       >
         <div class="flex w-full items-center justify-between gap-4 lg:block">
@@ -91,7 +91,7 @@ const progressionSignals = [
 
         <nav class="mt-8 hidden space-y-2 lg:block" aria-label="Primary">
           <a
-            class="block rounded-md border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-sm font-medium text-emerald-50 outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-shell"
+            class="block rounded-lg border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-sm font-medium text-emerald-50 shadow-lab-control outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-shell"
             href="#dashboard"
             aria-current="page"
           >
@@ -111,13 +111,16 @@ const progressionSignals = [
           </a>
         </nav>
 
-        <div class="mt-auto hidden rounded-md border border-amber-300/20 bg-lab-overlay p-4 text-sm text-stone-100 shadow-lg shadow-black/20 lg:block">
+        <div class="mt-auto hidden rounded-lg border border-amber-300/20 bg-lab-overlay p-4 text-sm text-stone-100 shadow-lab-shell lg:block">
           <p class="font-semibold text-amber-200">Next target</p>
           <p class="mt-2 leading-6 text-stone-300">Add evidence before increasing leverage.</p>
         </div>
       </aside>
 
-      <section id="dashboard" class="flex-1 bg-lab-paper px-5 py-6 text-lab-surface sm:px-8 lg:px-10 lg:py-8">
+      <section
+        id="dashboard"
+        class="flex-1 bg-[linear-gradient(135deg,var(--color-lab-paper)_0%,var(--color-lab-paper-soft)_48%,var(--color-lab-paper-deep)_100%)] px-5 py-6 text-lab-surface sm:px-8 lg:px-10 lg:py-8"
+      >
         <header class="flex flex-col gap-5 border-b border-lab-line/15 pb-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-sm font-semibold uppercase tracking-normal text-emerald-800">
@@ -131,7 +134,7 @@ const progressionSignals = [
             </p>
           </div>
           <button
-            class="inline-flex min-h-11 items-center justify-center rounded-md bg-lab-emerald px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20 outline-none transition hover:bg-lab-emerald-strong focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-paper"
+            class="inline-flex min-h-11 items-center justify-center rounded-lg bg-lab-emerald px-5 py-3 text-sm font-semibold text-white shadow-lab-control outline-none transition hover:-translate-y-0.5 hover:bg-lab-emerald-strong focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-paper"
             type="button"
             @click="activeFocus = 'today'"
           >
@@ -141,7 +144,7 @@ const progressionSignals = [
 
         <div class="grid gap-6 py-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <section id="today" aria-labelledby="focus-heading" class="space-y-5">
-            <div class="rounded-md border border-lab-line/12 bg-lab-card p-4 shadow-xl shadow-lab-shadow/10 sm:p-5">
+            <div class="rounded-lg border border-white/60 bg-lab-card/90 p-4 shadow-lab-panel backdrop-blur sm:p-5">
               <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                 <h2 id="focus-heading" class="text-lg font-semibold tracking-normal">Training focus</h2>
                 <p class="text-sm font-medium text-lab-soft">{{ selectedFocus.metric }}</p>
@@ -150,11 +153,11 @@ const progressionSignals = [
                 <button
                   v-for="option in focusOptions"
                   :key="option.id"
-                  class="rounded-md border px-4 py-3 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-card"
+                  class="rounded-lg border px-4 py-3 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-card"
                   :class="
                     activeFocus === option.id
-                      ? 'border-emerald-800 bg-lab-emerald text-white shadow-md shadow-emerald-950/20'
-                      : 'border-lab-line/12 bg-white/70 text-lab-copy hover:border-emerald-800/40 hover:bg-white'
+                      ? 'border-emerald-800 bg-lab-emerald text-white shadow-lab-control'
+                      : 'border-white/70 bg-lab-card-high/55 text-lab-copy shadow-lab-panel-soft hover:-translate-y-0.5 hover:border-emerald-800/30 hover:bg-lab-card-high'
                   "
                   type="button"
                   @click="activeFocus = option.id"
@@ -170,17 +173,17 @@ const progressionSignals = [
               <article
                 v-for="block in trainingBlocks"
                 :key="block.name"
-                class="rounded-md border border-lab-line/12 bg-lab-card p-5 shadow-xl shadow-lab-shadow/10"
+                class="rounded-lg border border-white/60 bg-lab-card/90 p-5 shadow-lab-panel transition hover:-translate-y-0.5 hover:bg-lab-card-high"
               >
                 <div class="flex items-start justify-between gap-3">
                   <p class="text-sm font-semibold text-emerald-800">{{ block.name }}</p>
-                  <span class="rounded-md bg-lab-surface px-2.5 py-1 text-xs font-semibold text-stone-100">
+                  <span class="rounded-lg bg-lab-surface px-2.5 py-1 text-xs font-semibold text-stone-100 shadow-sm">
                     {{ block.load }}
                   </span>
                 </div>
                 <h3 class="mt-3 text-lg font-semibold tracking-normal text-lab-shell">{{ block.target }}</h3>
                 <p class="mt-3 text-sm leading-6 text-lab-muted">{{ block.detail }}</p>
-                <p class="mt-4 rounded-md border border-amber-700/15 bg-amber-100/70 px-3 py-2 text-sm font-medium text-lab-amber">
+                <p class="mt-4 rounded-lg border border-amber-700/15 bg-amber-100/70 px-3 py-2 text-sm font-medium text-lab-amber shadow-sm shadow-amber-950/5">
                   {{ block.status }}
                 </p>
               </article>
@@ -188,13 +191,13 @@ const progressionSignals = [
           </section>
 
           <aside id="progressions" class="space-y-4" aria-labelledby="signals-heading">
-            <div class="rounded-md border border-white/10 bg-lab-shell p-5 text-stone-100 shadow-2xl shadow-black/20">
+            <div class="rounded-lg border border-white/10 bg-lab-shell/95 p-5 text-stone-100 shadow-lab-shell">
               <h2 id="signals-heading" class="text-lg font-semibold tracking-normal">Progression signals</h2>
               <dl class="mt-4 space-y-3">
                 <div
                   v-for="signal in progressionSignals"
                   :key="signal.label"
-                  class="flex items-center justify-between gap-4 rounded-md border border-white/10 bg-white/5 px-3 py-3"
+                  class="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/5 px-3 py-3 shadow-sm shadow-black/15"
                 >
                   <dt class="text-sm text-stone-300">{{ signal.label }}</dt>
                   <dd class="text-right">
@@ -205,7 +208,7 @@ const progressionSignals = [
               </dl>
             </div>
 
-            <div class="rounded-md border border-lab-line/12 bg-lab-card p-5 shadow-xl shadow-lab-shadow/10">
+            <div class="rounded-lg border border-white/60 bg-lab-card/90 p-5 shadow-lab-panel">
               <h2 class="text-lg font-semibold tracking-normal">Recommendation guard</h2>
               <p class="mt-3 text-sm leading-6 text-lab-muted">
                 No progression is suggested until hold quality, pain, and readiness stay inside safe bounds.
