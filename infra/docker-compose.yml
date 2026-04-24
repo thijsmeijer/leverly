@@ -62,9 +62,19 @@ services:
     working_dir: /workspace/apps/api
     command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
     environment:
+      APP_URL: "http://api.leverly.local:${LEVERLY_API_PORT:-8000}"
+      DB_CONNECTION: pgsql
       DB_HOST: leverly_postgres
+      DB_PORT: 5432
+      DB_DATABASE: "${LEVERLY_POSTGRES_DB:-leverly}"
+      DB_USERNAME: "${LEVERLY_POSTGRES_USER:-leverly}"
+      DB_PASSWORD: "${LEVERLY_POSTGRES_PASSWORD:-leverly}"
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
       REDIS_HOST: leverly_redis
+      MAIL_MAILER: smtp
       MAIL_HOST: leverly_mailpit
+      MAIL_PORT: 1025
     ports:
       - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_API_PORT:-8000}:8000"
     volumes:
@@ -88,7 +98,7 @@ services:
       dockerfile: infra/docker/web/Dockerfile
     container_name: leverly_web
     working_dir: /workspace/apps/web
-    command: ["corepack", "pnpm", "dev", "--host", "0.0.0.0"]
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
     environment:
       VITE_API_BASE_URL: "http://api.leverly.local:${LEVERLY_API_PORT:-8000}"
       OPENAPI_SPEC_PATH: /workspace/docs/api/openapi.yaml
@@ -105,6 +115,10 @@ services:
 networks:
   leverly_network:
     name: leverly_network
+    ipam:
+      config:
+        - subnet: 10.20.0.0/24
+          gateway: 10.20.0.1
 
 volumes:
   leverly_postgres_data:

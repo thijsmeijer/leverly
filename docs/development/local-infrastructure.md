@@ -10,10 +10,10 @@ Start the backend services:
 make up
 ```
 
-Start backend services plus optional API and web containers:
+Start only PostgreSQL, Redis, and Mailpit:
 
 ```sh
-make app-up
+make services-up
 ```
 
 Stop containers:
@@ -33,12 +33,12 @@ make compose-config
 
 | Service | Container | Default URL / Port | Credentials |
 | --- | --- | --- | --- |
-| PostgreSQL + pgvector | `leverly_postgres` | `127.0.0.1:5432` | database `leverly`, user `leverly`, password `leverly` |
-| Redis | `leverly_redis` | `127.0.0.1:6379` | no password |
-| Mailpit SMTP | `leverly_mailpit` | `127.0.0.1:1025` | no auth |
-| Mailpit UI | `leverly_mailpit` | `http://127.0.0.1:8025` | no auth |
-| API container | `leverly_api` | `http://127.0.0.1:8000` | optional `app` profile |
-| Web container | `leverly_web` | `http://127.0.0.1:5173` | optional `app` profile |
+| PostgreSQL + pgvector | `leverly_postgres` | `10.20.0.1:5432` | database `leverly`, user `leverly`, password `leverly` |
+| Redis | `leverly_redis` | `10.20.0.1:6379` | no password |
+| Mailpit SMTP | `leverly_mailpit` | `10.20.0.1:1025` | no auth |
+| Mailpit UI | `leverly_mailpit` | `http://mail.leverly.local:8025` | no auth |
+| API container | `leverly_api` | `http://api.leverly.local:8000` | local app container |
+| Web container | `leverly_web` | `http://web.leverly.local:5173` | local app container |
 
 Compose volume names are `leverly_postgres_data`, `leverly_redis_data`, `leverly_composer_cache`, and `leverly_pnpm_store`.
 
@@ -50,19 +50,7 @@ Use this `/etc/hosts` line when you want local host aliases on the custom endpoi
 10.20.0.1 leverly.local api.leverly.local web.leverly.local mail.leverly.local
 ```
 
-The custom endpoint only works when `10.20.0.1` exists on your host loopback interface and services bind to it:
-
-```sh
-LEVERLY_BIND_IP=10.20.0.1 make up
-```
-
-On Linux, a temporary loopback address can be added with:
-
-```sh
-sudo ip addr add 10.20.0.1/32 dev lo
-```
-
-If that address is not configured, use the default `127.0.0.1` binding and this fallback hosts line:
+The Compose network uses `10.20.0.1` as its gateway, so `make up` creates the local address through Docker. If that subnet conflicts with something on your machine, use the default loopback address and this fallback hosts line:
 
 ```txt
 127.0.0.1 leverly.local api.leverly.local web.leverly.local mail.leverly.local

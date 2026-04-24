@@ -38,8 +38,8 @@ infra/
 The root command surface is intentionally small:
 
 - `make setup`: install or prepare local dependencies
-- `make up`: start PostgreSQL, Redis, and Mailpit
-- `make app-up`: start infrastructure plus optional API and web containers
+- `make up`: start the full local Docker stack
+- `make services-up`: start only PostgreSQL, Redis, and Mailpit
 - `make down`: stop local containers
 - `make ps`: show local container status
 - `make doctor`: check local setup and print concrete fixes
