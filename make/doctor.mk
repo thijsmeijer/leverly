@@ -1,0 +1,12 @@
+.PHONY: doctor
+doctor:
+	@ROOT_DIR="$(ROOT_DIR)" \
+	API_DIR="$(API_DIR)" \
+	WEB_DIR="$(WEB_DIR)" \
+	PACKAGES_DIR="$(PACKAGES_DIR)" \
+	INFRA_DIR="$(INFRA_DIR)" \
+	COMPOSE_FILE="$(COMPOSE_FILE)" \
+	HOST_UID="$(HOST_UID)" \
+	HOST_GID="$(HOST_GID)" \
+	DOCKER_COMPOSE="$(DOCKER_COMPOSE)" \
+	sh "$(ROOT_DIR)/infra/scripts/doctor.sh"

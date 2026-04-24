@@ -7,6 +7,7 @@ include make/lifecycle.mk
 include make/api.mk
 include make/web.mk
 include make/tooling.mk
+include make/doctor.mk
 include make/verify.mk
 
 .PHONY: help
@@ -15,6 +16,8 @@ help:
 	@printf "Setup and lifecycle:\n"
 	@printf "  make setup    Prepare local dependencies when apps exist\n"
 	@printf "  make up       Start local infrastructure when compose exists\n\n"
+	@printf "Diagnostics:\n"
+	@printf "  make doctor   Check local setup and print concrete fixes\n\n"
 	@printf "Development:\n"
 	@printf "  make api      Run the API development process\n"
 	@printf "  make web      Run the web development process\n\n"

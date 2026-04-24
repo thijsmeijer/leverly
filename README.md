@@ -38,6 +38,7 @@ The root command surface is intentionally small:
 
 - `make setup`: install or prepare local dependencies
 - `make up`: start local infrastructure once it exists
+- `make doctor`: check local setup and print concrete fixes
 - `make api`: run the API development process once the app exists
 - `make web`: run the web development process once the app exists
 - `make test`: run available tests
