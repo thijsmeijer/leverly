@@ -5,6 +5,8 @@
   "scripts": {
     "web:dev": "corepack pnpm --dir apps/web dev",
     "web:build": "corepack pnpm --dir apps/web build",
-    "web:type-check": "corepack pnpm --dir apps/web type-check"
+    "web:type-check": "corepack pnpm --dir apps/web type-check",
+    "web:test": "corepack pnpm --dir apps/web test",
+    "web:lint": "corepack pnpm --dir apps/web lint"
   }
 }
