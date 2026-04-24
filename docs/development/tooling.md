@@ -14,6 +14,10 @@ Use focused checks while working on a narrow slice:
 ```sh
 make api-format-check
 make api-test
+make api-test-unit
+make api-test-api
+make api-test-integration
+make api-test-coverage
 make contract-check
 make modules-check
 make web-type-check
@@ -27,6 +31,27 @@ make web-test-e2e
 
 `make types` runs `make contract-check` and `make web-type-check`.
 `make test` runs API tests, web unit tests, architecture tests, accessibility tests, and E2E tests.
+
+## API Test Suites
+
+The Laravel app has three focused PHPUnit suites:
+
+- `make api-test-unit` runs isolated unit tests from `tests/Unit`.
+- `make api-test-api` runs HTTP contract tests from `tests/Feature/API`.
+- `make api-test-integration` runs framework and infrastructure integration tests from `tests/Feature/Integration`.
+
+`make api-test` runs all three suites in that order.
+
+Coverage checks run through the API Docker service so the PCOV engine is available, and they write Clover XML reports into `apps/api/storage/logs`:
+
+```sh
+make api-test-unit-coverage
+make api-test-api-coverage
+make api-test-integration-coverage
+make api-test-coverage
+```
+
+The local API Docker image includes PCOV. If the container was built before PCOV support was added, run `make up` once to rebuild it.
 
 ## Full Verification
 

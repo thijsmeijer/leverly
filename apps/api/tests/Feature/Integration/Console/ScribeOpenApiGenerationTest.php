@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Console;
+namespace Tests\Feature\Integration\Console;
 
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Yaml\Yaml;

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\CheckCoverageCommand;
 use App\Console\Commands\SyncScribeOpenApiCommand;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                CheckCoverageCommand::class,
                 SyncScribeOpenApiCommand::class,
             ]);
         }

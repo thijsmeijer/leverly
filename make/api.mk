@@ -1,4 +1,4 @@
-.PHONY: api api-format-check api-test api-openapi api-client contract-check
+.PHONY: api api-format-check api-test api-test-unit api-test-api api-test-integration api-test-coverage api-test-unit-coverage api-test-api-coverage api-test-integration-coverage api-openapi api-client contract-check
 api:
 	@if [ ! -f "$(API_DIR)/artisan" ]; then \
 		printf "API app is not scaffolded yet.\n"; \
@@ -16,13 +16,60 @@ api-format-check:
 	fi
 	@cd "$(API_DIR)" && ./vendor/bin/pint --test
 
-api-test:
+api-test: api-test-unit api-test-api api-test-integration
+
+api-test-unit:
 	@if [ ! -f "$(API_DIR)/artisan" ]; then \
 		printf "API app is not scaffolded yet.\n"; \
 		printf "Expected Laravel artisan file: %s/artisan\n" "$(API_DIR)"; \
 		exit 1; \
 	fi
-	@cd "$(API_DIR)" && "$(PHP)" artisan test
+	@cd "$(API_DIR)" && "$(COMPOSER)" test:unit
+
+api-test-api:
+	@if [ ! -f "$(API_DIR)/artisan" ]; then \
+		printf "API app is not scaffolded yet.\n"; \
+		printf "Expected Laravel artisan file: %s/artisan\n" "$(API_DIR)"; \
+		exit 1; \
+	fi
+	@cd "$(API_DIR)" && "$(COMPOSER)" test:api
+
+api-test-integration:
+	@if [ ! -f "$(API_DIR)/artisan" ]; then \
+		printf "API app is not scaffolded yet.\n"; \
+		printf "Expected Laravel artisan file: %s/artisan\n" "$(API_DIR)"; \
+		exit 1; \
+	fi
+	@cd "$(API_DIR)" && "$(COMPOSER)" test:integration
+
+api-test-coverage: api-test-unit-coverage api-test-api-coverage api-test-integration-coverage
+
+api-test-unit-coverage:
+	@if [ ! -f "$(COMPOSE_FILE)" ]; then \
+		printf "Local infrastructure is not available yet.\n"; \
+		printf "Expected compose file: %s\n" "$(COMPOSE_FILE)"; \
+		exit 1; \
+	fi
+	@$(compose_env) $(DOCKER_COMPOSE) -f "$(COMPOSE_FILE)" --profile app up -d api
+	@$(compose_env) $(DOCKER_COMPOSE) -f "$(COMPOSE_FILE)" --profile app exec -T api composer test:unit:coverage
+
+api-test-api-coverage:
+	@if [ ! -f "$(COMPOSE_FILE)" ]; then \
+		printf "Local infrastructure is not available yet.\n"; \
+		printf "Expected compose file: %s\n" "$(COMPOSE_FILE)"; \
+		exit 1; \
+	fi
+	@$(compose_env) $(DOCKER_COMPOSE) -f "$(COMPOSE_FILE)" --profile app up -d api
+	@$(compose_env) $(DOCKER_COMPOSE) -f "$(COMPOSE_FILE)" --profile app exec -T api composer test:api:coverage
+
+api-test-integration-coverage:
+	@if [ ! -f "$(COMPOSE_FILE)" ]; then \
+		printf "Local infrastructure is not available yet.\n"; \
+		printf "Expected compose file: %s\n" "$(COMPOSE_FILE)"; \
+		exit 1; \
+	fi
+	@$(compose_env) $(DOCKER_COMPOSE) -f "$(COMPOSE_FILE)" --profile app up -d api
+	@$(compose_env) $(DOCKER_COMPOSE) -f "$(COMPOSE_FILE)" --profile app exec -T api composer test:integration:coverage
 
 api-openapi:
 	@if [ ! -f "$(API_DIR)/artisan" ]; then \

@@ -46,8 +46,41 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
+            "@composer test:unit",
+            "@composer test:api",
+            "@composer test:integration"
+        ],
+        "test:unit": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php artisan test --testsuite=Unit"
+        ],
+        "test:api": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --testsuite=API"
+        ],
+        "test:integration": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --testsuite=Integration"
+        ],
+        "test:coverage": [
+            "@composer test:unit:coverage",
+            "@composer test:api:coverage",
+            "@composer test:integration:coverage"
+        ],
+        "test:unit:coverage": [
+            "@php artisan config:clear --ansi",
+            "@php -d xdebug.mode=off -d pcov.enabled=1 -d pcov.directory=app vendor/bin/phpunit --testsuite=Unit --coverage-clover=storage/logs/coverage-unit.xml",
+            "@php artisan coverage:check storage/logs/coverage-unit.xml --min=0"
+        ],
+        "test:api:coverage": [
+            "@php artisan config:clear --ansi",
+            "@php -d xdebug.mode=off -d pcov.enabled=1 -d pcov.directory=app vendor/bin/phpunit --testsuite=API --coverage-clover=storage/logs/coverage-api.xml",
+            "@php artisan coverage:check storage/logs/coverage-api.xml --min=0"
+        ],
+        "test:integration:coverage": [
+            "@php artisan config:clear --ansi",
+            "@php -d xdebug.mode=off -d pcov.enabled=1 -d pcov.directory=app vendor/bin/phpunit --testsuite=Integration --coverage-clover=storage/logs/coverage-integration.xml",
+            "@php artisan coverage:check storage/logs/coverage-integration.xml --min=0"
         ],
         "format": [
             "pint"

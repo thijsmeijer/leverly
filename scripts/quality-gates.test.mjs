@@ -6,6 +6,10 @@ import test from 'node:test'
 const expectedTargets = [
   'api-format-check',
   'api-test',
+  'api-test-unit',
+  'api-test-api',
+  'api-test-integration',
+  'api-test-coverage',
   'contract-check',
   'modules-check',
   'web-type-check',
@@ -44,7 +48,8 @@ test('make help documents focused gates and full verification', () => {
   })
 
   assert.match(help, /make verify\s+Run the full layered verification suite/)
-  assert.match(help, /make api-test\s+Run API tests/)
+  assert.match(help, /make api-test\s+Run all API test suites/)
+  assert.match(help, /make api-test-coverage\s+Run all API coverage checks with PCOV/)
   assert.match(help, /make web-test-unit\s+Run web unit tests/)
   assert.match(help, /make web-test-a11y\s+Run web accessibility tests/)
   assert.match(help, /make web-test-e2e\s+Run web end-to-end tests/)
