@@ -9,7 +9,8 @@
     "web:build": "corepack pnpm --dir apps/web build",
     "web:type-check": "corepack pnpm --dir apps/web type-check",
     "web:test": "corepack pnpm --dir apps/web test",
-    "web:lint": "corepack pnpm --dir apps/web lint"
+    "web:lint": "corepack pnpm --dir apps/web lint",
+    "scaffold:test": "node --test scripts/scaffold-module.test.mjs"
   },
   "devDependencies": {
     "lefthook": "^2.1.6"

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 
-import { fetchDashboardStatus, unavailableDashboardApiStatus } from '../api/dashboardStatusService'
+import { fetchDashboardStatus, unavailableDashboardApiStatus } from '../services/dashboardStatusService'
 
 export function useDashboardApiStatus() {
   const query = useQuery({

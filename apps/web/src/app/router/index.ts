@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { DashboardPage } from '@/modules/dashboard'
+import { dashboardRoutes } from '@/modules/dashboard'
 import LoginPage from '../pages/auth/LoginPage.vue'
 
 export const routes: RouteRecordRaw[] = [
@@ -19,15 +19,7 @@ export const routes: RouteRecordRaw[] = [
       title: 'Sign in',
     },
   },
-  {
-    path: '/app/dashboard',
-    name: 'dashboard',
-    component: DashboardPage,
-    meta: {
-      requiresAuth: true,
-      title: 'Dashboard',
-    },
-  },
+  ...dashboardRoutes,
   {
     path: '/:pathMatch(.*)*',
     redirect: { name: 'dashboard' },

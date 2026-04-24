@@ -6,6 +6,7 @@ include make/setup.mk
 include make/lifecycle.mk
 include make/api.mk
 include make/web.mk
+include make/modules.mk
 include make/tooling.mk
 include make/doctor.mk
 include make/verify.mk
@@ -24,6 +25,11 @@ help:
 	@printf "Development:\n"
 	@printf "  make api      Run the API development process\n"
 	@printf "  make web      Run the web development process\n\n"
+	@printf "Module scaffolds:\n"
+	@printf "  make api-module MODULE=training        Create an API domain scaffold\n"
+	@printf "  make web-module MODULE=workouts        Create a web module scaffold\n"
+	@printf "  make modules-check                     Validate web module structure\n"
+	@printf "  Add DRY_RUN=1 to preview scaffold output without writing files\n\n"
 	@printf "API contract:\n"
 	@printf "  make api-openapi  Generate the OpenAPI spec from Laravel\n"
 	@printf "  make api-client   Generate the OpenAPI spec and refresh web types\n\n"

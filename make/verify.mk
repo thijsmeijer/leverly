@@ -1,5 +1,5 @@
 .PHONY: verify test lint types
-verify: lint types test
+verify: module-scaffold-test modules-check lint types test
 
 test:
 	@ran=0; \
