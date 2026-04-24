@@ -45,6 +45,7 @@ The root command surface is intentionally small:
 - `make doctor`: check local setup and print concrete fixes
 - `make api`: run the API development process once the app exists
 - `make web`: run the web development process once the app exists
+- `make api-client`: generate the OpenAPI spec from Laravel and refresh web types
 - `make test`: run available tests
 - `make lint`: run available linters and format checks
 - `make types`: run available type and contract checks

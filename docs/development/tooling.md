@@ -22,6 +22,22 @@ Run the rule tests directly with:
 corepack pnpm --dir apps/web test:architecture
 ```
 
+## API Contract Generation
+
+Use the root command when backend routes or response metadata change:
+
+```sh
+make api-client
+```
+
+The command runs Scribe in the Laravel app, syncs the generated OpenAPI YAML to `docs/api/openapi.yaml`, then regenerates and checks the web TypeScript contract at `apps/web/src/shared/api/leverlyApi/openapi/generated.ts`.
+
+To regenerate only the API spec, run:
+
+```sh
+make api-openapi
+```
+
 ## Git Hooks
 
 Fast pre-commit checks are available through Lefthook.

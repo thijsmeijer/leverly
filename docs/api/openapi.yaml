@@ -1,49 +1,47 @@
 openapi: 3.1.0
 info:
-  title: Leverly API
+  title: 'Leverly API'
+  description: 'Versioned JSON API for Leverly.'
   version: 0.1.0
-  description: Versioned JSON API for Leverly.
 servers:
-  - url: /api/v1
-    description: Versioned API base path
+  -
+    url: /api/v1
+tags:
+  -
+    name: System
+    description: ''
 paths:
   /health:
     get:
-      operationId: getHealth
-      tags:
-        - System
-      summary: Get API health metadata
+      summary: 'Get API health metadata'
+      operationId: getAPIHealthMetadata
+      description: 'Returns a small safe payload for environment smoke checks.'
+      parameters: []
       responses:
-        '200':
-          description: API is reachable.
+        200:
+          description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
-components:
-  schemas:
-    HealthResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - status
-        - meta
-      properties:
-        status:
-          type: string
-          enum:
-            - ok
-        meta:
-          type: object
-          additionalProperties: false
-          required:
-            - api_version
-            - timestamp
-          properties:
-            api_version:
-              type: string
-              enum:
-                - v1
-            timestamp:
-              type: string
-              format: date-time
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: 'Health state.'
+                    enum:
+                      - ok
+                  meta:
+                    type: object
+                    properties:
+                      api_version: { type: string, description: 'Versioned API namespace.', enum: [v1] }
+                      timestamp: { type: string, description: 'ISO-8601 server timestamp.' }
+                    required:
+                      - api_version
+                      - timestamp
+                    description: 'Metadata for this health response.'
+                required:
+                  - status
+                  - meta
+      tags:
+        - System
+      security: []

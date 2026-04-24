@@ -11,31 +11,26 @@ servers:
 paths:
   /health:
     get:
-      operationId: getHealth
+      operationId: getAPIHealthMetadata
       responses:
-        '200':
+        200:
           description: API is reachable.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
-components:
-  schemas:
-    HealthResponse:
-      type: object
-      required:
-        - status
-        - meta
-      properties:
-        status:
-          type: string
-          enum:
-            - ok
-        meta:
-          type: object
-          required:
-            - api_version
-            - timestamp
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                  meta:
+                    type: object
+                    properties:
+                      api_version:
+                        type: string
+                      timestamp:
+                        type: string
 `
 
 describe('OpenAPI client generation', () => {

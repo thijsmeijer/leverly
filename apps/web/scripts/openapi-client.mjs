@@ -36,14 +36,13 @@ export function findContractProblems(openApiSource) {
     ['OpenAPI 3.1 metadata', 'openapi: 3.1.0'],
     ['versioned API server', 'url: /api/v1'],
     ['health path', '  /health:'],
-    ['health operation ID', 'operationId: getHealth'],
-    ['health 200 response', "'200':"],
+    ['health operation ID', 'operationId: getAPIHealthMetadata'],
+    ['health 200 response', '200:'],
     ['health JSON content type', 'application/json:'],
-    ['health response schema reference', "$ref: '#/components/schemas/HealthResponse'"],
-    ['health response schema', '    HealthResponse:'],
-    ['health status enum', '            - ok'],
-    ['health API version metadata', '            - api_version'],
-    ['health timestamp metadata', '            - timestamp'],
+    ['health status property', 'status:'],
+    ['health status enum', '- ok'],
+    ['health API version metadata', 'api_version:'],
+    ['health timestamp metadata', 'timestamp:'],
   ]
 
   const problems = requiredFragments

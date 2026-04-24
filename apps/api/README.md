@@ -9,6 +9,7 @@ Run commands from this directory:
 - `composer test`: clear configuration and run the API test suite.
 - `composer format`: format PHP files with Laravel Pint.
 - `composer format:test`: check PHP formatting without changing files.
+- `composer openapi`: generate the Scribe OpenAPI output and sync it to the repository contract.
 - `composer ide-helper`: refresh IDE helper files and model mixins.
 - `php artisan about --only=environment`: verify that the application can boot.
 

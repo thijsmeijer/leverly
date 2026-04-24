@@ -13,6 +13,7 @@
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",
         "fakerphp/faker": "^1.23",
+        "knuckleswtf/scribe": "^5.9",
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
@@ -53,6 +54,10 @@
         ],
         "format:test": [
             "pint --test"
+        ],
+        "openapi": [
+            "@php artisan scribe:generate --no-interaction",
+            "@php artisan leverly:openapi:sync-scribe"
         ],
         "ide-helper": [
             "@composer ide-helper:generate",
