@@ -49,6 +49,25 @@ These questions should inform later personalization and product polish, but they
 
 Answers can update future assumptions, implementation stories, onboarding defaults, and recommendation settings.
 
+## Reference Recheck Snapshot
+
+Checked on 2026-04-24 before scaffold work. Recheck these sources again when a later story installs or upgrades the related package.
+
+| Area | Current implementation note | Official source |
+| --- | --- | --- |
+| Laravel | Use Laravel 13 for the API. Laravel 13 was released on 2026-03-17 and supports PHP 8.3 through 8.5. PHP 8.4 remains the local target unless the local environment requires PHP 8.3. | [Laravel 13 release notes](https://laravel.com/docs/13.x/releases) |
+| Laravel app creation | Use the current Laravel installer flow when `apps/api` is scaffolded, then adapt it to the monorepo path and PostgreSQL setup. | [Laravel 13 installation](https://laravel.com/docs/13.x/installation) |
+| Sanctum | Use Sanctum for first-party SPA authentication. Prefer stateful cookie/session authentication for the web app rather than API tokens. | [Laravel Sanctum 13.x](https://laravel.com/docs/13.x/sanctum) |
+| Fortify | Use Fortify as the headless authentication backend if authentication scaffolding remains custom Vue UI. Disable server-rendered auth views for SPA flows. | [Laravel Fortify 13.x](https://laravel.com/docs/13.x/fortify) |
+| Reverb | Treat Reverb as optional future real-time infrastructure. Install with Laravel's broadcasting installer only when a realtime story needs it. | [Laravel Reverb 13.x](https://laravel.com/docs/13.x/reverb) |
+| Horizon | Horizon is appropriate once Redis-backed queues exist. Do not install it before queue work needs dashboard and worker supervision. | [Laravel Horizon 13.x](https://laravel.com/docs/13.x/horizon) |
+| Laravel AI | Laravel 13 includes first-party AI SDK capabilities, but Leverly keeps AI optional and later-phase. Do not install AI packages before deterministic recommendation behavior exists. | [Laravel 13 release notes](https://laravel.com/docs/13.x/releases) |
+| Vue | Use Vue 3 with the official Vue scaffolding path when the web app is created. Node should satisfy the Vue quick-start requirement. | [Vue quick start](https://vuejs.org/guide/quick-start) |
+| Vite | Use the current Vite toolchain and Vue TypeScript template path. Node should satisfy Vite's current requirement of 20.19+ or 22.12+. | [Vite guide](https://vite.dev/guide/) |
+| Tailwind CSS | Use Tailwind CSS v4 through the Vite plugin package pair `tailwindcss` and `@tailwindcss/vite`. | [Tailwind CSS with Vite](https://tailwindcss.com/docs/installation/using-vite) |
+| PostgreSQL | Use PostgreSQL 18 for local infrastructure; the current documentation stream is PostgreSQL 18.3. | [PostgreSQL current documentation](https://www.postgresql.org/docs/current/index.html) |
+| pgvector | Use a pgvector image compatible with PostgreSQL 18, preferably a pinned `0.8.2-pg18-trixie` tag once compose is added. Enable the extension per database with `CREATE EXTENSION vector;`. | [pgvector README](https://github.com/pgvector/pgvector) |
+
 ## Intentional Deferrals
 
 - Native app distribution is deferred until the web app proves the core logging and progression workflow.
