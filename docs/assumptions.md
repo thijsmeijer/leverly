@@ -34,6 +34,21 @@ When a future expansion is useful to mention, describe it as deferred and keep t
 - AI-assisted features are optional and must not be required for core recommendations.
 - Bodyweight-only training comes first; weighted calisthenics and resistance bands can be layered in through explicit stories.
 
+## Open Owner Preference Questions
+
+These questions should inform later personalization and product polish, but they do not block the foundation work.
+
+- Which equipment should the first onboarding flow prioritize: pull-up bar, rings, parallettes, bands, dip bars, weights, or bodyweight-only training?
+- Which goals should be first-class options: strength, skill progression, hypertrophy, conditioning, mobility, fat loss support, or a blend?
+- Should progress media be part of a later release, and if so should it focus on private form reference, transformation history, or coach review?
+- How central should AI feel in the product: hidden assistant, optional explanation layer, searchable knowledge layer, or visible coaching companion?
+- Should the MVP assume solo athletes only, or should coach-managed athletes and shared programs influence early data boundaries?
+- Should effort input favor RIR, RPE, simple difficulty labels, or a combined advanced mode?
+- Should bodyweight be required for progression logic from the start, optional per athlete, or only required for weighted calisthenics and analytics?
+- Should shared templates start as private reusable templates, curated defaults, import/export files, or a future public library?
+
+Answers can update future assumptions, implementation stories, onboarding defaults, and recommendation settings.
+
 ## Intentional Deferrals
 
 - Native app distribution is deferred until the web app proves the core logging and progression workflow.
