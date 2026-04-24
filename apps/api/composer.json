@@ -11,6 +11,7 @@
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.7",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
@@ -52,6 +53,20 @@
         ],
         "format:test": [
             "pint --test"
+        ],
+        "ide-helper": [
+            "@composer ide-helper:generate",
+            "@composer ide-helper:meta",
+            "@composer ide-helper:models"
+        ],
+        "ide-helper:generate": [
+            "@php artisan ide-helper:generate"
+        ],
+        "ide-helper:meta": [
+            "@php artisan ide-helper:meta"
+        ],
+        "ide-helper:models": [
+            "@php artisan ide-helper:models --write-mixin --no-interaction"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
