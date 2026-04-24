@@ -1,67 +1,8 @@
 .PHONY: verify test lint types
-verify: module-scaffold-test modules-check lint types test
+verify: api-format-check api-test module-scaffold-test modules-check contract-check web-type-check web-lint web-format-check web-test-unit web-test-architecture web-test-a11y web-test-e2e
 
-test:
-	@ran=0; \
-	if [ -f "$(API_DIR)/artisan" ]; then \
-		ran=1; \
-		cd "$(API_DIR)" && "$(PHP)" artisan test; \
-	fi; \
-	if [ -f "$(WEB_DIR)/package.json" ]; then \
-		ran=1; \
-		if grep -q '"test"' "$(WEB_DIR)/package.json"; then \
-			cd "$(WEB_DIR)" && $(PNPM) test; \
-		else \
-			printf "Web tests skipped: no test script exists yet.\n"; \
-		fi; \
-	fi; \
-	if [ "$$ran" = "0" ]; then \
-		printf "No test suites are available yet.\n"; \
-		printf "Expected future locations: %s and %s\n" "$(API_DIR)" "$(WEB_DIR)"; \
-		exit 1; \
-	fi
+test: api-test web-test-unit web-test-architecture web-test-a11y web-test-e2e
 
-lint:
-	@ran=0; \
-	if [ -f "$(API_DIR)/vendor/bin/pint" ]; then \
-		ran=1; \
-		cd "$(API_DIR)" && ./vendor/bin/pint --test; \
-	fi; \
-	if [ -f "$(WEB_DIR)/package.json" ]; then \
-		if grep -q '"lint"' "$(WEB_DIR)/package.json"; then \
-			ran=1; \
-			cd "$(WEB_DIR)" && $(PNPM) lint; \
-		else \
-			printf "Web lint skipped: no lint script exists yet.\n"; \
-		fi; \
-		if grep -q '"format:test"' "$(WEB_DIR)/package.json"; then \
-			ran=1; \
-			cd "$(WEB_DIR)" && $(PNPM) format:test; \
-		else \
-			printf "Web format check skipped: no format:test script exists yet.\n"; \
-		fi; \
-	fi; \
-	if [ "$$ran" = "0" ]; then \
-		printf "No lint commands are available yet.\n"; \
-		printf "Next step: add API and web scaffolds with their formatter and lint scripts.\n"; \
-		exit 1; \
-	fi
+lint: api-format-check web-lint web-format-check
 
-types:
-	@ran=0; \
-	if [ -f "$(WEB_DIR)/package.json" ]; then \
-		ran=1; \
-		cd "$(WEB_DIR)" && $(PNPM) type-check; \
-		if grep -q '"api-client:check"' "$(WEB_DIR)/package.json"; then \
-			cd "$(WEB_DIR)" && $(PNPM) api-client:check; \
-		fi; \
-	fi; \
-	if [ -f "$(ROOT_DIR)/docs/api/openapi.yaml" ]; then \
-		ran=1; \
-		printf "OpenAPI placeholder exists at %s/docs/api/openapi.yaml\n" "$(ROOT_DIR)"; \
-	fi; \
-	if [ "$$ran" = "0" ]; then \
-		printf "No type or contract checks are available yet.\n"; \
-		printf "Next step: scaffold the web app and API client generation.\n"; \
-		exit 1; \
-	fi
+types: contract-check web-type-check

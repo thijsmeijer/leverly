@@ -1,4 +1,4 @@
-.PHONY: api api-openapi api-client
+.PHONY: api api-format-check api-test api-openapi api-client contract-check
 api:
 	@if [ ! -f "$(API_DIR)/artisan" ]; then \
 		printf "API app is not scaffolded yet.\n"; \
@@ -7,6 +7,22 @@ api:
 		exit 1; \
 	fi
 	@cd "$(API_DIR)" && "$(PHP)" artisan serve
+
+api-format-check:
+	@if [ ! -f "$(API_DIR)/vendor/bin/pint" ]; then \
+		printf "API formatter is not available yet.\n"; \
+		printf "Expected Pint binary: %s/vendor/bin/pint\n" "$(API_DIR)"; \
+		exit 1; \
+	fi
+	@cd "$(API_DIR)" && ./vendor/bin/pint --test
+
+api-test:
+	@if [ ! -f "$(API_DIR)/artisan" ]; then \
+		printf "API app is not scaffolded yet.\n"; \
+		printf "Expected Laravel artisan file: %s/artisan\n" "$(API_DIR)"; \
+		exit 1; \
+	fi
+	@cd "$(API_DIR)" && "$(PHP)" artisan test
 
 api-openapi:
 	@if [ ! -f "$(API_DIR)/artisan" ]; then \
@@ -26,3 +42,15 @@ api-client: api-openapi
 	fi
 	@cd "$(WEB_DIR)" && $(PNPM) api-client:generate
 	@cd "$(WEB_DIR)" && $(PNPM) api-client:check
+
+contract-check:
+	@if [ ! -f "$(ROOT_DIR)/docs/api/openapi.yaml" ]; then \
+		printf "OpenAPI contract is missing at %s/docs/api/openapi.yaml\n" "$(ROOT_DIR)"; \
+		exit 1; \
+	fi
+	@printf "OpenAPI contract exists at %s/docs/api/openapi.yaml\n" "$(ROOT_DIR)"
+	@if [ -f "$(WEB_DIR)/package.json" ] && grep -q '"api-client:check"' "$(WEB_DIR)/package.json"; then \
+		cd "$(WEB_DIR)" && $(PNPM) api-client:check; \
+	else \
+		printf "Web API client check skipped: web app or api-client:check script is unavailable.\n"; \
+	fi
