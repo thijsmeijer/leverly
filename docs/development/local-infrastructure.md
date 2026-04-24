@@ -29,6 +29,18 @@ make ps
 make compose-config
 ```
 
+Send a smoke email through the API container and inspect it in Mailpit:
+
+```sh
+make mail-smoke
+```
+
+Use a custom local recipient when needed:
+
+```sh
+MAIL_SMOKE_TO=athlete@example.test make mail-smoke
+```
+
 ## Services
 
 | Service | Container | Default URL / Port | Credentials |
@@ -62,6 +74,16 @@ Direct debug ports still remain available:
 - Web: `http://web.leverly.local:5173`
 - API: `http://api.leverly.local:8000`
 - Mailpit: `http://mail.leverly.local:8025`
+
+## Mailpit
+
+Mailpit catches local email sent by the API. The Compose API environment uses:
+
+- `MAIL_MAILER=smtp`
+- `MAIL_HOST=leverly_mailpit`
+- `MAIL_PORT=1025`
+
+Run `make mail-smoke` to send a safe test message from Laravel. The command prints the generated subject and recipient, then the message can be inspected at `http://mail.leverly.local` without sending real email.
 
 If the `10.20.0.0/24` subnet conflicts with something on your machine, use the default loopback address and this fallback hosts line:
 

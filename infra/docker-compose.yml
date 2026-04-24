@@ -90,6 +90,8 @@ services:
       MAIL_MAILER: smtp
       MAIL_HOST: leverly_mailpit
       MAIL_PORT: 1025
+      MAIL_FROM_ADDRESS: hello@leverly.local
+      MAIL_FROM_NAME: Leverly
     ports:
       - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_API_PORT:-8000}:8000"
     volumes:

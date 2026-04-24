@@ -10,6 +10,7 @@ Run commands from this directory:
 - `composer format`: format PHP files with Laravel Pint.
 - `composer format:test`: check PHP formatting without changing files.
 - `composer ide-helper`: refresh IDE helper files and model mixins.
+- `php artisan leverly:mail-smoke --to=dev@leverly.local`: send a local smoke email to Mailpit.
 - `php artisan about --only=environment`: verify that the application can boot.
 
 Run `composer ide-helper` after changing models, migrations, service container bindings, facades, or framework dependencies. Model helper metadata is also refreshed after migrations through the IDE helper post-migrate hook when the dev package is installed.
@@ -19,5 +20,7 @@ Run `composer ide-helper` after changing models, migrations, service container b
 Copy `.env.example` to `.env` for standalone local development. The default example uses SQLite and log mail so the API can boot without Docker.
 
 Copy `.env.docker.example` to `.env` when using the Compose services. That example points the API at PostgreSQL, Redis, and Mailpit service names and uses the local host aliases documented in `docs/development/local-infrastructure.md`.
+
+When the Docker stack is running, `make mail-smoke` sends the same smoke email through the API container and Mailpit exposes it at `http://mail.leverly.local`.
 
 Do not commit `.env`, generated SQLite databases, `vendor`, logs, or local secrets.

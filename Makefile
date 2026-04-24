@@ -24,6 +24,8 @@ help:
 	@printf "Development:\n"
 	@printf "  make api      Run the API development process\n"
 	@printf "  make web      Run the web development process\n\n"
+	@printf "Local mail:\n"
+	@printf "  make mail-smoke  Send a smoke email to Mailpit through the API container\n\n"
 	@printf "Verification:\n"
 	@printf "  make verify   Run lint, type checks, and tests\n"
 	@printf "  make test     Run available tests\n"
