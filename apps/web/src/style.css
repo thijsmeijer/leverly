@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@theme {
+  --color-lab-void: #101412;
+  --color-lab-shell: #111713;
+  --color-lab-surface: #151812;
+  --color-lab-overlay: #1c1a12;
+  --color-lab-paper: #ebe7dc;
+  --color-lab-card: #f8f4ea;
+  --color-lab-line: #242820;
+  --color-lab-copy: #4b5047;
+  --color-lab-muted: #555b51;
+  --color-lab-soft: #66705f;
+  --color-lab-rest: #ded7c8;
+  --color-lab-emerald: #143f2a;
+  --color-lab-emerald-strong: #0f3321;
+  --color-lab-amber: #5c4316;
+  --color-lab-shadow: #332c1a;
+}
+
 :root {
   color-scheme: light;
   font-family:
@@ -17,7 +35,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  background: #fafaf9;
+  background: var(--color-lab-void);
 }
 
 button,

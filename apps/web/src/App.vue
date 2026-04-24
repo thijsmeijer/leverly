@@ -9,21 +9,25 @@ const focusOptions: Array<{
   id: TrainingFocus
   label: string
   summary: string
+  metric: string
 }> = [
   {
     id: 'today',
     label: 'Today',
     summary: 'Four focused blocks with one primary pull target.',
+    metric: '42 min',
   },
   {
     id: 'progressions',
     label: 'Progressions',
     summary: 'Front lever and dip paths are ready for the next evidence check.',
+    metric: '2 gates',
   },
   {
     id: 'recovery',
     label: 'Recovery',
     summary: 'Readiness is steady; keep pain and form gates visible.',
+    metric: '86%',
   },
 ]
 
@@ -37,44 +41,47 @@ const trainingBlocks = [
     target: 'Tuck front lever holds',
     detail: '5 x 12s with clean scapular position',
     status: 'Gate: form first',
+    load: 'RPE 7',
   },
   {
     name: 'Strength',
     target: 'Weighted pull-ups',
     detail: '4 x 5 at controlled tempo',
     status: 'Ready to log',
+    load: '+12.5 kg',
   },
   {
     name: 'Accessory',
     target: 'Ring rows',
     detail: '3 x 10 with full range',
     status: 'Balance pull volume',
+    load: 'Volume',
   },
 ]
 
 const progressionSignals = [
-  { label: 'Readiness', value: 'Good', tone: 'Stable' },
-  { label: 'Form trend', value: '4/5', tone: 'Progressing' },
-  { label: 'Pain signal', value: '0/10', tone: 'Clear' },
+  { label: 'Readiness', value: 'Good', tone: 'Stable', color: 'text-emerald-300' },
+  { label: 'Form trend', value: '4/5', tone: 'Progressing', color: 'text-amber-300' },
+  { label: 'Pain signal', value: '0/10', tone: 'Clear', color: 'text-emerald-300' },
 ]
 </script>
 
 <template>
-  <main class="min-h-screen bg-stone-50 text-slate-950">
+  <main class="min-h-screen bg-lab-void text-stone-100">
     <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col lg:flex-row">
       <aside
-        class="flex border-b border-slate-200 bg-white/90 px-5 py-4 backdrop-blur lg:w-72 lg:flex-col lg:border-b-0 lg:border-r lg:px-6 lg:py-8"
+        class="flex border-b border-white/10 bg-lab-shell/95 px-5 py-4 shadow-2xl shadow-black/25 backdrop-blur lg:w-72 lg:flex-col lg:border-b-0 lg:border-r lg:px-6 lg:py-8"
         aria-label="Application navigation"
       >
         <div class="flex w-full items-center justify-between gap-4 lg:block">
           <a
             href="#dashboard"
-            class="inline-flex rounded-md text-2xl font-semibold tracking-normal text-slate-950 outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-4"
+            class="inline-flex rounded-md text-2xl font-semibold tracking-normal text-stone-50 outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-4 focus-visible:ring-offset-lab-shell"
           >
             Leverly
           </a>
           <button
-            class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 outline-none transition hover:border-emerald-700 hover:text-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 lg:hidden"
+            class="rounded-md border border-emerald-300/30 bg-emerald-300/10 px-3 py-2 text-sm font-medium text-emerald-100 outline-none transition hover:border-emerald-300 hover:bg-emerald-300/15 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-shell lg:hidden"
             type="button"
             @click="activeFocus = 'today'"
           >
@@ -84,44 +91,47 @@ const progressionSignals = [
 
         <nav class="mt-8 hidden space-y-2 lg:block" aria-label="Primary">
           <a
-            class="block rounded-md bg-slate-950 px-4 py-3 text-sm font-medium text-white outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+            class="block rounded-md border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-sm font-medium text-emerald-50 outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-shell"
             href="#dashboard"
             aria-current="page"
           >
             Dashboard
           </a>
           <a
-            class="block rounded-md px-4 py-3 text-sm font-medium text-slate-700 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+            class="block rounded-md px-4 py-3 text-sm font-medium text-stone-300 outline-none hover:bg-white/10 hover:text-stone-50 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-shell"
             href="#today"
           >
             Today
           </a>
           <a
-            class="block rounded-md px-4 py-3 text-sm font-medium text-slate-700 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+            class="block rounded-md px-4 py-3 text-sm font-medium text-stone-300 outline-none hover:bg-white/10 hover:text-stone-50 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-shell"
             href="#progressions"
           >
             Progressions
           </a>
         </nav>
 
-        <div class="mt-auto hidden rounded-md bg-emerald-50 p-4 text-sm text-emerald-950 lg:block">
-          <p class="font-semibold">Next target</p>
-          <p class="mt-2 text-emerald-900">Add evidence before increasing leverage.</p>
+        <div class="mt-auto hidden rounded-md border border-amber-300/20 bg-lab-overlay p-4 text-sm text-stone-100 shadow-lg shadow-black/20 lg:block">
+          <p class="font-semibold text-amber-200">Next target</p>
+          <p class="mt-2 leading-6 text-stone-300">Add evidence before increasing leverage.</p>
         </div>
       </aside>
 
-      <section id="dashboard" class="flex-1 px-5 py-6 sm:px-8 lg:px-10 lg:py-8">
-        <header class="flex flex-col gap-5 border-b border-slate-200 pb-6 md:flex-row md:items-center md:justify-between">
+      <section id="dashboard" class="flex-1 bg-lab-paper px-5 py-6 text-lab-surface sm:px-8 lg:px-10 lg:py-8">
+        <header class="flex flex-col gap-5 border-b border-lab-line/15 pb-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p class="text-sm font-semibold uppercase tracking-normal text-emerald-700">
-              Bodyweight strength
+            <p class="text-sm font-semibold uppercase tracking-normal text-emerald-800">
+              Premium training lab
             </p>
-            <h1 class="mt-2 max-w-3xl text-3xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-4xl lg:text-5xl">
+            <h1 class="mt-2 max-w-3xl text-3xl font-semibold leading-tight tracking-normal text-lab-shell sm:text-4xl lg:text-5xl">
               Today&apos;s work is ready to log.
             </h1>
+            <p class="mt-3 max-w-2xl text-base leading-7 text-lab-copy">
+              Calisthenics progress, readiness, and recommendation gates in one focused workspace.
+            </p>
           </div>
           <button
-            class="inline-flex min-h-11 items-center justify-center rounded-md bg-emerald-700 px-5 py-3 text-sm font-semibold text-white outline-none transition hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-lab-emerald px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20 outline-none transition hover:bg-lab-emerald-strong focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-paper"
             type="button"
             @click="activeFocus = 'today'"
           >
@@ -131,37 +141,46 @@ const progressionSignals = [
 
         <div class="grid gap-6 py-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <section id="today" aria-labelledby="focus-heading" class="space-y-5">
-            <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <h2 id="focus-heading" class="text-lg font-semibold tracking-normal">Training focus</h2>
+            <div class="rounded-md border border-lab-line/12 bg-lab-card p-4 shadow-xl shadow-lab-shadow/10 sm:p-5">
+              <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <h2 id="focus-heading" class="text-lg font-semibold tracking-normal">Training focus</h2>
+                <p class="text-sm font-medium text-lab-soft">{{ selectedFocus.metric }}</p>
+              </div>
               <div class="mt-4 grid gap-2 sm:grid-cols-3" role="group" aria-label="Training focus">
                 <button
                   v-for="option in focusOptions"
                   :key="option.id"
-                  class="rounded-md border px-4 py-3 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+                  class="rounded-md border px-4 py-3 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 focus-visible:ring-offset-lab-card"
                   :class="
                     activeFocus === option.id
-                      ? 'border-emerald-700 bg-emerald-50 text-emerald-950'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'
+                      ? 'border-emerald-800 bg-lab-emerald text-white shadow-md shadow-emerald-950/20'
+                      : 'border-lab-line/12 bg-white/70 text-lab-copy hover:border-emerald-800/40 hover:bg-white'
                   "
                   type="button"
                   @click="activeFocus = option.id"
                 >
-                  {{ option.label }}
+                  <span class="block">{{ option.label }}</span>
+                  <span class="mt-1 block text-xs opacity-75">{{ option.metric }}</span>
                 </button>
               </div>
-              <p class="mt-4 text-sm leading-6 text-slate-600">{{ selectedFocus.summary }}</p>
+              <p class="mt-4 text-sm leading-6 text-lab-muted">{{ selectedFocus.summary }}</p>
             </div>
 
             <div class="grid gap-4 md:grid-cols-3">
               <article
                 v-for="block in trainingBlocks"
                 :key="block.name"
-                class="rounded-md border border-slate-200 bg-white p-5 shadow-sm"
+                class="rounded-md border border-lab-line/12 bg-lab-card p-5 shadow-xl shadow-lab-shadow/10"
               >
-                <p class="text-sm font-semibold text-emerald-700">{{ block.name }}</p>
-                <h3 class="mt-2 text-lg font-semibold tracking-normal text-slate-950">{{ block.target }}</h3>
-                <p class="mt-3 text-sm leading-6 text-slate-600">{{ block.detail }}</p>
-                <p class="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700">
+                <div class="flex items-start justify-between gap-3">
+                  <p class="text-sm font-semibold text-emerald-800">{{ block.name }}</p>
+                  <span class="rounded-md bg-lab-surface px-2.5 py-1 text-xs font-semibold text-stone-100">
+                    {{ block.load }}
+                  </span>
+                </div>
+                <h3 class="mt-3 text-lg font-semibold tracking-normal text-lab-shell">{{ block.target }}</h3>
+                <p class="mt-3 text-sm leading-6 text-lab-muted">{{ block.detail }}</p>
+                <p class="mt-4 rounded-md border border-amber-700/15 bg-amber-100/70 px-3 py-2 text-sm font-medium text-lab-amber">
                   {{ block.status }}
                 </p>
               </article>
@@ -169,28 +188,31 @@ const progressionSignals = [
           </section>
 
           <aside id="progressions" class="space-y-4" aria-labelledby="signals-heading">
-            <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="rounded-md border border-white/10 bg-lab-shell p-5 text-stone-100 shadow-2xl shadow-black/20">
               <h2 id="signals-heading" class="text-lg font-semibold tracking-normal">Progression signals</h2>
               <dl class="mt-4 space-y-3">
                 <div
                   v-for="signal in progressionSignals"
                   :key="signal.label"
-                  class="flex items-center justify-between gap-4 rounded-md bg-slate-50 px-3 py-3"
+                  class="flex items-center justify-between gap-4 rounded-md border border-white/10 bg-white/5 px-3 py-3"
                 >
-                  <dt class="text-sm text-slate-600">{{ signal.label }}</dt>
+                  <dt class="text-sm text-stone-300">{{ signal.label }}</dt>
                   <dd class="text-right">
-                    <span class="block text-sm font-semibold text-slate-950">{{ signal.value }}</span>
-                    <span class="block text-xs text-emerald-700">{{ signal.tone }}</span>
+                    <span class="block text-sm font-semibold text-stone-50">{{ signal.value }}</span>
+                    <span class="block text-xs" :class="signal.color">{{ signal.tone }}</span>
                   </dd>
                 </div>
               </dl>
             </div>
 
-            <div class="rounded-md border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
+            <div class="rounded-md border border-lab-line/12 bg-lab-card p-5 shadow-xl shadow-lab-shadow/10">
               <h2 class="text-lg font-semibold tracking-normal">Recommendation guard</h2>
-              <p class="mt-3 text-sm leading-6 text-slate-200">
+              <p class="mt-3 text-sm leading-6 text-lab-muted">
                 No progression is suggested until hold quality, pain, and readiness stay inside safe bounds.
               </p>
+              <div class="mt-4 h-2 rounded-full bg-lab-rest">
+                <div class="h-2 w-4/5 rounded-full bg-lab-emerald"></div>
+              </div>
             </div>
           </aside>
         </div>
