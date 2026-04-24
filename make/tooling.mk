@@ -5,5 +5,7 @@ tools-info:
 	@printf "  WEB_DIR=%s\n" "$(WEB_DIR)"
 	@printf "  PACKAGES_DIR=%s\n" "$(PACKAGES_DIR)"
 	@printf "  INFRA_DIR=%s\n" "$(INFRA_DIR)"
+	@printf "  COMPOSE_FILE=%s\n" "$(COMPOSE_FILE)"
 	@printf "  HOST_UID=%s\n" "$(HOST_UID)"
 	@printf "  HOST_GID=%s\n" "$(HOST_GID)"
+	@printf "  LEVERLY_BIND_IP=%s\n" "$(LEVERLY_BIND_IP)"

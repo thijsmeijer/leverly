@@ -52,6 +52,9 @@ types:
 	if [ -f "$(WEB_DIR)/package.json" ]; then \
 		ran=1; \
 		cd "$(WEB_DIR)" && $(PNPM) type-check; \
+		if grep -q '"api-client:check"' "$(WEB_DIR)/package.json"; then \
+			cd "$(WEB_DIR)" && $(PNPM) api-client:check; \
+		fi; \
 	fi; \
 	if [ -f "$(ROOT_DIR)/docs/api/openapi.yaml" ]; then \
 		ran=1; \

@@ -28,6 +28,7 @@ docs/
   product-roadmap.md
   progression-engine.md
 infra/
+  docker-compose.yml
   nginx/
   scripts/
 ```
@@ -37,7 +38,10 @@ infra/
 The root command surface is intentionally small:
 
 - `make setup`: install or prepare local dependencies
-- `make up`: start local infrastructure once it exists
+- `make up`: start PostgreSQL, Redis, and Mailpit
+- `make app-up`: start infrastructure plus optional API and web containers
+- `make down`: stop local containers
+- `make ps`: show local container status
 - `make doctor`: check local setup and print concrete fixes
 - `make api`: run the API development process once the app exists
 - `make web`: run the web development process once the app exists
@@ -45,6 +49,6 @@ The root command surface is intentionally small:
 - `make lint`: run available linters and format checks
 - `make types`: run available type and contract checks
 
-Commands that depend on scaffolded apps will fail with an actionable message until the relevant app exists.
+Local infrastructure, service ports, credentials, and host aliases are documented in `docs/development/local-infrastructure.md`.
 
 Development tooling, lint boundaries, and optional git hooks are documented in `docs/development/tooling.md`.

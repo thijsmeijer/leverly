@@ -13,6 +13,7 @@
     "test:architecture": "node eslint-rules/architecture.test.mjs",
     "test:e2e": "playwright test",
     "test:a11y": "playwright test --grep @a11y",
+    "api-client:check": "node scripts/check-openapi-spec.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:test": "prettier --check ."

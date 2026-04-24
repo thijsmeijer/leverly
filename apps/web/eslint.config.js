@@ -23,6 +23,22 @@ export default [
   ...pluginVue.configs['flat/recommended'],
   eslintConfigPrettier,
   {
+    files: [
+      '*.config.js',
+      '*.config.ts',
+      'eslint-rules/**/*.js',
+      'eslint-rules/**/*.mjs',
+      'scripts/**/*.js',
+      'scripts/**/*.mjs',
+    ],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
+  {
     plugins: {
       'leverly-architecture': architecture,
     },

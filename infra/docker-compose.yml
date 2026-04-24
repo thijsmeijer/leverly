@@ -1,0 +1,117 @@
+name: leverly
+
+x-app-user: &app-user
+  user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: leverly_postgres
+    environment:
+      POSTGRES_DB: "${LEVERLY_POSTGRES_DB:-leverly}"
+      POSTGRES_USER: "${LEVERLY_POSTGRES_USER:-leverly}"
+      POSTGRES_PASSWORD: "${LEVERLY_POSTGRES_PASSWORD:-leverly}"
+    ports:
+      - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - leverly_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - leverly_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: leverly_redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_REDIS_PORT:-6379}:6379"
+    volumes:
+      - leverly_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - leverly_network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: leverly_mailpit
+    ports:
+      - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_MAILPIT_UI_PORT:-8025}:8025"
+    networks:
+      - leverly_network
+
+  api:
+    <<: *app-user
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: infra/docker/api/Dockerfile
+    container_name: leverly_api
+    working_dir: /workspace/apps/api
+    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+    environment:
+      DB_HOST: leverly_postgres
+      REDIS_HOST: leverly_redis
+      MAIL_HOST: leverly_mailpit
+    ports:
+      - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_API_PORT:-8000}:8000"
+    volumes:
+      - ..:/workspace
+      - leverly_composer_cache:/tmp/composer-cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks:
+      - leverly_network
+
+  web:
+    <<: *app-user
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: infra/docker/web/Dockerfile
+    container_name: leverly_web
+    working_dir: /workspace/apps/web
+    command: ["corepack", "pnpm", "dev", "--host", "0.0.0.0"]
+    environment:
+      VITE_API_BASE_URL: "http://api.leverly.local:${LEVERLY_API_PORT:-8000}"
+      OPENAPI_SPEC_PATH: /workspace/docs/api/openapi.yaml
+    ports:
+      - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_WEB_PORT:-5173}:5173"
+    volumes:
+      - ..:/workspace
+      - leverly_pnpm_store:/home/node/.local/share/pnpm/store
+    depends_on:
+      - api
+    networks:
+      - leverly_network
+
+networks:
+  leverly_network:
+    name: leverly_network
+
+volumes:
+  leverly_postgres_data:
+    name: leverly_postgres_data
+  leverly_redis_data:
+    name: leverly_redis_data
+  leverly_composer_cache:
+    name: leverly_composer_cache
+  leverly_pnpm_store:
+    name: leverly_pnpm_store
