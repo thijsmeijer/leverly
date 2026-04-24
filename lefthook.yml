@@ -4,6 +4,9 @@ pre-commit:
     api-format:
       glob: "apps/api/**/*.php"
       run: cd apps/api && ./vendor/bin/pint --test
+    api-client:
+      glob: "{apps/api/**,apps/web/scripts/**,docs/api/openapi.yaml,make/api.mk,Makefile}"
+      run: make api-client && git add docs/api/openapi.yaml apps/web/src/shared/api/leverlyApi/openapi/generated.ts
     web-lint:
       glob: "apps/web/**/*.{js,ts,vue}"
       run: corepack pnpm --dir apps/web lint

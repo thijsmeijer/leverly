@@ -54,4 +54,6 @@ Run the pre-commit hook manually with:
 corepack pnpm hooks:run
 ```
 
-The hook runs fast formatting and lint checks only. It does not run the full test suite. In CI or other non-interactive environments, skip hook installation by not running `hooks:install`. For urgent local commits, Git can bypass hooks with `git commit --no-verify`.
+The hook runs formatting and lint checks for staged API and web files. When API code, OpenAPI tooling, or the contract file changes, it also runs `make api-client` and re-stages the generated OpenAPI spec and web TypeScript types. Review any generated changes before finishing the commit.
+
+It does not run the full test suite. In CI or other non-interactive environments, skip hook installation by not running `hooks:install`. For urgent local commits, Git can bypass hooks with `git commit --no-verify`.
