@@ -1,0 +1,52 @@
+# Local planning and agent guidance
+.ai/
+AGENTS.md
+leverly-plan-v*.md
+
+# Editors and local project metadata
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dependencies
+node_modules/
+vendor/
+apps/api/vendor/
+apps/web/node_modules/
+packages/*/node_modules/
+
+# Build outputs and caches
+dist/
+build/
+.vite/
+.turbo/
+.cache/
+coverage/
+apps/web/dist/
+apps/web/coverage/
+apps/api/bootstrap/cache/*.php
+apps/api/storage/framework/cache/
+apps/api/storage/framework/sessions/
+apps/api/storage/framework/views/
+apps/api/storage/logs/
+
+# Test and tooling artifacts
+playwright-report/
+test-results/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
