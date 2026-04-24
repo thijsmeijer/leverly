@@ -1,6 +1,7 @@
 import path from 'node:path'
 
-const clientInternalPattern = /(^|[/@])api\/generated(\/|$)/
+const clientInternalPattern =
+  /(^|[/@])api\/generated(\/|$)|(^|[/@])shared\/api\/leverlyApi\/openapi\/generated(\.|\/|$)/
 
 function normalizePath(value) {
   return value.split(path.sep).join('/')

@@ -18,11 +18,20 @@ tester.run('no-generated-openapi-internals', architecture.rules['no-generated-op
       filename: '/repo/apps/web/src/app/pages/dashboard/DashboardPage.ts',
       code: "import { listWorkouts } from '../../api/workouts'",
     },
+    {
+      filename: '/repo/apps/web/src/features/workouts/index.ts',
+      code: "import { leverlyApiRequest } from '@/shared/api/leverlyApi/runtimeClient'",
+    },
   ],
   invalid: [
     {
       filename: '/repo/apps/web/src/features/workouts/index.ts',
       code: "import { client } from '@/api/generated/client'",
+      errors: [{ message: 'Use typed API wrapper modules instead of generated OpenAPI client internals.' }],
+    },
+    {
+      filename: '/repo/apps/web/src/modules/workouts/index.ts',
+      code: "import { paths } from '@/shared/api/leverlyApi/openapi/generated'",
       errors: [{ message: 'Use typed API wrapper modules instead of generated OpenAPI client internals.' }],
     },
   ],
