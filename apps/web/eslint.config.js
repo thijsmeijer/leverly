@@ -47,6 +47,7 @@ export default [
       'leverly-architecture/no-shared-upstream-imports': 'error',
       'leverly-architecture/no-feature-app-imports': 'error',
       'leverly-architecture/no-cross-feature-deep-imports': 'error',
+      'leverly-architecture/no-app-module-deep-imports': 'error',
     },
   },
   {

@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import AccessibleLineChart from '../../charts/AccessibleLineChart.vue'
-import DashboardHero from './components/DashboardHero.vue'
-import DashboardSidebar from './components/DashboardSidebar.vue'
-import ProgressionSignalsPanel from './components/ProgressionSignalsPanel.vue'
-import RecommendationGuardPanel from './components/RecommendationGuardPanel.vue'
-import TrainingBlockGrid from './components/TrainingBlockGrid.vue'
-import TrainingFocusPanel from './components/TrainingFocusPanel.vue'
+import AccessibleLineChart from '@/shared/charts/AccessibleLineChart.vue'
+import { useDashboardApiStatus } from '../composables/useDashboardApiStatus'
+import DashboardHero from '../components/DashboardHero.vue'
+import DashboardSidebar from '../components/DashboardSidebar.vue'
+import ProgressionSignalsPanel from '../components/ProgressionSignalsPanel.vue'
+import RecommendationGuardPanel from '../components/RecommendationGuardPanel.vue'
+import TrainingBlockGrid from '../components/TrainingBlockGrid.vue'
+import TrainingFocusPanel from '../components/TrainingFocusPanel.vue'
 import {
   focusOptions,
   progressionSignals,
   readinessTrend,
   trainingBlocks,
   type TrainingFocus,
-} from './data/dashboardPreview'
+} from '../data/dashboardPreview'
 
 const activeFocus = ref<TrainingFocus>('today')
+const { apiStatus, isRefreshing: isStatusRefreshing, refreshStatus } = useDashboardApiStatus()
 
 const selectedFocus = computed(() => {
   return focusOptions.find((item) => item.id === activeFocus.value) ?? focusOptions[0]
@@ -29,7 +31,12 @@ function startWorkout(): void {
 <template>
   <main class="bg-lab-void min-h-screen text-stone-100">
     <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col lg:flex-row">
-      <DashboardSidebar @start="startWorkout" />
+      <DashboardSidebar
+        :api-status="apiStatus"
+        :is-status-refreshing="isStatusRefreshing"
+        @refresh-status="refreshStatus"
+        @start="startWorkout"
+      />
 
       <section
         id="dashboard"

@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
+import { queryClient, VueQueryPlugin } from './app/plugins/query'
 import { router } from './app/router'
 
 vi.mock('vue-chartjs', () => ({
@@ -16,7 +17,7 @@ describe('App', () => {
 
     const wrapper = mount(App, {
       global: {
-        plugins: [router],
+        plugins: [router, [VueQueryPlugin, { queryClient }]],
       },
     })
 

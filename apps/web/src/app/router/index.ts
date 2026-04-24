@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { DashboardPage } from '@/modules/dashboard'
 import LoginPage from '../pages/auth/LoginPage.vue'
-import DashboardPage from '../pages/dashboard/DashboardPage.vue'
 
 export const routes: RouteRecordRaw[] = [
   {

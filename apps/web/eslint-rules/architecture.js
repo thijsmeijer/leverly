@@ -207,11 +207,46 @@ const noCrossFeatureDeepImports = {
   },
 }
 
+const noAppModuleDeepImports = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Prevent app code from importing feature or module internals.',
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = normalizedFilename(context)
+
+    if (!isInsideSrc(filename, 'app')) {
+      return {}
+    }
+
+    return createImportVisitor((node) => {
+      const resolved = resolveSource(filename, sourceValue(node))
+      const targetLayer = layerForPath(resolved)
+
+      if (!['features', 'modules'].includes(targetLayer)) {
+        return
+      }
+
+      const target = areaName(resolved, targetLayer)
+
+      if (!target || isPublicAreaImport(resolved, targetLayer, target)) {
+        return
+      }
+
+      report(context, node, 'Import feature and module code through its public index instead of deep imports.')
+    })
+  },
+}
+
 export default {
   rules: {
     'no-generated-openapi-internals': noGeneratedOpenApiInternals,
     'no-shared-upstream-imports': noSharedUpstreamImports,
     'no-feature-app-imports': noFeatureAppImports,
     'no-cross-feature-deep-imports': noCrossFeatureDeepImports,
+    'no-app-module-deep-imports': noAppModuleDeepImports,
   },
 }

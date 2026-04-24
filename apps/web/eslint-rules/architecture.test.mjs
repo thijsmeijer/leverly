@@ -84,3 +84,19 @@ tester.run('no-cross-feature-deep-imports', architecture.rules['no-cross-feature
     },
   ],
 })
+
+tester.run('no-app-module-deep-imports', architecture.rules['no-app-module-deep-imports'], {
+  valid: [
+    {
+      filename: '/repo/apps/web/src/app/router/index.ts',
+      code: "import { DashboardPage } from '@/modules/dashboard'",
+    },
+  ],
+  invalid: [
+    {
+      filename: '/repo/apps/web/src/app/router/index.ts',
+      code: "import DashboardPage from '@/modules/dashboard/pages/DashboardPage.vue'",
+      errors: [{ message: 'Import feature and module code through its public index instead of deep imports.' }],
+    },
+  ],
+})
