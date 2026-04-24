@@ -6,7 +6,7 @@ INFRA_DIR := $(ROOT_DIR)/infra
 COMPOSE_FILE := $(INFRA_DIR)/docker-compose.yml
 
 DOCKER_COMPOSE ?= docker compose
-PNPM ?= pnpm
+PNPM ?= corepack pnpm
 COMPOSER ?= composer
 PHP ?= php
 

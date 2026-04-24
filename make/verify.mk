@@ -1,4 +1,6 @@
-.PHONY: test lint types
+.PHONY: verify test lint types
+verify: lint types test
+
 test:
 	@ran=0; \
 	if [ -f "$(API_DIR)/artisan" ]; then \
@@ -7,7 +9,11 @@ test:
 	fi; \
 	if [ -f "$(WEB_DIR)/package.json" ]; then \
 		ran=1; \
-		cd "$(WEB_DIR)" && "$(PNPM)" test; \
+		if grep -q '"test"' "$(WEB_DIR)/package.json"; then \
+			cd "$(WEB_DIR)" && $(PNPM) test; \
+		else \
+			printf "Web tests skipped: no test script exists yet.\n"; \
+		fi; \
 	fi; \
 	if [ "$$ran" = "0" ]; then \
 		printf "No test suites are available yet.\n"; \
@@ -22,8 +28,12 @@ lint:
 		cd "$(API_DIR)" && ./vendor/bin/pint --test; \
 	fi; \
 	if [ -f "$(WEB_DIR)/package.json" ]; then \
-		ran=1; \
-		cd "$(WEB_DIR)" && "$(PNPM)" lint; \
+		if grep -q '"lint"' "$(WEB_DIR)/package.json"; then \
+			ran=1; \
+			cd "$(WEB_DIR)" && $(PNPM) lint; \
+		else \
+			printf "Web lint skipped: no lint script exists yet.\n"; \
+		fi; \
 	fi; \
 	if [ "$$ran" = "0" ]; then \
 		printf "No lint commands are available yet.\n"; \
@@ -35,7 +45,7 @@ types:
 	@ran=0; \
 	if [ -f "$(WEB_DIR)/package.json" ]; then \
 		ran=1; \
-		cd "$(WEB_DIR)" && "$(PNPM)" type-check; \
+		cd "$(WEB_DIR)" && $(PNPM) type-check; \
 	fi; \
 	if [ -f "$(ROOT_DIR)/docs/api/openapi.yaml" ]; then \
 		ran=1; \

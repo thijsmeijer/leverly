@@ -9,7 +9,7 @@ setup:
 	fi
 	@if [ -f "$(WEB_DIR)/package.json" ]; then \
 		printf "Installing web dependencies in %s\n" "$(WEB_DIR)"; \
-		cd "$(WEB_DIR)" && "$(PNPM)" install; \
+		cd "$(WEB_DIR)" && $(PNPM) install; \
 	else \
 		printf "Web dependencies skipped: %s/package.json does not exist yet.\n" "$(WEB_DIR)"; \
 	fi

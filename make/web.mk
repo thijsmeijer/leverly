@@ -6,4 +6,4 @@ web:
 		printf "Next step: scaffold the Vue app in apps/web.\n"; \
 		exit 1; \
 	fi
-	@cd "$(WEB_DIR)" && "$(PNPM)" dev
+	@cd "$(WEB_DIR)" && $(PNPM) dev

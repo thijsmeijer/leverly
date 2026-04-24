@@ -1,0 +1,10 @@
+{
+  "name": "leverly",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "web:dev": "corepack pnpm --dir apps/web dev",
+    "web:build": "corepack pnpm --dir apps/web build",
+    "web:type-check": "corepack pnpm --dir apps/web type-check"
+  }
+}

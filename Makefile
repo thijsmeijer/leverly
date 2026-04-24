@@ -22,6 +22,7 @@ help:
 	@printf "  make api      Run the API development process\n"
 	@printf "  make web      Run the web development process\n\n"
 	@printf "Verification:\n"
+	@printf "  make verify   Run lint, type checks, and tests\n"
 	@printf "  make test     Run available tests\n"
 	@printf "  make lint     Run available lint and format checks\n"
 	@printf "  make types    Run available type and contract checks\n"
