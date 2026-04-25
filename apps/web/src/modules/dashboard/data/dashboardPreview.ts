@@ -1,3 +1,5 @@
+import { dashboardCopy } from '@/shared/brand'
+
 export type TrainingFocus = 'today' | 'progressions' | 'recovery'
 
 export type TrainingFocusOption = {
@@ -30,52 +32,28 @@ export type ReadinessPoint = {
 export const focusOptions: TrainingFocusOption[] = [
   {
     id: 'today',
-    label: 'Today',
-    summary: 'Four focused blocks with one primary pull target.',
-    metric: '42 min',
+    ...dashboardCopy.focus.options.today,
   },
   {
     id: 'progressions',
-    label: 'Progressions',
-    summary: 'Front lever and dip paths are ready for the next evidence check.',
-    metric: '2 gates',
+    ...dashboardCopy.focus.options.progressions,
   },
   {
     id: 'recovery',
-    label: 'Recovery',
-    summary: 'Readiness is steady; keep pain and form gates visible.',
-    metric: '86%',
+    ...dashboardCopy.focus.options.recovery,
   },
 ]
 
 export const trainingBlocks: TrainingBlock[] = [
-  {
-    name: 'Skill',
-    target: 'Tuck front lever holds',
-    detail: '5 x 12s with clean scapular position',
-    status: 'Gate: form first',
-    load: 'RPE 7',
-  },
-  {
-    name: 'Strength',
-    target: 'Weighted pull-ups',
-    detail: '4 x 5 at controlled tempo',
-    status: 'Ready to log',
-    load: '+12.5 kg',
-  },
-  {
-    name: 'Accessory',
-    target: 'Ring rows',
-    detail: '3 x 10 with full range',
-    status: 'Balance pull volume',
-    load: 'Volume',
-  },
+  dashboardCopy.trainingBlocks.skill,
+  dashboardCopy.trainingBlocks.strength,
+  dashboardCopy.trainingBlocks.accessory,
 ]
 
 export const progressionSignals: ProgressionSignal[] = [
-  { label: 'Readiness', value: 'Good', tone: 'Stable', toneVariant: 'success' },
-  { label: 'Form trend', value: '4/5', tone: 'Progressing', toneVariant: 'warning' },
-  { label: 'Pain signal', value: '0/10', tone: 'Clear', toneVariant: 'success' },
+  { ...dashboardCopy.progressionSignals.readiness, toneVariant: 'success' },
+  { ...dashboardCopy.progressionSignals.formTrend, toneVariant: 'warning' },
+  { ...dashboardCopy.progressionSignals.painSignal, toneVariant: 'success' },
 ]
 
 export const readinessTrend: ReadinessPoint[] = [

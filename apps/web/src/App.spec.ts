@@ -9,7 +9,7 @@ describe('App', () => {
     })
 
     expect(wrapper.text()).toContain('Leverly')
-    expect(wrapper.text()).toContain("Today's work is ready to log.")
+    expect(wrapper.text()).toContain("Today's training is ready to log.")
     expect(wrapper.find('[data-test="readiness-chart"]').exists()).toBe(true)
   })
 })

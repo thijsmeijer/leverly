@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { authCopy } from '@/shared/brand'
 import { UiCard, UiSectionHeader } from '@/shared/ui'
 
 const route = useRoute()
@@ -16,12 +17,12 @@ const redirectPath = computed(() =>
     <section class="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
       <UiCard padding="lg">
         <UiSectionHeader
-          eyebrow="Leverly"
-          title="Sign in"
-          description="Account access is required before you can continue."
+          :eyebrow="authCopy.login.eyebrow"
+          :title="authCopy.login.title"
+          :description="authCopy.login.description"
         />
         <div class="rounded-card border-line-subtle bg-surface-muted text-ink-secondary mt-6 border p-4 text-sm">
-          After signing in, continue to
+          {{ authCopy.login.redirectPrefix }}
           <span class="text-ink-primary font-medium">{{ redirectPath }}</span>
         </div>
       </UiCard>

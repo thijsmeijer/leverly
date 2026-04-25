@@ -9,15 +9,15 @@ describe('DashboardSidebar', () => {
       props: {
         apiStatus: {
           checkedAt: '2026-04-25T10:30:00.000000Z',
-          detail: 'Version v1',
-          label: 'API online',
+          detail: 'Connected to v1. Live training data can sync when flows are added.',
+          label: 'Training API online',
           state: 'online',
         },
       },
     })
 
-    expect(wrapper.text()).toContain('API online')
-    expect(wrapper.text()).toContain('Version v1')
+    expect(wrapper.text()).toContain('Training API online')
+    expect(wrapper.text()).toContain('Connected to v1')
 
     await wrapper.get('[data-test="refresh-api-status"]').trigger('click')
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { dashboardCopy } from '@/shared/brand'
 import AccessibleLineChart from '@/shared/charts/AccessibleLineChart.vue'
 import { useDashboardApiStatus } from '../composables/useDashboardApiStatus'
 import DashboardHero from '../components/DashboardHero.vue'
@@ -56,9 +57,9 @@ function startWorkout(): void {
             <TrainingBlockGrid :blocks="trainingBlocks" />
 
             <AccessibleLineChart
-              title="Readiness trend"
-              summary="Readiness stayed within a productive range this week, with Friday currently strongest at 86."
-              value-label="Readiness score"
+              :title="dashboardCopy.readinessTrend.title"
+              :summary="dashboardCopy.readinessTrend.summary"
+              :value-label="dashboardCopy.readinessTrend.valueLabel"
               :points="readinessTrend"
             />
           </section>

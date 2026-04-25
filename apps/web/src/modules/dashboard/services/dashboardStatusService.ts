@@ -1,3 +1,4 @@
+import { dashboardCopy } from '@/shared/brand'
 import { leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 
 import type { DashboardApiStatus } from '../types'
@@ -6,8 +7,8 @@ type HealthTransport = ApiResponseBody<'/health', 'get'> | null
 
 export const unavailableDashboardApiStatus: DashboardApiStatus = {
   checkedAt: null,
-  detail: 'Status unavailable',
-  label: 'API status pending',
+  detail: dashboardCopy.connectionStatus.unavailableDetail,
+  label: dashboardCopy.connectionStatus.unavailableLabel,
   state: 'unavailable',
 }
 
@@ -28,8 +29,8 @@ export function mapDashboardStatus(response: HealthTransport): DashboardApiStatu
 
   return {
     checkedAt: response.meta.timestamp,
-    detail: `Version ${response.meta.api_version}`,
-    label: 'API online',
+    detail: dashboardCopy.connectionStatus.onlineDetail(response.meta.api_version),
+    label: dashboardCopy.connectionStatus.onlineLabel,
     state: 'online',
   }
 }

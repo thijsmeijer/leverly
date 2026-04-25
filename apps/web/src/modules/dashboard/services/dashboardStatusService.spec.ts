@@ -22,8 +22,8 @@ describe('fetchDashboardStatus', () => {
 
     await expect(fetchDashboardStatus()).resolves.toEqual({
       checkedAt: '2026-04-25T10:30:00.000000Z',
-      detail: 'Version v1',
-      label: 'API online',
+      detail: 'Connected to v1. Live training data can sync when flows are added.',
+      label: 'Training API online',
       state: 'online',
     })
 
@@ -39,8 +39,8 @@ describe('fetchDashboardStatus', () => {
 
     await expect(fetchDashboardStatus()).resolves.toEqual({
       checkedAt: null,
-      detail: 'Status unavailable',
-      label: 'API status pending',
+      detail: 'Connection is not ready. Refresh when local services are running.',
+      label: 'Connection not ready',
       state: 'unavailable',
     })
   })

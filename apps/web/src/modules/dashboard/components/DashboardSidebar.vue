@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { dashboardCopy, sharedCopy } from '@/shared/brand'
 import { UiBadge, UiButton, UiCard } from '@/shared/ui'
 import type { DashboardApiStatus } from '../types'
 
@@ -21,43 +22,48 @@ defineEmits<{
 <template>
   <aside
     class="bg-surface-inverse text-ink-inverse shadow-shell flex border-b border-white/10 px-5 py-4 lg:w-72 lg:flex-col lg:border-r lg:border-b-0 lg:px-6 lg:py-8"
-    aria-label="Application navigation"
+    :aria-label="dashboardCopy.navigation.ariaLabel"
   >
     <div class="flex w-full items-center justify-between gap-4 lg:block">
       <a
         href="#dashboard"
         class="rounded-control text-ink-inverse focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse inline-flex text-2xl font-semibold tracking-normal outline-none focus-visible:ring-2 focus-visible:ring-offset-4"
       >
-        Leverly
+        {{ dashboardCopy.brand.name }}
       </a>
-      <UiButton class="lg:hidden" size="sm" variant="inverse" @click="$emit('start')"> Start </UiButton>
+      <p class="text-ink-inverse/60 mt-2 hidden max-w-48 text-sm leading-5 lg:block">
+        {{ dashboardCopy.brand.tagline }}
+      </p>
+      <UiButton class="lg:hidden" size="sm" variant="inverse" @click="$emit('start')">
+        {{ dashboardCopy.navigation.startShort }}
+      </UiButton>
     </div>
 
-    <nav class="mt-8 hidden space-y-2 lg:block" aria-label="Primary">
+    <nav class="mt-8 hidden space-y-2 lg:block" :aria-label="dashboardCopy.navigation.primaryAriaLabel">
       <a
         class="rounded-control text-ink-inverse shadow-control focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse block border border-white/15 bg-white/10 px-4 py-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         href="#dashboard"
         aria-current="page"
       >
-        Dashboard
+        {{ dashboardCopy.navigation.dashboard }}
       </a>
       <a
         class="rounded-control text-ink-inverse/75 hover:text-ink-inverse focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse block px-4 py-3 text-sm font-medium outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-offset-2"
         href="#today"
       >
-        Today
+        {{ dashboardCopy.navigation.today }}
       </a>
       <a
         class="rounded-control text-ink-inverse/75 hover:text-ink-inverse focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse block px-4 py-3 text-sm font-medium outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-offset-2"
         href="#progressions"
       >
-        Progressions
+        {{ dashboardCopy.navigation.progressions }}
       </a>
     </nav>
 
     <UiCard as="div" tone="inverse" padding="sm" class="mt-auto hidden lg:block">
-      <UiBadge tone="warning">Next target</UiBadge>
-      <p class="text-ink-inverse/75 mt-3 text-sm leading-6">Add evidence before increasing leverage.</p>
+      <UiBadge tone="warning">{{ dashboardCopy.nextTarget.label }}</UiBadge>
+      <p class="text-ink-inverse/75 mt-3 text-sm leading-6">{{ dashboardCopy.nextTarget.description }}</p>
     </UiCard>
 
     <UiCard as="div" tone="inverse" padding="sm" class="mt-4 hidden lg:block">
@@ -80,7 +86,7 @@ defineEmits<{
         :disabled="isStatusRefreshing"
         @click="$emit('refresh-status')"
       >
-        {{ isStatusRefreshing ? 'Refreshing' : 'Refresh' }}
+        {{ isStatusRefreshing ? sharedCopy.actions.refreshing : sharedCopy.actions.refresh }}
       </UiButton>
     </UiCard>
   </aside>

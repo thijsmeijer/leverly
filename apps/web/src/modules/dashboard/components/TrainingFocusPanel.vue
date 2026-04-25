@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { dashboardCopy } from '@/shared/brand'
 import { UiCard, UiSectionHeader } from '@/shared/ui'
 import type { TrainingFocus, TrainingFocusOption } from '../data/dashboardPreview'
 
@@ -15,8 +16,8 @@ defineEmits<{
 
 <template>
   <UiCard tone="soft" padding="md">
-    <UiSectionHeader title="Training focus" title-id="focus-heading" :metric="selectedFocus.metric" />
-    <div class="mt-4 grid gap-2 sm:grid-cols-3" role="group" aria-label="Training focus">
+    <UiSectionHeader :title="dashboardCopy.focus.title" title-id="focus-heading" :metric="selectedFocus.metric" />
+    <div class="mt-4 grid gap-2 sm:grid-cols-3" role="group" :aria-label="dashboardCopy.focus.ariaLabel">
       <button
         v-for="option in options"
         :key="option.id"

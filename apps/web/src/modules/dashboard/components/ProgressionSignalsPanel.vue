@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { dashboardCopy } from '@/shared/brand'
 import { UiBadge, UiCard, UiSectionHeader } from '@/shared/ui'
 import type { ProgressionSignal } from '../data/dashboardPreview'
 
@@ -9,7 +10,7 @@ defineProps<{
 
 <template>
   <UiCard tone="inverse">
-    <UiSectionHeader title="Progression signals" title-id="signals-heading" tone="inverse" />
+    <UiSectionHeader :title="dashboardCopy.progressionSignals.title" title-id="signals-heading" tone="inverse" />
     <dl class="mt-4 space-y-3">
       <div
         v-for="signal in signals"

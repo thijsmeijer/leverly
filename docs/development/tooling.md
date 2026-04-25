@@ -82,6 +82,8 @@ The foundation check verifies the expected test scripts, support files, Vitest s
 
 It also runs the design-system foundation check, which verifies semantic tokens, shared UI primitives, light/dark hooks, focus-visible styling, and touch target rules.
 
+The same foundation command runs the brand-copy check, which verifies the product name, approved tagline, stale copy removal, tone contract, and diagnosis-language guardrails for current user-facing copy.
+
 ## Accessibility Checks
 
 Accessibility checks are scenario-based under `apps/web/e2e/accessibility`.
