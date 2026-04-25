@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import DashboardSidebar from './DashboardSidebar.vue'
+import DashboardApiStatusPanel from './DashboardApiStatusPanel.vue'
 
-describe('DashboardSidebar', () => {
+describe('DashboardApiStatusPanel', () => {
   it('renders mapped API status and exposes a refresh command', async () => {
-    const wrapper = mount(DashboardSidebar, {
+    const wrapper = mount(DashboardApiStatusPanel, {
       props: {
         apiStatus: {
           checkedAt: '2026-04-25T10:30:00.000000Z',

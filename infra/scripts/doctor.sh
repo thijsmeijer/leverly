@@ -60,8 +60,12 @@ check_port() {
 
 	if command -v nc >/dev/null 2>&1; then
 		if nc -z -w 1 "$host" "$port" >/dev/null 2>&1; then
-			warn "$label port $port is already in use on $host"
-			fix "Stop the conflicting service or change the local port before starting Leverly services."
+			if port_owned_by_leverly "$host" "$port"; then
+				ok "$label port $port is already served by a Leverly container on $host"
+			else
+				warn "$label port $port is already in use on $host"
+				fix "Stop the conflicting service or change the local port before starting Leverly services."
+			fi
 		else
 			ok "$label port $port is free on $host"
 		fi
@@ -69,6 +73,17 @@ check_port() {
 		skip "Port check for $label skipped because nc is not installed"
 		fix "Install netcat if you want doctor to detect local port conflicts."
 	fi
+}
+
+port_owned_by_leverly() {
+	host="$1"
+	port="$2"
+
+	if ! command -v docker >/dev/null 2>&1; then
+		return 1
+	fi
+
+	docker ps --filter "name=leverly_" --format "{{.Ports}}" 2>/dev/null | grep -Fq "$host:$port->"
 }
 
 bind_ip_ready() {
@@ -159,9 +174,11 @@ fi
 if [ -f "$WEB_DIR/package.json" ]; then
 	if [ -f "$WEB_DIR/.env.local" ] || [ -f "$WEB_DIR/.env" ]; then
 		ok "Web env file exists"
+	elif [ -f "$WEB_DIR/.env.example" ]; then
+		ok "Web env example exists"
 	else
 		warn "Web env file is missing"
-		fix "Create apps/web/.env.local after the web app is scaffolded."
+		fix "Add apps/web/.env.example and copy it to apps/web/.env.local when running the web app outside Docker."
 	fi
 else
 	skip "Web env check skipped because apps/web is not scaffolded yet"

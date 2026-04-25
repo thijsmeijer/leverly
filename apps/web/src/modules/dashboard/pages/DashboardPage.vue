@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 import { dashboardCopy } from '@/shared/brand'
 import AccessibleLineChart from '@/shared/charts/AccessibleLineChart.vue'
+import { useDashboardApiStatus } from '../composables/useDashboardApiStatus'
+import DashboardApiStatusPanel from '../components/DashboardApiStatusPanel.vue'
 import DashboardHero from '../components/DashboardHero.vue'
 import ProgressionSignalsPanel from '../components/ProgressionSignalsPanel.vue'
 import RecommendationGuardPanel from '../components/RecommendationGuardPanel.vue'
@@ -16,6 +18,7 @@ import {
 } from '../data/dashboardPreview'
 
 const activeFocus = ref<TrainingFocus>('today')
+const { apiStatus, isRefreshing: isStatusRefreshing, refreshStatus } = useDashboardApiStatus()
 
 const selectedFocus = computed(() => {
   return focusOptions.find((item) => item.id === activeFocus.value) ?? focusOptions[0]
@@ -52,6 +55,11 @@ function startWorkout(): void {
       <aside id="progressions" class="space-y-4" aria-labelledby="signals-heading">
         <ProgressionSignalsPanel :signals="progressionSignals" />
         <RecommendationGuardPanel />
+        <DashboardApiStatusPanel
+          :api-status="apiStatus"
+          :is-status-refreshing="isStatusRefreshing"
+          @refresh-status="refreshStatus"
+        />
       </aside>
     </div>
   </section>

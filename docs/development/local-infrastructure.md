@@ -103,6 +103,18 @@ The Docker example points Laravel at the Compose service names:
 - `REDIS_HOST=leverly_redis`
 - `MAIL_HOST=leverly_mailpit`
 
+## Web Environment
+
+The Docker web service sets `VITE_API_BASE_URL=http://api.leverly.local` so browser API calls use the reverse-proxied API host.
+
+When running the web app outside Docker, copy the web example first:
+
+```sh
+cp apps/web/.env.example apps/web/.env.local
+```
+
+The API client appends `/api/v1` automatically, so `VITE_API_BASE_URL` can be either the API origin or the full versioned API base URL.
+
 ## API Contract Source
 
 The web workspace reads the API contract from `docs/api/openapi.yaml` by default:

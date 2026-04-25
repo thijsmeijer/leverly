@@ -22,6 +22,7 @@ export function setupLeverlyApiRuntime(options: LeverlyApiRuntimeSetupOptions = 
   const handleSessionExpired = options.handleSessionExpired ?? ignoreApiError
 
   configureLeverlyApiClient({
+    baseUrl: apiBaseUrl(),
     fetcher: options.fetcher,
     getCsrfToken: options.getCsrfToken,
     getLocale: options.getLocale ?? browserLocale,
@@ -36,6 +37,18 @@ export function setupLeverlyApiRuntime(options: LeverlyApiRuntimeSetupOptions = 
       handleSessionExpired(error)
     },
   })
+}
+
+function apiBaseUrl(): string {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL
+
+  if (!configuredBaseUrl) {
+    return '/api/v1'
+  }
+
+  const trimmedBaseUrl = configuredBaseUrl.replace(/\/+$/, '')
+
+  return trimmedBaseUrl.endsWith('/api/v1') ? trimmedBaseUrl : `${trimmedBaseUrl}/api/v1`
 }
 
 function browserLocale(): string | null {

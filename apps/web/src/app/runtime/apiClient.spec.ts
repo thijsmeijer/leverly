@@ -10,6 +10,7 @@ import { setupLeverlyApiRuntime } from './apiClient'
 describe('setupLeverlyApiRuntime', () => {
   afterEach(() => {
     resetLeverlyApiClient()
+    vi.unstubAllEnvs()
   })
 
   it('wires app-owned runtime dependencies into the shared API client', async () => {
@@ -85,5 +86,45 @@ describe('setupLeverlyApiRuntime', () => {
     await leverlyApiRequest('/health', 'get', { authenticated: true, errorMode: 'silent' })
 
     expect(session.status).toBe('guest')
+  })
+
+  it('uses the configured API host while preserving the versioned API prefix', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'http://api.leverly.local')
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ meta: { api_version: 'v1', timestamp: 'now' } }))
+
+    setupLeverlyApiRuntime({
+      fetcher,
+    })
+
+    const { leverlyApiRequest } = await import('@/shared/api/leverlyApi/runtimeClient')
+
+    await leverlyApiRequest('/health', 'get', { authenticated: false })
+
+    expect(fetcher).toHaveBeenCalledWith(
+      'http://api.leverly.local/api/v1/health',
+      expect.objectContaining({
+        method: 'GET',
+      }),
+    )
+  })
+
+  it('does not duplicate the versioned API prefix when the env value already includes it', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'http://api.leverly.local/api/v1/')
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ meta: { api_version: 'v1', timestamp: 'now' } }))
+
+    setupLeverlyApiRuntime({
+      fetcher,
+    })
+
+    const { leverlyApiRequest } = await import('@/shared/api/leverlyApi/runtimeClient')
+
+    await leverlyApiRequest('/health', 'get', { authenticated: false })
+
+    expect(fetcher).toHaveBeenCalledWith(
+      'http://api.leverly.local/api/v1/health',
+      expect.objectContaining({
+        method: 'GET',
+      }),
+    )
   })
 })

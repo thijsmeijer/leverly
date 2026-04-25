@@ -11,8 +11,8 @@ RUN apk add --no-cache \
     intl \
     pdo_pgsql \
     zip \
-  && pecl install pcov \
-  && docker-php-ext-enable pcov \
+  && pecl install pcov redis \
+  && docker-php-ext-enable pcov redis \
   && apk del .php-build-deps
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
