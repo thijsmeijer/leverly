@@ -3,6 +3,7 @@ import type { paths } from './openapi/generated'
 export type ApiPath = keyof paths
 export type ApiHttpMethod = 'delete' | 'get' | 'patch' | 'post' | 'put'
 export type ApiErrorMode = 'handle' | 'silent' | 'throw'
+export type ApiForbiddenMode = 'handle' | 'silent' | 'throw'
 export type ApiNotFoundMode = 'handle' | 'silent' | 'throw'
 export type ApiFetch = (input: string, init?: RequestInit) => Promise<Response>
 
@@ -24,6 +25,7 @@ export interface ApiRequestOptions {
   readonly body?: unknown
   readonly csrf?: boolean | 'auto'
   readonly errorMode?: ApiErrorMode
+  readonly forbiddenMode?: ApiForbiddenMode
   readonly headers?: Record<string, string>
   readonly notFoundMode?: ApiNotFoundMode
   readonly signal?: AbortSignal
@@ -36,6 +38,7 @@ export interface ApiRuntimeDependencies {
   readonly getCsrfToken?: () => string | null | Promise<string | null>
   readonly getLocale?: () => string | null
   readonly onError?: (error: ApiRequestError) => void
+  readonly onForbidden?: (error: ApiRequestError) => void
   readonly onNotFound?: (error: ApiRequestError) => void
   readonly onUnauthenticated?: (error: ApiRequestError) => void
 }
@@ -219,6 +222,10 @@ async function handleErrorResponse<Path extends ApiPath, Method extends ApiHttpM
     return handleNotFound(error, options.notFoundMode ?? 'handle')
   }
 
+  if (response.status === 403) {
+    return handleForbidden(error, options.forbiddenMode ?? 'handle')
+  }
+
   return handleGeneralError(error, options.errorMode ?? 'handle')
 }
 
@@ -246,6 +253,21 @@ function handleNotFound<Path extends ApiPath, Method extends ApiHttpMethod>(
 
   if (mode === 'handle') {
     runtimeDependencies.onNotFound?.(error)
+  }
+
+  return null
+}
+
+function handleForbidden<Path extends ApiPath, Method extends ApiHttpMethod>(
+  error: ApiRequestError,
+  mode: ApiForbiddenMode,
+): ApiResponseBody<Path, Method> | null {
+  if (mode === 'throw') {
+    throw error
+  }
+
+  if (mode === 'handle') {
+    runtimeDependencies.onForbidden?.(error)
   }
 
   return null

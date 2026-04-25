@@ -104,6 +104,32 @@ describe('leverlyApiRequest', () => {
     expect(handledNotFound).toHaveBeenCalledTimes(1)
     expect(handledNotFound.mock.calls[0]?.[0].status).toBe(404)
   })
+
+  it('routes forbidden responses through the authorization handler without using the general error handler', async () => {
+    const handledError = vi.fn()
+    const handledForbidden = vi.fn()
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ message: 'forbidden' }, { status: 403 }))
+      .mockResolvedValueOnce(jsonResponse({ message: 'quiet' }, { status: 403 }))
+      .mockResolvedValueOnce(jsonResponse({ message: 'throw' }, { status: 403 }))
+
+    configureLeverlyApiClient({
+      fetcher,
+      onError: handledError,
+      onForbidden: handledForbidden,
+    })
+
+    await expect(leverlyApiRequest('/health', 'get')).resolves.toBeNull()
+    await expect(leverlyApiRequest('/health', 'get', { forbiddenMode: 'silent' })).resolves.toBeNull()
+    await expect(leverlyApiRequest('/health', 'get', { forbiddenMode: 'throw' })).rejects.toBeInstanceOf(
+      ApiRequestError,
+    )
+
+    expect(handledForbidden).toHaveBeenCalledTimes(1)
+    expect(handledForbidden.mock.calls[0]?.[0].status).toBe(403)
+    expect(handledError).not.toHaveBeenCalled()
+  })
 })
 
 function jsonResponse(body: unknown, init: ResponseInit = {}): Response {

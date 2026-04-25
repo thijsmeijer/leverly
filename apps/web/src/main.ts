@@ -5,13 +5,15 @@ import { queryClient, VueQueryPlugin } from './app/plugins/query'
 import { router } from './app/router'
 import { createSessionGuard } from './app/router/sessionGuard'
 import { setupLeverlyApiRuntime } from './app/runtime/apiClient'
+import { useAuthorizationStore } from './app/stores/authorizationStore'
 import { useSessionStore } from './app/stores/sessionStore'
 import { createPinia } from 'pinia'
 
 const pinia = createPinia()
+const authorizationStore = useAuthorizationStore(pinia)
 const sessionStore = useSessionStore(pinia)
 
-setupLeverlyApiRuntime({ sessionStore })
+setupLeverlyApiRuntime({ authorizationStore, sessionStore })
 router.beforeEach(createSessionGuard({ useSessionStore: () => sessionStore }))
 
 createApp(App).use(pinia).use(router).use(VueQueryPlugin, { queryClient }).mount('#app')
