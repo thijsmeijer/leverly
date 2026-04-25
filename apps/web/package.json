@@ -14,6 +14,7 @@
     "test:architecture": "node eslint-rules/architecture.test.mjs",
     "test:e2e": "playwright test",
     "test:a11y": "playwright test --grep @a11y",
+    "test:a11y:foundation": "node scripts/check-accessibility-foundation.mjs",
     "api-client:generate": "node scripts/generate-openapi-types.mjs",
     "api-client:check": "node scripts/check-openapi-client.mjs",
     "lint": "eslint .",

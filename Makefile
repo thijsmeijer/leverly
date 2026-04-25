@@ -51,5 +51,6 @@ help:
 	@printf "  make web-test-foundation Run web test foundation checks\n"
 	@printf "  make web-test-unit       Run web unit tests\n"
 	@printf "  make web-test-architecture  Run web architecture tests\n"
+	@printf "  make web-test-a11y-foundation  Run web accessibility foundation checks\n"
 	@printf "  make web-test-a11y       Run web accessibility tests\n"
 	@printf "  make web-test-e2e        Run web end-to-end tests\n"

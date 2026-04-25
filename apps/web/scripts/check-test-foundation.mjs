@@ -15,7 +15,15 @@ for (const filePath of requiredFiles) {
   assert.equal(existsSync(join(root, filePath)), true, `Missing frontend test foundation path: ${filePath}`)
 }
 
-for (const scriptName of ['test', 'test:foundation', 'test:unit', 'test:architecture', 'test:a11y', 'test:e2e']) {
+for (const scriptName of [
+  'test',
+  'test:foundation',
+  'test:unit',
+  'test:architecture',
+  'test:a11y',
+  'test:a11y:foundation',
+  'test:e2e',
+]) {
   assert.equal(typeof packageJson.scripts?.[scriptName], 'string', `Missing package script: ${scriptName}`)
 }
 
