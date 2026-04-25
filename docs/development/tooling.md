@@ -26,13 +26,12 @@ make web-format-check
 make web-test-foundation
 make web-test-unit
 make web-test-architecture
-make web-test-a11y-foundation
 make web-test-a11y
 make web-test-e2e
 ```
 
 `make types` runs `make contract-check` and `make web-type-check`.
-`make test` runs API tests, web foundation checks, web unit tests, architecture tests, accessibility foundation checks, accessibility tests, and E2E tests.
+`make test` runs API tests, web foundation checks, web unit tests, architecture tests, accessibility tests, and E2E tests.
 
 ## API Test Suites
 
@@ -63,7 +62,7 @@ Run the full CI-ready gate before finishing a broad slice:
 make verify
 ```
 
-`make verify` runs these layers in order: API format, API tests, module scaffold tests, module structure checks, contract checks, web type-check, web lint, web format, web test foundation checks, web unit tests, web architecture tests, web accessibility foundation checks, web accessibility tests, and web E2E tests. Accessibility and E2E targets skip cleanly only when the corresponding suite does not exist yet.
+`make verify` runs these layers in order: API format, API tests, module scaffold tests, module structure checks, contract checks, web type-check, web lint, web format, web test foundation checks, web unit tests, web architecture tests, web accessibility tests, and web E2E tests. Accessibility and E2E targets skip cleanly only when the corresponding suite does not exist yet.
 
 ## Frontend Test Foundation
 
@@ -79,7 +78,7 @@ Run the foundation check directly with:
 make web-test-foundation
 ```
 
-The foundation check verifies the expected test scripts, support files, Vitest setup, Playwright desktop/mobile projects, and keeps snapshot-first UI tests out of the behavior suite.
+The foundation check verifies the expected test scripts, support files, Vitest setup, Playwright desktop/mobile projects, accessibility scenario infrastructure, and keeps snapshot-first UI tests out of the behavior suite.
 
 ## Accessibility Checks
 
@@ -88,12 +87,6 @@ Accessibility checks are scenario-based under `apps/web/e2e/accessibility`.
 - `scenarios.ts` lists built screens that should run through the accessibility suite.
 - `scenarioRunner.ts` handles navigation and optional scenario setup before scanning.
 - `assertions.ts` provides reusable axe, focus-visible, and keyboard reachability assertions.
-
-Run the infrastructure check with:
-
-```sh
-make web-test-a11y-foundation
-```
 
 Run the browser accessibility suite with:
 

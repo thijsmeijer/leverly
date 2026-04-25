@@ -19,7 +19,7 @@ for (const filePath of requiredFiles) {
   assert.equal(existsSync(join(root, filePath)), true, `Missing accessibility foundation path: ${filePath}`)
 }
 
-for (const scriptName of ['test:a11y', 'test:a11y:foundation']) {
+for (const scriptName of ['test:foundation', 'test:a11y']) {
   assert.equal(typeof packageJson.scripts?.[scriptName], 'string', `Missing package script: ${scriptName}`)
 }
 

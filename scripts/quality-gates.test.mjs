@@ -18,7 +18,6 @@ const expectedTargets = [
   'web-test-foundation',
   'web-test-unit',
   'web-test-architecture',
-  'web-test-a11y-foundation',
   'web-test-a11y',
   'web-test-e2e',
 ]
@@ -40,7 +39,7 @@ test('make verify declares the full layered gate order', () => {
 
   assert.match(
     verify,
-    /verify: api-format-check api-test module-scaffold-test modules-check contract-check web-type-check web-lint web-format-check web-test-foundation web-test-unit web-test-architecture web-test-a11y-foundation web-test-a11y web-test-e2e/,
+    /verify: api-format-check api-test module-scaffold-test modules-check contract-check web-type-check web-lint web-format-check web-test-foundation web-test-unit web-test-architecture web-test-a11y web-test-e2e/,
   )
 })
 
@@ -54,7 +53,6 @@ test('make help documents focused gates and full verification', () => {
   assert.match(help, /make api-test-coverage\s+Run all API coverage checks with PCOV/)
   assert.match(help, /make web-test-foundation\s+Run web test foundation checks/)
   assert.match(help, /make web-test-unit\s+Run web unit tests/)
-  assert.match(help, /make web-test-a11y-foundation\s+Run web accessibility foundation checks/)
   assert.match(help, /make web-test-a11y\s+Run web accessibility tests/)
   assert.match(help, /make web-test-e2e\s+Run web end-to-end tests/)
 })
