@@ -48,6 +48,7 @@ help:
 	@printf "  make web-type-check      Run web type checks\n"
 	@printf "  make web-lint            Run web lint\n"
 	@printf "  make web-format-check    Run web format check\n"
+	@printf "  make web-test-foundation Run web test foundation checks\n"
 	@printf "  make web-test-unit       Run web unit tests\n"
 	@printf "  make web-test-architecture  Run web architecture tests\n"
 	@printf "  make web-test-a11y       Run web accessibility tests\n"

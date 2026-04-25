@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouterHistory, type RouteRecordRaw } from 'vue-router'
 import { dashboardRoutes } from '@/modules/dashboard'
 import LoginPage from '../pages/auth/LoginPage.vue'
 
@@ -26,7 +26,11 @@ export const routes: RouteRecordRaw[] = [
   },
 ]
 
-export const router = createRouter({
-  history: createWebHistory(),
-  routes,
-})
+export function createLeverlyRouter(history: RouterHistory = createWebHistory()) {
+  return createRouter({
+    history,
+    routes,
+  })
+}
+
+export const router = createLeverlyRouter()

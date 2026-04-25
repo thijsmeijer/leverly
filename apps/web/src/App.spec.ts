@@ -1,8 +1,6 @@
-import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
-import { queryClient, VueQueryPlugin } from './app/plugins/query'
-import { router } from './app/router'
+import { mountWithApp } from './tests/harness'
 
 vi.mock('vue-chartjs', () => ({
   Line: {
@@ -12,13 +10,8 @@ vi.mock('vue-chartjs', () => ({
 
 describe('App', () => {
   it('renders the routed dashboard experience', async () => {
-    router.push('/app/dashboard')
-    await router.isReady()
-
-    const wrapper = mount(App, {
-      global: {
-        plugins: [router, [VueQueryPlugin, { queryClient }]],
-      },
+    const { wrapper } = await mountWithApp(App, {
+      route: '/app/dashboard',
     })
 
     expect(wrapper.text()).toContain('Leverly')

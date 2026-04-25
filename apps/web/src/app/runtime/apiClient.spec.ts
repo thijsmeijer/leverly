@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { resetLeverlyApiClient } from '@/shared/api/leverlyApi/runtimeClient'
 import { useSessionStore } from '@/app/stores/sessionStore'
+import { jsonResponse } from '@/tests/http'
 
 import { setupLeverlyApiRuntime } from './apiClient'
 
@@ -15,7 +16,7 @@ describe('setupLeverlyApiRuntime', () => {
     const handleSessionExpired = vi.fn()
     const showError = vi.fn()
     const handleNotFound = vi.fn()
-    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'expired' }), { status: 401 }))
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ message: 'expired' }, { status: 401 }))
 
     setupLeverlyApiRuntime({
       fetcher,
@@ -38,7 +39,7 @@ describe('setupLeverlyApiRuntime', () => {
   it('connects unauthenticated API responses to the session store', async () => {
     setActivePinia(createPinia())
     const session = useSessionStore()
-    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'expired' }), { status: 401 }))
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ message: 'expired' }, { status: 401 }))
 
     session.markLoggedIn()
 

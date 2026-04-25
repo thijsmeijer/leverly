@@ -1,4 +1,4 @@
-.PHONY: web web-type-check web-lint web-format-check web-test-unit web-test-architecture web-test-a11y web-test-e2e
+.PHONY: web web-type-check web-lint web-format-check web-test-foundation web-test-unit web-test-architecture web-test-a11y web-test-e2e
 web:
 	@if [ ! -f "$(WEB_DIR)/package.json" ]; then \
 		printf "Web app is not scaffolded yet.\n"; \
@@ -31,6 +31,14 @@ web-format-check:
 		exit 1; \
 	fi
 	@cd "$(WEB_DIR)" && $(PNPM) format:test
+
+web-test-foundation:
+	@if [ ! -f "$(WEB_DIR)/package.json" ]; then \
+		printf "Web app is not scaffolded yet.\n"; \
+		printf "Expected package file: %s/package.json\n" "$(WEB_DIR)"; \
+		exit 1; \
+	fi
+	@cd "$(WEB_DIR)" && $(PNPM) test:foundation
 
 web-test-unit:
 	@if [ ! -f "$(WEB_DIR)/package.json" ]; then \
