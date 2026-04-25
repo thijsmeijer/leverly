@@ -40,6 +40,7 @@ make compose-config
 | Mailpit UI | `leverly_mailpit` | `http://mail.leverly.local` | no auth |
 | API container | `leverly_api` | `http://api.leverly.local` | local app container |
 | Web container | `leverly_web` | `http://web.leverly.local` | local app container |
+| Telescope UI | `leverly_api` | `http://api.leverly.local/telescope` | local only |
 
 Compose volume names are `leverly_postgres_data`, `leverly_redis_data`, `leverly_composer_cache`, and `leverly_pnpm_store`.
 
@@ -56,6 +57,7 @@ The Compose network uses `10.20.0.1` as its gateway, so `make up` creates the lo
 - Web: `http://web.leverly.local`
 - API: `http://api.leverly.local`
 - Mailpit: `http://mail.leverly.local`
+- Telescope: `http://api.leverly.local/telescope`
 
 Direct debug ports still remain available:
 

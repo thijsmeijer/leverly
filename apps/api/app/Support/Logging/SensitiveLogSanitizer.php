@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support\Logging;
 
-use BackedEnum;
-use Stringable;
-use UnitEnum;
-
 final class SensitiveLogSanitizer
 {
     public const string REDACTED = '[redacted]';
@@ -31,26 +27,6 @@ final class SensitiveLogSanitizer
     {
         if (is_array($value)) {
             return $this->redactArray($value);
-        }
-
-        if ($value instanceof BackedEnum) {
-            return $value->value;
-        }
-
-        if ($value instanceof UnitEnum) {
-            return $value->name;
-        }
-
-        if ($value instanceof Stringable) {
-            return (string) $value;
-        }
-
-        if (is_object($value)) {
-            return sprintf('[object:%s]', $value::class);
-        }
-
-        if (is_resource($value)) {
-            return '[resource]';
         }
 
         return $value;
@@ -140,10 +116,6 @@ final class SensitiveLogSanitizer
     {
         if (is_string($value)) {
             return [$value];
-        }
-
-        if ($value instanceof Stringable) {
-            return [(string) $value];
         }
 
         if (is_array($value)) {
