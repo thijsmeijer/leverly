@@ -18,7 +18,7 @@ corepack pnpm --dir apps/web build
 | Local state           | Pinia                     | Owns durable UI and client workflow state.                                  |
 | Server state          | TanStack Vue Query        | Owns API query caching, retries, and invalidation once API calls are added. |
 | Validation            | VeeValidate and Zod       | Own typed form schemas and validation adapters.                             |
-| Charts                | Chart.js and vue-chartjs  | Own chart rendering; every chart needs a text summary or table alternative. |
+| Charts                | Shared SVG components     | Own chart rendering; every chart needs a text summary or table alternative. |
 | Offline storage       | Dexie                     | Owns typed IndexedDB access for offline drafts.                             |
 | Unit tests            | Vitest and Vue Test Utils | Own Vue unit and component tests.                                           |
 | E2E and accessibility | Playwright and axe-core   | Own browser workflow checks and accessibility scans.                        |

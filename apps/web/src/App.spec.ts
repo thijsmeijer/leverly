@@ -1,12 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import App from './App.vue'
 import { mountWithApp } from './tests/harness'
-
-vi.mock('vue-chartjs', () => ({
-  Line: {
-    template: '<div data-test="readiness-chart"></div>',
-  },
-}))
 
 describe('App', () => {
   it('renders the routed dashboard experience', async () => {

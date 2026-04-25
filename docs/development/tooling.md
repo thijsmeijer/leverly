@@ -80,6 +80,8 @@ make web-test-foundation
 
 The foundation check verifies the expected test scripts, support files, Vitest setup, Playwright desktop/mobile projects, accessibility scenario infrastructure, and keeps snapshot-first UI tests out of the behavior suite.
 
+It also runs the design-system foundation check, which verifies semantic tokens, shared UI primitives, light/dark hooks, focus-visible styling, and touch target rules.
+
 ## Accessibility Checks
 
 Accessibility checks are scenario-based under `apps/web/e2e/accessibility`.

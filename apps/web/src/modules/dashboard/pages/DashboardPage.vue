@@ -30,7 +30,7 @@ function startWorkout(): void {
 
 <template>
   <main class="bg-lab-void min-h-screen text-stone-100">
-    <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col lg:flex-row">
+    <div class="mx-auto flex min-h-screen w-full max-w-[92rem] flex-col lg:flex-row">
       <DashboardSidebar
         :api-status="apiStatus"
         :is-status-refreshing="isStatusRefreshing"
@@ -40,7 +40,7 @@ function startWorkout(): void {
 
       <section
         id="dashboard"
-        class="text-lab-surface flex-1 bg-[linear-gradient(135deg,var(--color-lab-paper)_0%,var(--color-lab-paper-soft)_48%,var(--color-lab-paper-deep)_100%)] px-5 py-6 sm:px-8 lg:px-10 lg:py-8"
+        class="text-ink-primary flex-1 bg-[radial-gradient(circle_at_top_left,var(--accent-primary-soft),transparent_34rem),linear-gradient(135deg,var(--surface-primary)_0%,var(--surface-canvas)_54%,var(--surface-muted)_100%)] px-5 py-6 sm:px-8 lg:px-10 lg:py-8"
       >
         <DashboardHero @start="startWorkout" />
 

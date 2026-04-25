@@ -19,7 +19,7 @@ export type ProgressionSignal = {
   label: string
   value: string
   tone: string
-  color: string
+  toneVariant: 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 }
 
 export type ReadinessPoint = {
@@ -73,9 +73,9 @@ export const trainingBlocks: TrainingBlock[] = [
 ]
 
 export const progressionSignals: ProgressionSignal[] = [
-  { label: 'Readiness', value: 'Good', tone: 'Stable', color: 'text-emerald-300' },
-  { label: 'Form trend', value: '4/5', tone: 'Progressing', color: 'text-amber-300' },
-  { label: 'Pain signal', value: '0/10', tone: 'Clear', color: 'text-emerald-300' },
+  { label: 'Readiness', value: 'Good', tone: 'Stable', toneVariant: 'success' },
+  { label: 'Form trend', value: '4/5', tone: 'Progressing', toneVariant: 'warning' },
+  { label: 'Pain signal', value: '0/10', tone: 'Clear', toneVariant: 'success' },
 ]
 
 export const readinessTrend: ReadinessPoint[] = [
