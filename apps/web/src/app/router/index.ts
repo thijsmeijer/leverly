@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouterHistory, type RouteRecordRaw } from 'vue-router'
 import { dashboardRoutes } from '@/modules/dashboard'
+import { settingsRoutes } from '@/modules/settings'
 import AppShell from '@/app/shell/AppShell.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
 import RegisterPage from '../pages/auth/RegisterPage.vue'
@@ -120,21 +121,6 @@ const appPlaceholderRoutes: RouteRecordRaw[] = [
     },
   },
   {
-    path: 'settings',
-    redirect: { name: 'settings-profile' },
-  },
-  {
-    path: 'settings/profile',
-    name: 'settings-profile',
-    component: RoutePlaceholderPage,
-    meta: {
-      requiresAuth: true,
-      section: 'Settings',
-      title: 'Profile settings',
-      placeholder: routePlaceholders.settingsProfile,
-    },
-  },
-  {
     path: 'settings/equipment',
     name: 'settings-equipment',
     component: RoutePlaceholderPage,
@@ -170,7 +156,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
     },
-    children: [...dashboardRoutes, ...appPlaceholderRoutes],
+    children: [...dashboardRoutes, ...settingsRoutes, ...appPlaceholderRoutes],
   },
   {
     path: '/login',
