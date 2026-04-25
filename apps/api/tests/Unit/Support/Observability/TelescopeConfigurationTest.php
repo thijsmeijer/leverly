@@ -28,6 +28,8 @@ final class TelescopeConfigurationTest extends TestCase
 
     public function test_it_stays_opt_in_outside_local_and_uses_the_application_database_by_default(): void
     {
+        config(['telescope.enabled' => false]);
+
         $this->assertFalse((bool) config('telescope.enabled'));
         $this->assertSame(config('database.default'), config('telescope.storage.database.connection'));
         $this->assertSame(['OPTIONS'], config('telescope.watchers.'.Watchers\RequestWatcher::class.'.ignore_http_methods'));

@@ -85,7 +85,9 @@ If the `10.20.0.0/24` subnet conflicts with something on your machine, use the d
 
 The default `apps/api/.env.example` stays SQLite/log-mail based so the API can boot before Docker is running.
 
-For Compose-backed development, copy the Docker example:
+For Compose-backed development, keep `apps/api/.env` present for local secrets such as `APP_KEY`. The Compose service also passes its runtime database, Redis, mail, Telescope, and Sentry values directly into the API container so HTTP requests use the same settings as Artisan commands.
+
+To rebuild the file from defaults, copy the Docker example:
 
 ```sh
 cp apps/api/.env.docker.example apps/api/.env
@@ -97,11 +99,17 @@ Then generate the Laravel app key from `apps/api`:
 php artisan key:generate
 ```
 
-The Docker example points Laravel at the Compose service names:
+The Docker example points Laravel inside the container at the Compose service names:
 
 - `DB_HOST=leverly_postgres`
 - `REDIS_HOST=leverly_redis`
 - `MAIL_HOST=leverly_mailpit`
+
+When running Artisan directly on the host against the Docker services, use the bind IP instead:
+
+- `DB_HOST=10.20.0.1`
+- `REDIS_HOST=10.20.0.1`
+- `MAIL_HOST=10.20.0.1`
 
 ## Web Environment
 

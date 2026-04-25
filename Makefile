@@ -43,6 +43,7 @@ help:
 	@printf "  make api-test-api        Run API HTTP tests\n"
 	@printf "  make api-test-integration  Run API integration tests\n"
 	@printf "  make api-test-coverage   Run all API coverage checks with PCOV\n"
+	@printf "  make quality-gates-test  Run root verification wiring tests\n"
 	@printf "  make api-format-check    Run API formatter check\n"
 	@printf "  make contract-check      Check the OpenAPI contract and web client\n"
 	@printf "  make web-type-check      Run web type checks\n"

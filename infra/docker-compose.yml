@@ -75,8 +75,14 @@ services:
       dockerfile: infra/docker/api/Dockerfile
     container_name: leverly_api
     working_dir: /workspace/apps/api
-    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+    command:
+      [
+        "sh",
+        "-c",
+        "cd public && exec php -S 0.0.0.0:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php",
+      ]
     environment:
+      APP_ENV: local
       APP_URL: "http://api.leverly.local"
       DB_CONNECTION: pgsql
       DB_HOST: leverly_postgres
@@ -92,6 +98,16 @@ services:
       MAIL_PORT: 1025
       MAIL_FROM_ADDRESS: hello@leverly.local
       MAIL_FROM_NAME: Leverly
+      TELESCOPE_ENABLED: "${TELESCOPE_ENABLED:-true}"
+      TELESCOPE_PATH: "${TELESCOPE_PATH:-telescope}"
+      TELESCOPE_PRUNE_HOURS: "${TELESCOPE_PRUNE_HOURS:-24}"
+      SENTRY_LARAVEL_DSN: "${SENTRY_LARAVEL_DSN:-}"
+      SENTRY_RELEASE: "${SENTRY_RELEASE:-}"
+      SENTRY_ENVIRONMENT: "${SENTRY_ENVIRONMENT:-local}"
+      SENTRY_SAMPLE_RATE: "${SENTRY_SAMPLE_RATE:-1.0}"
+      SENTRY_TRACES_SAMPLE_RATE: "${SENTRY_TRACES_SAMPLE_RATE:-}"
+      SENTRY_PROFILES_SAMPLE_RATE: "${SENTRY_PROFILES_SAMPLE_RATE:-}"
+      SENTRY_ENABLE_LOGS: "${SENTRY_ENABLE_LOGS:-false}"
     ports:
       - "${LEVERLY_BIND_IP:-127.0.0.1}:${LEVERLY_API_PORT:-8000}:8000"
     volumes:

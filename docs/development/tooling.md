@@ -18,6 +18,7 @@ make api-test-unit
 make api-test-api
 make api-test-integration
 make api-test-coverage
+make quality-gates-test
 make contract-check
 make modules-check
 make web-type-check
@@ -62,7 +63,7 @@ Run the full CI-ready gate before finishing a broad slice:
 make verify
 ```
 
-`make verify` runs these layers in order: API format, API tests, module scaffold tests, module structure checks, contract checks, web type-check, web lint, web format, web test foundation checks, web unit tests, web architecture tests, web accessibility tests, and web E2E tests. Accessibility and E2E targets skip cleanly only when the corresponding suite does not exist yet.
+`make verify` runs these layers in order: API format, API tests, module scaffold tests, module structure checks, root verification wiring tests, contract checks, web type-check, web lint, web format, web test foundation checks, web unit tests, web architecture tests, web accessibility tests, and web E2E tests. Accessibility and E2E targets skip cleanly only when the corresponding suite does not exist yet.
 
 ## Frontend Test Foundation
 
