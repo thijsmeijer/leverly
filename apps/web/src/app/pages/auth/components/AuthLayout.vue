@@ -58,13 +58,13 @@ defineProps<{
             <div class="rounded-card border border-white/10 bg-white/10 p-4">
               <p class="text-sm font-semibold">Know what to train next</p>
               <p class="text-ink-inverse/68 mt-2 text-sm leading-6">
-                Turn your logged sets, holds, and skill work into clear next targets.
+                Get smart options that keep your skills moving forward.
               </p>
             </div>
             <div class="rounded-card border border-white/10 bg-white/10 p-4">
               <p class="text-sm font-semibold">Made for bodyweight strength</p>
               <p class="text-ink-inverse/68 mt-2 text-sm leading-6">
-                Track reps, hold times, assistance, leverage, and weighted calisthenics without generic gym clutter.
+                Built for calisthenics athletes chasing control, strength, and clean progress.
               </p>
             </div>
           </div>
@@ -72,7 +72,7 @@ defineProps<{
           <div class="mt-auto pt-10">
             <div class="bg-accent-primary/25 h-2 w-28 rounded-full" />
             <p class="text-ink-inverse/72 mt-4 max-w-sm text-sm leading-6">
-              Your account keeps training history, personal records, and progression targets in one private place.
+              Track the work. See the progress. Unlock what your body can do.
             </p>
           </div>
         </div>
