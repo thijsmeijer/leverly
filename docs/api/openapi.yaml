@@ -8,9 +8,41 @@ servers:
     url: /api/v1
 tags:
   -
+    name: Auth
+    description: ''
+  -
     name: System
     description: ''
 paths:
+  /me:
+    get:
+      summary: 'Get the current user'
+      operationId: getTheCurrentUser
+      description: 'Returns the signed-in athlete account for the first-party web app.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, description: 'Stable user identifier.' }
+                      name: { type: string, description: 'Display name used for account access.' }
+                      email: { type: string, description: 'Account email address.' }
+                    required:
+                      - id
+                      - name
+                      - email
+                    description: 'Current user account.'
+                required:
+                  - data
+      tags:
+        - Auth
   /health:
     get:
       summary: 'Get API health metadata'

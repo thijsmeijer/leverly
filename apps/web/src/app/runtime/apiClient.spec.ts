@@ -5,7 +5,7 @@ import { resetLeverlyApiClient } from '@/shared/api/leverlyApi/runtimeClient'
 import { useSessionStore } from '@/app/stores/sessionStore'
 import { jsonResponse } from '@/tests/http'
 
-import { setupLeverlyApiRuntime } from './apiClient'
+import { apiOriginUrl, csrfCookieUrl, setupLeverlyApiRuntime } from './apiClient'
 
 describe('setupLeverlyApiRuntime', () => {
   afterEach(() => {
@@ -126,5 +126,12 @@ describe('setupLeverlyApiRuntime', () => {
         method: 'GET',
       }),
     )
+  })
+
+  it('derives the API origin and csrf cookie URL from the configured API base URL', () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'http://api.leverly.local/api/v1/')
+
+    expect(apiOriginUrl()).toBe('http://api.leverly.local')
+    expect(csrfCookieUrl()).toBe('http://api.leverly.local/sanctum/csrf-cookie')
   })
 })

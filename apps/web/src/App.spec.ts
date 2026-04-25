@@ -33,4 +33,22 @@ describe('App', () => {
     expect(wrapper.text()).toContain('Create account')
     expect(wrapper.find('[aria-label="Mobile primary"]').exists()).toBe(false)
   })
+
+  it('renders real auth routes outside the app shell', async () => {
+    const { wrapper: loginWrapper } = await mountWithApp(App, {
+      route: '/login',
+    })
+
+    expect(loginWrapper.text()).toContain('Pick up where your last set left off.')
+    expect(loginWrapper.find('input[type="email"]').exists()).toBe(true)
+    expect(loginWrapper.find('[aria-label="Mobile primary"]').exists()).toBe(false)
+
+    const { wrapper: registerWrapper } = await mountWithApp(App, {
+      route: '/register',
+    })
+
+    expect(registerWrapper.text()).toContain('Start tracking real calisthenics progress.')
+    expect(registerWrapper.find('#register-password-confirmation').exists()).toBe(true)
+    expect(registerWrapper.find('[aria-label="Mobile primary"]').exists()).toBe(false)
+  })
 })

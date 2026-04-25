@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type RouterHistory, type RouteRecordRaw
 import { dashboardRoutes } from '@/modules/dashboard'
 import AppShell from '@/app/shell/AppShell.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
+import RegisterPage from '../pages/auth/RegisterPage.vue'
 import RoutePlaceholderPage from '../pages/placeholders/RoutePlaceholderPage.vue'
 import StandalonePlaceholderPage from '../pages/placeholders/StandalonePlaceholderPage.vue'
 import { routePlaceholders } from '../pages/placeholders/routePlaceholders'
@@ -182,10 +183,9 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/register',
     name: 'register',
-    component: StandalonePlaceholderPage,
+    component: RegisterPage,
     meta: {
       title: 'Create account',
-      placeholder: standalonePlaceholders.register,
     },
   },
   {

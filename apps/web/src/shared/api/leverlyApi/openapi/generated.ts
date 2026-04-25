@@ -9,7 +9,28 @@ export interface HealthResponse {
   }
 }
 
+export interface CurrentUser {
+  readonly id: string
+  readonly name: string
+  readonly email: string
+}
+
+export interface CurrentUserResponse {
+  readonly data: CurrentUser
+}
+
 export interface paths {
+  readonly '/me': {
+    readonly get: {
+      readonly responses: {
+        readonly 200: {
+          readonly content: {
+            readonly 'application/json': CurrentUserResponse
+          }
+        }
+      }
+    }
+  }
   readonly '/health': {
     readonly get: {
       readonly responses: {

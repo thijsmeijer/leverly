@@ -23,6 +23,7 @@ export function setupLeverlyApiRuntime(options: LeverlyApiRuntimeSetupOptions = 
 
   configureLeverlyApiClient({
     baseUrl: apiBaseUrl(),
+    csrfUrl: csrfCookieUrl(),
     fetcher: options.fetcher,
     getCsrfToken: options.getCsrfToken,
     getLocale: options.getLocale ?? browserLocale,
@@ -39,7 +40,7 @@ export function setupLeverlyApiRuntime(options: LeverlyApiRuntimeSetupOptions = 
   })
 }
 
-function apiBaseUrl(): string {
+export function apiBaseUrl(): string {
   const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL
 
   if (!configuredBaseUrl) {
@@ -49,6 +50,17 @@ function apiBaseUrl(): string {
   const trimmedBaseUrl = configuredBaseUrl.replace(/\/+$/, '')
 
   return trimmedBaseUrl.endsWith('/api/v1') ? trimmedBaseUrl : `${trimmedBaseUrl}/api/v1`
+}
+
+export function apiOriginUrl(): string {
+  const baseUrl = apiBaseUrl().replace(/\/+$/, '')
+  const versionedPrefix = '/api/v1'
+
+  return baseUrl.endsWith(versionedPrefix) ? baseUrl.slice(0, -versionedPrefix.length) : baseUrl
+}
+
+export function csrfCookieUrl(): string {
+  return `${apiOriginUrl()}/sanctum/csrf-cookie`
 }
 
 function browserLocale(): string | null {

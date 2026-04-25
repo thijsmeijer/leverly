@@ -25,11 +25,24 @@ export const sharedCopy = {
 } as const
 
 export const authCopy = {
+  errors: {
+    unavailable: 'Connection is not ready. Try again when the API is running.',
+  },
   login: {
     eyebrow: leverlyBrand.productName,
-    title: 'Sign in to Leverly',
-    description: 'Continue to your training workspace with logging, readiness, and progression guidance kept together.',
-    redirectPrefix: 'After signing in, continue to',
+    title: 'Pick up where your last set left off.',
+    submit: 'Sign in',
+    submitting: 'Signing in',
+    switchLabel: 'Create one',
+    switchText: 'No account yet?',
+  },
+  register: {
+    eyebrow: leverlyBrand.tagline,
+    title: 'Start tracking real calisthenics progress.',
+    submit: 'Create account',
+    submitting: 'Creating account',
+    switchLabel: 'Sign in',
+    switchText: 'Already have an account?',
   },
 } as const
 

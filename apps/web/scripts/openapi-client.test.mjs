@@ -9,6 +9,26 @@ info:
 servers:
   - url: /api/v1
 paths:
+  /me:
+    get:
+      operationId: getTheCurrentUser
+      responses:
+        200:
+          description: Current user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
   /health:
     get:
       operationId: getAPIHealthMetadata
@@ -51,6 +71,8 @@ describe('OpenAPI client generation', () => {
     const generated = buildGeneratedTypes(validHealthSpec)
 
     expect(generated).toContain('export interface HealthResponse')
+    expect(generated).toContain('export interface CurrentUserResponse')
+    expect(generated).toContain("readonly '/me'")
     expect(generated).toContain("readonly status: 'ok'")
     expect(generated).toContain('readonly timestamp: string')
     expect(generated).not.toContain('example')

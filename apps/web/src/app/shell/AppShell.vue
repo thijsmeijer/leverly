@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useSessionStore } from '@/app/stores/sessionStore'
 import { leverlyBrand } from '@/shared/brand'
 import { UiBadge } from '@/shared/ui'
 import {
@@ -11,6 +12,8 @@ import {
 } from './appNavigation'
 
 const route = useRoute()
+const router = useRouter()
+const session = useSessionStore()
 
 const navigationGroups = computed(() =>
   Object.entries(navigationGroupLabels).map(([name, label]) => ({
@@ -31,6 +34,11 @@ const pageSection = computed(() =>
 
 function isActive(item: AppNavigationItem): boolean {
   return item.matchNames.includes(String(route.name ?? ''))
+}
+
+async function signOut(): Promise<void> {
+  await session.logout()
+  await router.push({ name: 'login' })
 }
 </script>
 
@@ -107,6 +115,13 @@ function isActive(item: AppNavigationItem): boolean {
             >
               Profile
             </RouterLink>
+            <button
+              class="rounded-control text-ink-secondary hover:bg-accent-primary-soft hover:text-ink-primary focus-visible:ring-accent-primary focus-visible:ring-offset-surface-primary inline-flex min-h-11 items-center justify-center px-3 text-sm font-semibold transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              type="button"
+              @click="signOut"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </header>

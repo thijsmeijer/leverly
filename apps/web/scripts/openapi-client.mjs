@@ -43,6 +43,12 @@ export function findContractProblems(openApiSource) {
     ['health status enum', '- ok'],
     ['health API version metadata', 'api_version:'],
     ['health timestamp metadata', 'timestamp:'],
+    ['current user path', '  /me:'],
+    ['current user operation ID', 'operationId: getTheCurrentUser'],
+    ['current user data wrapper', 'data:'],
+    ['current user id property', 'id:'],
+    ['current user name property', 'name:'],
+    ['current user email property', 'email:'],
   ]
 
   const problems = requiredFragments
@@ -74,7 +80,28 @@ export interface HealthResponse {
   }
 }
 
+export interface CurrentUser {
+  readonly id: string
+  readonly name: string
+  readonly email: string
+}
+
+export interface CurrentUserResponse {
+  readonly data: CurrentUser
+}
+
 export interface paths {
+  readonly '/me': {
+    readonly get: {
+      readonly responses: {
+        readonly 200: {
+          readonly content: {
+            readonly 'application/json': CurrentUserResponse
+          }
+        }
+      }
+    }
+  }
   readonly '/health': {
     readonly get: {
       readonly responses: {

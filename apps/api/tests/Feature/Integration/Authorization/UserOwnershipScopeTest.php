@@ -19,7 +19,7 @@ class UserOwnershipScopeTest extends TestCase
     {
         Schema::create('authorization_owned_records', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignUlid('user_id')->constrained();
             $table->string('name');
             $table->timestamps();
         });
