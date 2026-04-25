@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\Profile\AthleteProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -9,5 +10,7 @@ Route::prefix('v1')->group(function (): void {
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/me', MeController::class)->name('api.v1.me');
+        Route::get('/me/profile', [AthleteProfileController::class, 'show'])->name('api.v1.me.profile.show');
+        Route::patch('/me/profile', [AthleteProfileController::class, 'update'])->name('api.v1.me.profile.update');
     });
 });

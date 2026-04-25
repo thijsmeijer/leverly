@@ -11,6 +11,9 @@ tags:
     name: Auth
     description: ''
   -
+    name: Profile
+    description: ''
+  -
     name: System
     description: ''
 paths:
@@ -43,6 +46,297 @@ paths:
                   - data
       tags:
         - Auth
+  /me/profile:
+    get:
+      summary: 'Get athlete profile'
+      operationId: getAthleteProfile
+      description: 'Returns the signed-in athlete profile and recommendation input settings.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string, description: 'Stable profile identifier.' }
+                      user_id: { type: string, description: 'Owner user identifier.' }
+                      display_name: { type: string, description: 'Profile display name.' }
+                      timezone: { type: string }
+                      unit_system: { type: string }
+                      training_age_months: { type: integer }
+                      experience_level: { type: string }
+                      current_bodyweight_value: { type: number }
+                      bodyweight_unit: { type: string }
+                      primary_goal: { type: string }
+                      secondary_goals: { type: array, items: { type: string } }
+                      target_skills: { type: array, items: { type: string } }
+                      available_equipment: { type: array, items: { type: string } }
+                      training_locations: { type: array, items: { type: string } }
+                      movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
+                      injury_notes: { type: string }
+                      preferred_training_days: { type: array, items: { type: string } }
+                      preferred_session_minutes: { type: integer }
+                      weekly_session_goal: { type: integer }
+                      preferred_training_time: { type: string }
+                      progression_pace: { type: string }
+                      intensity_preference: { type: string }
+                      effort_tracking_preference: { type: string }
+                      deload_preference: { type: string }
+                      session_structure_preferences: { type: array, items: { type: string } }
+                    required:
+                      - id
+                      - user_id
+                      - display_name
+                    description: 'Athlete profile settings.'
+                required:
+                  - data
+      tags:
+        - Profile
+    patch:
+      summary: 'Update athlete profile'
+      operationId: updateAthleteProfile
+      description: 'Creates or updates the signed-in athlete profile and recommendation input settings.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      user_id: { type: string }
+                      display_name: { type: string }
+                      timezone: { type: string }
+                      unit_system: { type: string }
+                      training_age_months: { type: integer }
+                      experience_level: { type: string }
+                      current_bodyweight_value: { type: number }
+                      bodyweight_unit: { type: string }
+                      primary_goal: { type: string }
+                      secondary_goals: { type: array, items: { type: string } }
+                      target_skills: { type: array, items: { type: string } }
+                      available_equipment: { type: array, items: { type: string } }
+                      training_locations: { type: array, items: { type: string } }
+                      movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
+                      injury_notes: { type: string }
+                      preferred_training_days: { type: array, items: { type: string } }
+                      preferred_session_minutes: { type: integer }
+                      weekly_session_goal: { type: integer }
+                      preferred_training_time: { type: string }
+                      progression_pace: { type: string }
+                      intensity_preference: { type: string }
+                      effort_tracking_preference: { type: string }
+                      deload_preference: { type: string }
+                      session_structure_preferences: { type: array, items: { type: string } }
+      tags:
+        - Profile
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                  description: 'Profile display name. Must be at least 1 character. Must not be greater than 120 characters.'
+                timezone:
+                  type: string
+                  description: 'IANA timezone. Must be a valid time zone, such as <code>Africa/Accra</code>. Must not be greater than 80 characters.'
+                unit_system:
+                  type: string
+                  description: 'Preferred unit system.'
+                  enum:
+                    - metric
+                    - imperial
+                training_age_months:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Total training experience in months. Must be at least 0. Must not be greater than 1200.'
+                experience_level:
+                  type: string
+                  description: 'Training experience band.'
+                  enum:
+                    - new
+                    - beginner
+                    - intermediate
+                    - advanced
+                    - elite
+                current_bodyweight_value:
+                  type:
+                    - number
+                    - 'null'
+                  description: 'Current bodyweight in the selected unit. Must be at least 20. Must not be greater than 400.'
+                bodyweight_unit:
+                  type: string
+                  description: 'Bodyweight unit.'
+                  enum:
+                    - kg
+                    - lb
+                primary_goal:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'Primary training goal.'
+                  enum:
+                    - strength
+                    - hypertrophy
+                    - skill
+                    - endurance
+                    - general_fitness
+                    - mobility
+                    - conditioning
+                secondary_goals:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strength
+                      - hypertrophy
+                      - skill
+                      - endurance
+                      - general_fitness
+                      - mobility
+                      - conditioning
+                target_skills:
+                  type: array
+                  description: 'Must be at least 2 characters. Must not be greater than 80 characters.'
+                  items:
+                    type: string
+                available_equipment:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - floor
+                      - wall
+                      - pull_up_bar
+                      - parallel_bars
+                      - parallettes
+                      - rings
+                      - resistance_band
+                      - chair_box
+                      - weight_vest
+                      - dip_belt
+                training_locations:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - home
+                      - gym
+                      - park
+                      - travel
+                      - other
+                movement_limitations:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      area: { type: string, description: '', enum: [wrist, elbow, shoulder, neck, back, hip, knee, ankle, general, other] }
+                      severity: { type: string, description: '', enum: [mild, moderate, severe] }
+                      status: { type: string, description: '', enum: [active, recurring, past] }
+                      notes: { type: [string, 'null'], description: 'Must not be greater than 500 characters.' }
+                    required:
+                      - area
+                      - severity
+                      - status
+                injury_notes:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'Private injury notes. Must not be greater than 2000 characters.'
+                preferred_training_days:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - monday
+                      - tuesday
+                      - wednesday
+                      - thursday
+                      - friday
+                      - saturday
+                      - sunday
+                preferred_session_minutes:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Preferred session length in minutes. Must be at least 10. Must not be greater than 240.'
+                weekly_session_goal:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Target sessions per week. Must be at least 1. Must not be greater than 14.'
+                preferred_training_time:
+                  type: string
+                  description: 'Preferred training time.'
+                  enum:
+                    - morning
+                    - midday
+                    - evening
+                    - flexible
+                progression_pace:
+                  type: string
+                  description: 'Preferred progression pace.'
+                  enum:
+                    - conservative
+                    - balanced
+                    - ambitious
+                intensity_preference:
+                  type: string
+                  description: 'Preferred intensity bias.'
+                  enum:
+                    - low
+                    - moderate
+                    - high
+                    - auto
+                effort_tracking_preference:
+                  type: string
+                  description: 'Preferred effort tracking style.'
+                  enum:
+                    - simple
+                    - rir
+                    - rpe
+                    - both
+                deload_preference:
+                  type: string
+                  description: 'Preferred deload handling.'
+                  enum:
+                    - auto
+                    - scheduled
+                    - manual
+                session_structure_preferences:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - skill_first
+                      - strength_first
+                      - hypertrophy_focus
+                      - mobility_finish
+                      - conditioning_finish
+                      - longer_warmup
+                      - unilateral_work
+                      - isometrics
+                      - explosive_work
   /health:
     get:
       summary: 'Get API health metadata'

@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Resources\Api\V1;
+
+use App\Models\AthleteProfile;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * @mixin AthleteProfile
+ */
+class AthleteProfileResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'display_name' => $this->display_name,
+            'timezone' => $this->timezone,
+            'unit_system' => $this->unit_system,
+            'training_age_months' => $this->training_age_months,
+            'experience_level' => $this->experience_level,
+            'current_bodyweight_value' => $this->current_bodyweight_value,
+            'bodyweight_unit' => $this->bodyweight_unit,
+            'primary_goal' => $this->primary_goal,
+            'secondary_goals' => $this->secondary_goals ?? [],
+            'target_skills' => $this->target_skills ?? [],
+            'available_equipment' => $this->available_equipment ?? [],
+            'training_locations' => $this->training_locations ?? [],
+            'movement_limitations' => $this->movement_limitations ?? [],
+            'injury_notes' => $this->injury_notes,
+            'preferred_training_days' => $this->preferred_training_days ?? [],
+            'preferred_session_minutes' => $this->preferred_session_minutes,
+            'weekly_session_goal' => $this->weekly_session_goal,
+            'preferred_training_time' => $this->preferred_training_time,
+            'progression_pace' => $this->progression_pace,
+            'intensity_preference' => $this->intensity_preference,
+            'effort_tracking_preference' => $this->effort_tracking_preference,
+            'deload_preference' => $this->deload_preference,
+            'session_structure_preferences' => $this->session_structure_preferences ?? [],
+        ];
+    }
+}

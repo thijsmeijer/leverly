@@ -51,6 +51,49 @@ paths:
                         type: string
                       timestamp:
                         type: string
+  /me/profile:
+    get:
+      operationId: getAthleteProfile
+      responses:
+        200:
+          description: Athlete profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      display_name:
+                        type: string
+                      timezone:
+                        type: string
+                      unit_system:
+                        type: string
+                      preferred_session_minutes:
+                        type: integer
+    patch:
+      operationId: updateAthleteProfile
+      responses:
+        200:
+          description: Athlete profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      display_name:
+                        type: string
+                      timezone:
+                        type: string
+                      unit_system:
+                        type: string
+                      preferred_session_minutes:
+                        type: integer
 `
 
 describe('OpenAPI client generation', () => {
@@ -72,7 +115,10 @@ describe('OpenAPI client generation', () => {
 
     expect(generated).toContain('export interface HealthResponse')
     expect(generated).toContain('export interface CurrentUserResponse')
+    expect(generated).toContain('export interface AthleteProfileResponse')
     expect(generated).toContain("readonly '/me'")
+    expect(generated).toContain("readonly '/me/profile'")
+    expect(generated).toContain('readonly patch')
     expect(generated).toContain("readonly status: 'ok'")
     expect(generated).toContain('readonly timestamp: string')
     expect(generated).not.toContain('example')
