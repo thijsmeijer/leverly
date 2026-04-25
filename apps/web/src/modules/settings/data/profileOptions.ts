@@ -28,17 +28,28 @@ export const goalOptions: ChoiceOption[] = [
   { label: 'Conditioning', value: 'conditioning', description: 'Add engine work without losing control.' },
 ]
 
+export const compatibleSecondaryGoals: Record<string, string[]> = {
+  conditioning: ['endurance', 'hypertrophy', 'general_fitness'],
+  endurance: ['conditioning', 'general_fitness', 'mobility'],
+  general_fitness: ['strength', 'endurance', 'mobility'],
+  hypertrophy: ['strength', 'conditioning', 'mobility'],
+  mobility: ['skill', 'strength', 'general_fitness'],
+  skill: ['strength', 'mobility', 'endurance'],
+  strength: ['skill', 'hypertrophy', 'mobility'],
+}
+
 export const equipmentOptions: ChoiceOption[] = [
-  { label: 'Floor', value: 'floor' },
-  { label: 'Wall', value: 'wall' },
   { label: 'Pull-up bar', value: 'pull_up_bar' },
+  { label: 'Dip bars', value: 'dip_bars' },
   { label: 'Parallel bars', value: 'parallel_bars' },
   { label: 'Parallettes', value: 'parallettes' },
   { label: 'Rings', value: 'rings' },
   { label: 'Resistance band', value: 'resistance_band' },
-  { label: 'Chair or box', value: 'chair_box' },
+  { label: 'Box or bench', value: 'box_bench' },
   { label: 'Weight vest', value: 'weight_vest' },
   { label: 'Dip belt', value: 'dip_belt' },
+  { label: 'Suspension trainer', value: 'suspension_trainer' },
+  { label: 'Ab wheel', value: 'ab_wheel' },
 ]
 
 export const trainingDayOptions: ChoiceOption[] = [

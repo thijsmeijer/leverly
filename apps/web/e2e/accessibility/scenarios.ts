@@ -41,7 +41,7 @@ export const accessibilityScenarios: AccessibilityScenario[] = [
 function profileResponse() {
   return {
     data: {
-      available_equipment: ['floor', 'rings'],
+      available_equipment: ['pull_up_bar', 'rings'],
       bodyweight_unit: 'kg',
       current_bodyweight_value: 72.5,
       deload_preference: 'auto',

@@ -221,16 +221,17 @@ paths:
                   items:
                     type: string
                     enum:
-                      - floor
-                      - wall
                       - pull_up_bar
+                      - dip_bars
                       - parallel_bars
                       - parallettes
                       - rings
                       - resistance_band
-                      - chair_box
+                      - box_bench
                       - weight_vest
                       - dip_belt
+                      - suspension_trainer
+                      - ab_wheel
                 training_locations:
                   type: array
                   description: ''
@@ -278,7 +279,7 @@ paths:
                   type:
                     - integer
                     - 'null'
-                  description: 'Preferred session length in minutes. Must be at least 10. Must not be greater than 240.'
+                  description: 'Maximum session length in minutes. Must be at least 10. Must not be greater than 240.'
                 weekly_session_goal:
                   type:
                     - integer

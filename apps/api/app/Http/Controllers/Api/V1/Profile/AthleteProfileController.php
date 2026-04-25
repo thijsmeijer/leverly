@@ -36,7 +36,7 @@ class AthleteProfileController extends Controller
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
             'target_skills' => ['freestanding handstand', 'strict muscle-up'],
-            'available_equipment' => ['floor', 'pull_up_bar', 'rings'],
+            'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home', 'park'],
             'movement_limitations' => [
                 [
@@ -92,7 +92,7 @@ class AthleteProfileController extends Controller
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
             'target_skills' => ['freestanding handstand', 'strict muscle-up'],
-            'available_equipment' => ['floor', 'pull_up_bar', 'rings'],
+            'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home', 'park'],
             'movement_limitations' => [
                 [

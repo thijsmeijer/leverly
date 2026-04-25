@@ -9,6 +9,7 @@ const props = withDefaults(
     error?: string
     help?: string
     label: string
+    maxSelections?: number
     multiple?: boolean
     name: string
     options: ChoiceOption[]
@@ -17,6 +18,7 @@ const props = withDefaults(
     columns: 'wide',
     error: undefined,
     help: undefined,
+    maxSelections: undefined,
     multiple: false,
   },
 )
@@ -34,7 +36,27 @@ function selectValue(value: string): void {
 
   const current = Array.isArray(model.value) ? model.value : []
 
-  model.value = current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+  if (current.includes(value)) {
+    model.value = current.filter((item) => item !== value)
+
+    return
+  }
+
+  if (props.maxSelections && current.length >= props.maxSelections) {
+    return
+  }
+
+  model.value = [...current, value]
+}
+
+function isDisabled(value: string): boolean {
+  if (!props.multiple || !props.maxSelections || isSelected(value)) {
+    return false
+  }
+
+  const current = Array.isArray(model.value) ? model.value : []
+
+  return current.length >= props.maxSelections
 }
 </script>
 
@@ -50,33 +72,34 @@ function selectValue(value: string): void {
         :key="option.value"
         class="rounded-control focus-within:ring-accent-primary focus-within:ring-offset-surface-elevated border p-3 transition duration-200 focus-within:ring-2 focus-within:ring-offset-2"
         :class="
-          isSelected(option.value)
-            ? 'border-accent-primary bg-accent-primary-soft text-ink-primary shadow-card-soft'
-            : 'border-line-subtle bg-surface-primary text-ink-secondary hover:border-line-strong hover:bg-surface-overlay'
+          isDisabled(option.value)
+            ? 'border-line-subtle bg-surface-muted text-ink-muted cursor-not-allowed opacity-60'
+            : isSelected(option.value)
+              ? 'border-accent-primary bg-accent-primary-soft text-ink-primary shadow-card-soft'
+              : 'border-line-subtle bg-surface-primary text-ink-secondary hover:border-line-strong hover:bg-surface-overlay cursor-pointer'
         "
       >
         <input
           class="sr-only"
           :checked="isSelected(option.value)"
+          :disabled="isDisabled(option.value)"
           :name="name"
           :type="multiple ? 'checkbox' : 'radio'"
           :value="option.value"
           @change="selectValue(option.value)"
         />
-        <span class="flex min-h-10 items-center gap-3">
-          <span
-            class="border-line-strong flex h-5 w-5 shrink-0 items-center justify-center rounded-full border"
-            :class="isSelected(option.value) ? 'border-accent-primary bg-accent-primary' : 'bg-surface-elevated'"
-            aria-hidden="true"
-          >
-            <span v-if="isSelected(option.value)" class="bg-ink-inverse h-2 w-2 rounded-full" />
-          </span>
-          <span>
+        <span class="flex min-h-10 items-start justify-between gap-3">
+          <span class="min-w-0">
             <span class="block text-sm font-semibold">{{ option.label }}</span>
             <span v-if="option.description" class="text-ink-muted mt-1 block text-xs leading-5">
               {{ option.description }}
             </span>
           </span>
+          <span
+            v-if="isSelected(option.value)"
+            class="bg-accent-primary shadow-control mt-1 h-3 w-3 shrink-0 rounded-full"
+            aria-hidden="true"
+          />
         </span>
       </label>
     </div>

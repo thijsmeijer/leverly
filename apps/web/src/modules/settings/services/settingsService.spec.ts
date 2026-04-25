@@ -22,7 +22,7 @@ describe('settingsService', () => {
 
     await expect(fetchProfileSettings()).resolves.toMatchObject({
       form: {
-        availableEquipment: ['floor', 'wall'],
+        availableEquipment: [],
         unitSystem: 'metric',
       },
       profileId: null,
@@ -36,7 +36,7 @@ describe('settingsService', () => {
 
     await expect(fetchProfileSettings()).resolves.toMatchObject({
       form: {
-        availableEquipment: ['floor', 'rings'],
+        availableEquipment: ['pull_up_bar', 'rings'],
         currentBodyweightValue: '72.5',
         displayName: 'Ada Athlete',
         movementLimitation: {
@@ -65,7 +65,7 @@ describe('settingsService', () => {
 
     const form = {
       ...defaultProfileSettingsForm(),
-      availableEquipment: ['floor', 'rings'],
+      availableEquipment: ['pull_up_bar', 'rings'],
       displayName: 'Ada Bars',
       injuryNotes: 'No diagnosis here.',
       preferredSessionMinutes: '60',
@@ -99,7 +99,7 @@ describe('settingsService', () => {
         jsonResponse(
           {
             errors: {
-              preferred_session_minutes: ['Session length is outside the supported range.'],
+              preferred_session_minutes: ['Maximum session length is outside the supported range.'],
             },
             message: 'The given data was invalid.',
           },
@@ -113,7 +113,7 @@ describe('settingsService', () => {
 
     await expect(saveProfileSettings(defaultProfileSettingsForm())).rejects.toMatchObject({
       errors: {
-        preferredSessionMinutes: 'Session length is outside the supported range.',
+        preferredSessionMinutes: 'Maximum session length is outside the supported range.',
       },
     } satisfies Pick<ProfileSettingsValidationError, 'errors'>)
   })
@@ -124,11 +124,13 @@ describe('settingsService', () => {
         ...defaultProfileSettingsForm(),
         displayName: '',
         preferredSessionMinutes: '5',
+        secondaryGoals: ['endurance', 'conditioning', 'general_fitness'],
         weeklySessionGoal: '15',
       }),
     ).toMatchObject({
       displayName: 'Add the name you want shown in Leverly.',
-      preferredSessionMinutes: 'Session length must be 10 to 240 minutes.',
+      preferredSessionMinutes: 'Maximum session length must be 10 to 240 minutes.',
+      secondaryGoals: 'Choose up to two secondary goals that fit your primary goal.',
       weeklySessionGoal: 'Weekly sessions must be between 1 and 14.',
     })
   })
@@ -137,7 +139,7 @@ describe('settingsService', () => {
 function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     data: {
-      available_equipment: ['floor', 'rings'],
+      available_equipment: ['pull_up_bar', 'rings'],
       bodyweight_unit: 'kg',
       current_bodyweight_value: 72.5,
       deload_preference: 'auto',

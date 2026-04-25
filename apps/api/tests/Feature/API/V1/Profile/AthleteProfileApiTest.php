@@ -65,16 +65,16 @@ class AthleteProfileApiTest extends TestCase
         $this->patchJson('/api/v1/me/profile', [
             'display_name' => 'Ada Bars',
             'preferred_session_minutes' => 45,
-            'secondary_goals' => ['mobility', 'conditioning'],
-            'available_equipment' => ['floor', 'wall', 'rings'],
+            'secondary_goals' => ['strength', 'mobility'],
+            'available_equipment' => ['dip_bars', 'rings', 'box_bench'],
         ])
             ->assertOk()
             ->assertJsonPath('data.id', $profileId)
             ->assertJsonPath('data.display_name', 'Ada Bars')
             ->assertJsonPath('data.timezone', 'Europe/Amsterdam')
             ->assertJsonPath('data.preferred_session_minutes', 45)
-            ->assertJsonPath('data.secondary_goals.1', 'conditioning')
-            ->assertJsonPath('data.available_equipment.2', 'rings');
+            ->assertJsonPath('data.secondary_goals.1', 'mobility')
+            ->assertJsonPath('data.available_equipment.2', 'box_bench');
     }
 
     public function test_profile_data_is_scoped_to_the_signed_in_user(): void
@@ -118,7 +118,7 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.unit_system', 'metric')
             ->assertJsonPath('data.bodyweight_unit', 'kg')
             ->assertJsonPath('data.experience_level', 'new')
-            ->assertJsonPath('data.available_equipment.0', 'floor')
+            ->assertJsonPath('data.available_equipment', [])
             ->assertJsonPath('data.preferred_training_time', 'flexible')
             ->assertJsonPath('data.progression_pace', 'balanced')
             ->assertJsonPath('data.intensity_preference', 'auto');
@@ -137,7 +137,7 @@ class AthleteProfileApiTest extends TestCase
             'current_bodyweight_value' => 3,
             'bodyweight_unit' => 'stone',
             'primary_goal' => 'unsupported_goal',
-            'secondary_goals' => ['strength', 'unsupported_goal'],
+            'secondary_goals' => ['strength', 'unsupported_goal', 'mobility'],
             'target_skills' => ['a'],
             'available_equipment' => ['trampoline'],
             'training_locations' => ['moon'],
@@ -170,6 +170,7 @@ class AthleteProfileApiTest extends TestCase
                 'bodyweight_unit',
                 'primary_goal',
                 'secondary_goals.1',
+                'secondary_goals',
                 'target_skills.0',
                 'available_equipment.0',
                 'training_locations.0',
@@ -205,7 +206,7 @@ class AthleteProfileApiTest extends TestCase
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
             'target_skills' => ['freestanding handstand', 'strict muscle-up'],
-            'available_equipment' => ['floor', 'pull_up_bar', 'rings', 'parallettes', 'resistance_band'],
+            'available_equipment' => ['pull_up_bar', 'dip_bars', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home', 'park'],
             'movement_limitations' => [
                 [

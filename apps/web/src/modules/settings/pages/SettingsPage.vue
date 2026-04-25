@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
 import { UiButton } from '@/shared/ui'
 import ProfileChoiceGrid from '../components/ProfileChoiceGrid.vue'
 import ProfileFormSection from '../components/ProfileFormSection.vue'
+import ProfileSectionTabs from '../components/ProfileSectionTabs.vue'
 import ProfileSelectField from '../components/ProfileSelectField.vue'
 import ProfileStatusBanner from '../components/ProfileStatusBanner.vue'
 import ProfileTextAreaField from '../components/ProfileTextAreaField.vue'
@@ -11,6 +11,7 @@ import ProfileTextField from '../components/ProfileTextField.vue'
 import { useSettings } from '../composables/useSettings'
 import {
   bodyweightUnitOptions,
+  compatibleSecondaryGoals,
   deloadPreferenceOptions,
   effortTrackingOptions,
   equipmentOptions,
@@ -27,6 +28,9 @@ import {
   trainingTimeOptions,
   unitSystemOptions,
 } from '../data/profileOptions'
+import type { ProfileFieldErrors } from '../types'
+
+type ProfileSectionId = 'basics' | 'training' | 'setup' | 'coaching' | 'limitations'
 
 const {
   fieldErrors,
@@ -49,10 +53,80 @@ const selectedDaysLabel = computed(() =>
 const primaryGoalLabel = computed(
   () => goalOptions.find((option) => option.value === form.primaryGoal)?.label ?? 'Strength',
 )
+const activeSection = ref<ProfileSectionId>('basics')
+const profileSections: Array<{ id: ProfileSectionId; label: string; summary: string }> = [
+  { id: 'basics', label: 'Basics', summary: 'Account and units' },
+  { id: 'training', label: 'Training', summary: 'Level and goals' },
+  { id: 'setup', label: 'Setup', summary: 'Equipment and schedule' },
+  { id: 'coaching', label: 'Coaching', summary: 'Recommendation style' },
+  { id: 'limitations', label: 'Limitations', summary: 'Pain flags and notes' },
+]
+const compatibleSecondaryGoalOptions = computed(() => {
+  const allowedGoals = compatibleSecondaryGoals[form.primaryGoal] ?? []
+
+  return goalOptions.filter((option) => allowedGoals.includes(option.value))
+})
+
+watch(
+  () => form.primaryGoal,
+  () => {
+    const allowedGoals = compatibleSecondaryGoals[form.primaryGoal] ?? []
+
+    form.secondaryGoals = form.secondaryGoals.filter((goal) => allowedGoals.includes(goal)).slice(0, 2)
+  },
+)
 
 onMounted(() => {
   void loadProfile()
 })
+
+async function submitProfile(): Promise<void> {
+  const saved = await saveProfile()
+
+  if (!saved) {
+    activeSection.value = sectionForErrors(fieldErrors.value)
+  }
+}
+
+function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
+  if (errors.displayName || errors.timezone || errors.unitSystem || errors.bodyweightUnit) {
+    return 'basics'
+  }
+
+  if (
+    errors.trainingAgeMonths ||
+    errors.currentBodyweightValue ||
+    errors.experienceLevel ||
+    errors.primaryGoal ||
+    errors.secondaryGoals ||
+    errors.targetSkillsText
+  ) {
+    return 'training'
+  }
+
+  if (
+    errors.availableEquipment ||
+    errors.trainingLocations ||
+    errors.preferredTrainingDays ||
+    errors.preferredSessionMinutes ||
+    errors.weeklySessionGoal ||
+    errors.preferredTrainingTime
+  ) {
+    return 'setup'
+  }
+
+  if (
+    errors.progressionPace ||
+    errors.intensityPreference ||
+    errors.effortTrackingPreference ||
+    errors.deloadPreference ||
+    errors.sessionStructurePreferences
+  ) {
+    return 'coaching'
+  }
+
+  return 'limitations'
+}
 </script>
 
 <template>
@@ -69,28 +143,6 @@ onMounted(() => {
           Keep your goals, equipment, schedule, and training constraints current so progress options fit the work you
           can actually do.
         </p>
-
-        <div class="mt-5 flex flex-wrap gap-2" aria-label="Settings sections">
-          <RouterLink
-            :to="{ name: 'settings-profile' }"
-            class="bg-accent-primary text-ink-inverse rounded-control shadow-control px-3 py-2 text-sm font-semibold"
-            aria-current="page"
-          >
-            Profile
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'settings-equipment' }"
-            class="border-line-subtle bg-surface-primary text-ink-secondary hover:border-line-strong rounded-control border px-3 py-2 text-sm font-semibold transition"
-          >
-            Equipment
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'settings-export' }"
-            class="border-line-subtle bg-surface-primary text-ink-secondary hover:border-line-strong rounded-control border px-3 py-2 text-sm font-semibold transition"
-          >
-            Export
-          </RouterLink>
-        </div>
       </div>
 
       <aside class="border-line-subtle bg-surface-muted/70 border-t p-5 sm:p-7 lg:border-t-0 lg:border-l">
@@ -125,8 +177,14 @@ onMounted(() => {
       message="Some fields need attention before your profile can be saved."
     />
 
-    <form class="space-y-5" novalidate @submit.prevent="saveProfile">
+    <ProfileSectionTabs v-model="activeSection" :sections="profileSections" />
+
+    <form class="space-y-5" novalidate @submit.prevent="submitProfile">
       <ProfileFormSection
+        v-if="activeSection === 'basics'"
+        id="profile-panel-basics"
+        aria-labelledby="profile-tab-basics"
+        role="tabpanel"
         eyebrow="Basics"
         title="Account and measurement"
         description="Set the identity and units used across training logs, recommendations, and progress summaries."
@@ -170,9 +228,13 @@ onMounted(() => {
       </ProfileFormSection>
 
       <ProfileFormSection
+        v-if="activeSection === 'training'"
+        id="profile-panel-training"
+        aria-labelledby="profile-tab-training"
+        role="tabpanel"
         eyebrow="Training profile"
         title="Experience and goals"
-        description="Give Leverly enough context to choose sensible options without guessing what kind of progress you want."
+        description="Set one main outcome, then add up to two compatible support goals so recommendations stay focused."
       >
         <div class="grid gap-4 md:grid-cols-3">
           <ProfileTextField
@@ -213,10 +275,12 @@ onMounted(() => {
           <ProfileChoiceGrid
             v-model="form.secondaryGoals"
             :error="fieldErrors.secondaryGoals"
+            help="Pick up to two support goals that work with your primary goal."
             label="Secondary goals"
+            :max-selections="2"
             multiple
             name="secondary-goals"
-            :options="goalOptions"
+            :options="compatibleSecondaryGoalOptions"
           />
           <ProfileTextAreaField
             id="target-skills"
@@ -231,6 +295,10 @@ onMounted(() => {
       </ProfileFormSection>
 
       <ProfileFormSection
+        v-if="activeSection === 'setup'"
+        id="profile-panel-setup"
+        aria-labelledby="profile-tab-setup"
+        role="tabpanel"
         eyebrow="Training setup"
         title="Equipment and schedule"
         description="Match recommendations to the tools, places, and session shape you can reliably use."
@@ -269,8 +337,9 @@ onMounted(() => {
             id="preferred-session-minutes"
             v-model="form.preferredSessionMinutes"
             :error="fieldErrors.preferredSessionMinutes"
+            help="Use this as an upper limit, not an exact duration."
             input-mode="numeric"
-            label="Session length"
+            label="Up to minutes"
             placeholder="45"
             type="number"
           />
@@ -294,9 +363,13 @@ onMounted(() => {
       </ProfileFormSection>
 
       <ProfileFormSection
-        eyebrow="Recommendation bias"
-        title="How Leverly should steer options"
-        description="These settings help shape how conservative, intense, and structured your recommendations should feel."
+        v-if="activeSection === 'coaching'"
+        id="profile-panel-coaching"
+        aria-labelledby="profile-tab-coaching"
+        role="tabpanel"
+        eyebrow="Coaching style"
+        title="How recommendations should feel"
+        description="Choose how assertive, intense, and structured your options should be when the app has enough evidence."
       >
         <div class="space-y-5">
           <ProfileChoiceGrid
@@ -332,7 +405,9 @@ onMounted(() => {
           <ProfileChoiceGrid
             v-model="form.sessionStructurePreferences"
             :error="fieldErrors.sessionStructurePreferences"
+            help="Pick up to three preferences. The app can still adapt each session when your plan needs it."
             label="Session structure preferences"
+            :max-selections="3"
             multiple
             name="session-structure-preferences"
             :options="sessionStructureOptions"
@@ -341,6 +416,10 @@ onMounted(() => {
       </ProfileFormSection>
 
       <ProfileFormSection
+        v-if="activeSection === 'limitations'"
+        id="profile-panel-limitations"
+        aria-labelledby="profile-tab-limitations"
+        role="tabpanel"
         eyebrow="Limitations"
         title="Pain flags and private notes"
         description="Use this for training constraints. Leverly can adjust exercise options, but it is not medical software and cannot diagnose or treat injuries."

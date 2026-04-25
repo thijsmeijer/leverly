@@ -1,5 +1,6 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 
+import { compatibleSecondaryGoals, equipmentOptions } from '../data/profileOptions'
 import type { ProfileFieldErrors, ProfileSettingsForm, ProfileSettingsState } from '../types'
 
 type ServerValidationBody = {
@@ -53,7 +54,7 @@ export class ProfileSettingsValidationError extends Error {
 
 export function defaultProfileSettingsForm(): ProfileSettingsForm {
   return {
-    availableEquipment: ['floor', 'wall'],
+    availableEquipment: [],
     bodyweightUnit: 'kg',
     currentBodyweightValue: '',
     deloadPreference: 'auto',
@@ -148,7 +149,7 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
     form.preferredSessionMinutes,
     10,
     240,
-    'Session length must be 10 to 240 minutes.',
+    'Maximum session length must be 10 to 240 minutes.',
   )
   addNumberError(
     errors,
@@ -158,6 +159,19 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
     14,
     'Weekly sessions must be between 1 and 14.',
   )
+
+  const compatibleGoals = compatibleSecondaryGoals[form.primaryGoal] ?? []
+  const hasIncompatibleGoal = form.secondaryGoals.some(
+    (goal) => goal === form.primaryGoal || !compatibleGoals.includes(goal),
+  )
+
+  if (form.secondaryGoals.length > 2 || hasIncompatibleGoal) {
+    errors.secondaryGoals = 'Choose up to two secondary goals that fit your primary goal.'
+  }
+
+  if (form.sessionStructurePreferences.length > 3) {
+    errors.sessionStructurePreferences = 'Choose up to three session structure preferences.'
+  }
 
   return errors
 }
@@ -173,7 +187,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
   const limitation = profile.movement_limitations[0]
 
   return {
-    availableEquipment: [...profile.available_equipment],
+    availableEquipment: profile.available_equipment.filter(isSupportedEquipment),
     bodyweightUnit: profile.bodyweight_unit === 'lb' ? 'lb' : 'kg',
     currentBodyweightValue: profile.current_bodyweight_value === null ? '' : String(profile.current_bodyweight_value),
     deloadPreference: profile.deload_preference,
@@ -194,7 +208,9 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     preferredTrainingTime: profile.preferred_training_time,
     primaryGoal: profile.primary_goal ?? 'strength',
     progressionPace: profile.progression_pace,
-    secondaryGoals: [...profile.secondary_goals],
+    secondaryGoals: profile.secondary_goals.filter((goal) =>
+      (compatibleSecondaryGoals[profile.primary_goal ?? 'strength'] ?? []).includes(goal),
+    ),
     sessionStructurePreferences: [...profile.session_structure_preferences],
     targetSkillsText: profile.target_skills.join('\n'),
     timezone: profile.timezone,
@@ -220,7 +236,7 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
       : []
 
   return {
-    available_equipment: form.availableEquipment,
+    available_equipment: form.availableEquipment.filter(isSupportedEquipment),
     bodyweight_unit: form.bodyweightUnit,
     current_bodyweight_value: nullableNumber(form.currentBodyweightValue),
     deload_preference: form.deloadPreference,
@@ -235,8 +251,10 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     preferred_training_time: form.preferredTrainingTime,
     primary_goal: form.primaryGoal || null,
     progression_pace: form.progressionPace,
-    secondary_goals: form.secondaryGoals,
-    session_structure_preferences: form.sessionStructurePreferences,
+    secondary_goals: form.secondaryGoals.filter((goal) =>
+      (compatibleSecondaryGoals[form.primaryGoal] ?? []).includes(goal),
+    ),
+    session_structure_preferences: form.sessionStructurePreferences.slice(0, 3),
     target_skills: splitTargetSkills(form.targetSkillsText),
     timezone: form.timezone.trim(),
     training_age_months: nullableNumber(form.trainingAgeMonths),
@@ -278,6 +296,10 @@ function splitTargetSkills(value: string): string[] {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function isSupportedEquipment(value: string): boolean {
+  return equipmentOptions.some((option) => option.value === value)
 }
 
 function mapServerValidationErrors(body: unknown): ProfileFieldErrors {

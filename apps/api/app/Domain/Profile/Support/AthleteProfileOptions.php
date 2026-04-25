@@ -24,17 +24,28 @@ final class AthleteProfileOptions
         'conditioning',
     ];
 
+    public const array COMPATIBLE_SECONDARY_GOALS = [
+        'conditioning' => ['endurance', 'hypertrophy', 'general_fitness'],
+        'endurance' => ['conditioning', 'general_fitness', 'mobility'],
+        'general_fitness' => ['strength', 'endurance', 'mobility'],
+        'hypertrophy' => ['strength', 'conditioning', 'mobility'],
+        'mobility' => ['skill', 'strength', 'general_fitness'],
+        'skill' => ['strength', 'mobility', 'endurance'],
+        'strength' => ['skill', 'hypertrophy', 'mobility'],
+    ];
+
     public const array EQUIPMENT = [
-        'floor',
-        'wall',
         'pull_up_bar',
+        'dip_bars',
         'parallel_bars',
         'parallettes',
         'rings',
         'resistance_band',
-        'chair_box',
+        'box_bench',
         'weight_vest',
         'dip_belt',
+        'suspension_trainer',
+        'ab_wheel',
     ];
 
     public const array TRAINING_LOCATIONS = ['home', 'gym', 'park', 'travel', 'other'];
@@ -101,7 +112,7 @@ final class AthleteProfileOptions
             'experience_level' => 'new',
             'secondary_goals' => [],
             'target_skills' => [],
-            'available_equipment' => ['floor', 'wall'],
+            'available_equipment' => [],
             'training_locations' => [],
             'movement_limitations' => [],
             'preferred_training_days' => [],

@@ -45,7 +45,7 @@ async function signOut(): Promise<void> {
 <template>
   <div class="bg-surface-inverse text-ink-primary min-h-screen lg:flex">
     <aside
-      class="text-ink-inverse shadow-shell border-white/10 bg-[linear-gradient(180deg,var(--surface-inverse),#0b1110)] px-6 py-7 max-lg:hidden lg:flex lg:w-72 lg:flex-col lg:border-r"
+      class="text-ink-inverse shadow-shell border-white/10 bg-[linear-gradient(180deg,var(--surface-inverse),#0b1110)] px-6 py-7 max-lg:hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-r"
       aria-label="Primary"
     >
       <RouterLink
@@ -68,7 +68,7 @@ async function signOut(): Promise<void> {
             class="rounded-control focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse block border px-3 py-3 transition duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             :class="
               isActive(item)
-                ? 'text-ink-inverse shadow-control border-white/20 bg-white/15'
+                ? 'text-ink-inverse border-white/20 bg-white/15'
                 : 'text-ink-inverse/70 hover:text-ink-inverse border-transparent hover:border-white/15 hover:bg-white/10'
             "
             :aria-current="isActive(item) ? 'page' : undefined"
@@ -79,7 +79,7 @@ async function signOut(): Promise<void> {
         </section>
       </nav>
 
-      <div class="rounded-card mt-auto border border-white/10 bg-white/10 p-4">
+      <div class="rounded-card mt-8 border border-white/10 bg-white/10 p-4">
         <UiBadge tone="warning">Next focus</UiBadge>
         <p class="text-ink-inverse mt-3 text-sm font-semibold">Start with clean evidence.</p>
         <p class="text-ink-inverse/70 mt-2 text-sm leading-6">

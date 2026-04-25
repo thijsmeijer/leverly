@@ -7,6 +7,7 @@ namespace App\Http\Requests\Api\V1\Profile;
 use App\Domain\Profile\Support\AthleteProfileOptions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpsertAthleteProfileRequest extends FormRequest
 {
@@ -29,7 +30,7 @@ class UpsertAthleteProfileRequest extends FormRequest
             'current_bodyweight_value' => ['sometimes', 'nullable', 'numeric', 'min:20', 'max:400'],
             'bodyweight_unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::BODYWEIGHT_UNITS)],
             'primary_goal' => ['sometimes', 'nullable', 'string', Rule::in(AthleteProfileOptions::GOALS)],
-            'secondary_goals' => ['sometimes', 'array', 'max:6'],
+            'secondary_goals' => ['sometimes', 'array', 'max:2'],
             'secondary_goals.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::GOALS)],
             'target_skills' => ['sometimes', 'array', 'max:20'],
             'target_skills.*' => ['string', 'distinct', 'min:2', 'max:80'],
@@ -53,7 +54,7 @@ class UpsertAthleteProfileRequest extends FormRequest
             'intensity_preference' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::INTENSITY_PREFERENCES)],
             'effort_tracking_preference' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::EFFORT_TRACKING_PREFERENCES)],
             'deload_preference' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::DELOAD_PREFERENCES)],
-            'session_structure_preferences' => ['sometimes', 'array', 'max:8'],
+            'session_structure_preferences' => ['sometimes', 'array', 'max:3'],
             'session_structure_preferences.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::SESSION_STRUCTURE_PREFERENCES)],
         ];
     }
@@ -82,7 +83,7 @@ class UpsertAthleteProfileRequest extends FormRequest
             'primary_goal' => ['description' => 'Primary training goal.', 'example' => 'skill'],
             'secondary_goals' => ['description' => 'Additional training goals.', 'example' => ['strength', 'mobility']],
             'target_skills' => ['description' => 'Skills the athlete wants to unlock.', 'example' => ['freestanding handstand', 'strict muscle-up']],
-            'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['floor', 'pull_up_bar', 'rings']],
+            'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['pull_up_bar', 'rings', 'parallettes']],
             'training_locations' => ['description' => 'Preferred training locations.', 'example' => ['home', 'park']],
             'movement_limitations' => [
                 'description' => 'Movement limitations or pain flags.',
@@ -97,7 +98,7 @@ class UpsertAthleteProfileRequest extends FormRequest
             ],
             'injury_notes' => ['description' => 'Private injury notes.', 'example' => 'Left wrist can get irritated under high volume.'],
             'preferred_training_days' => ['description' => 'Preferred training weekdays.', 'example' => ['monday', 'wednesday', 'friday']],
-            'preferred_session_minutes' => ['description' => 'Preferred session length in minutes.', 'example' => 60],
+            'preferred_session_minutes' => ['description' => 'Maximum session length in minutes.', 'example' => 60],
             'weekly_session_goal' => ['description' => 'Target sessions per week.', 'example' => 4],
             'preferred_training_time' => ['description' => 'Preferred training time.', 'example' => 'evening'],
             'progression_pace' => ['description' => 'Preferred progression pace.', 'example' => 'balanced'],
@@ -117,5 +118,32 @@ class UpsertAthleteProfileRequest extends FormRequest
                 $this->merge([$key => $value === '' && $key !== 'display_name' ? null : $value]);
             }
         }
+    }
+
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $primaryGoal = $this->input('primary_goal');
+                $secondaryGoals = $this->input('secondary_goals', []);
+
+                if (! is_string($primaryGoal) || ! is_array($secondaryGoals)) {
+                    return;
+                }
+
+                $compatibleGoals = AthleteProfileOptions::COMPATIBLE_SECONDARY_GOALS[$primaryGoal] ?? [];
+
+                foreach ($secondaryGoals as $index => $secondaryGoal) {
+                    if (! is_string($secondaryGoal) || in_array($secondaryGoal, $compatibleGoals, true)) {
+                        continue;
+                    }
+
+                    $validator->errors()->add(
+                        "secondary_goals.{$index}",
+                        'The selected secondary goal does not fit the primary goal.',
+                    );
+                }
+            },
+        ];
     }
 }
