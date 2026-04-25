@@ -4,11 +4,12 @@ import DashboardPage from './pages/DashboardPage.vue'
 
 export const dashboardRoutes: RouteRecordRaw[] = [
   {
-    path: '/app/dashboard',
+    path: 'dashboard',
     name: 'dashboard',
     component: DashboardPage,
     meta: {
       requiresAuth: true,
+      section: 'Train',
       title: 'Dashboard',
     },
   },
