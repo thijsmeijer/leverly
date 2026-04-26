@@ -11,6 +11,9 @@ tags:
     name: Auth
     description: ''
   -
+    name: Onboarding
+    description: ''
+  -
     name: Profile
     description: ''
   -
@@ -46,6 +49,298 @@ paths:
                   - data
       tags:
         - Auth
+  /me/onboarding:
+    get:
+      summary: 'Get onboarding state'
+      operationId: getOnboardingState
+      description: 'Returns the signed-in athlete onboarding draft or completed onboarding answers.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      user_id: { type: string }
+                      primary_goal: { type: string }
+                      secondary_goals: { type: array, items: { type: string } }
+                      target_skills: { type: array, items: { type: string } }
+                      available_equipment: { type: array, items: { type: string } }
+                      training_locations: { type: array, items: { type: string } }
+                      preferred_training_days: { type: array, items: { type: string } }
+                      preferred_session_minutes: { type: integer }
+                      weekly_session_goal: { type: integer }
+                      preferred_training_time: { type: string }
+                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, progression: { type: string } } }, squat: { type: object, properties: { max_reps: { type: integer }, progression: { type: string } } }, hollow_hold_seconds: { type: integer } }, description: 'Baseline push-up, pull-up, squat, and hollow hold tests.' }
+                      skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
+                      readiness_rating: { type: integer }
+                      sleep_quality: { type: integer }
+                      soreness_level: { type: integer }
+                      pain_level: { type: integer }
+                      pain_areas: { type: array }
+                      pain_notes: { type: [string, 'null'] }
+                      starter_plan_key: { type: string }
+                      is_complete: { type: boolean }
+                      completed_at: { type: [string, 'null'] }
+                      missing_sections: { type: array, description: 'Sections still needed before onboarding can be completed.' }
+                    required:
+                      - current_level_tests
+                      - missing_sections
+                    description: 'Athlete onboarding answers.'
+                required:
+                  - data
+      tags:
+        - Onboarding
+    patch:
+      summary: 'Update onboarding state'
+      operationId: updateOnboardingState
+      description: 'Creates, updates, resumes, or completes signed-in athlete onboarding answers.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      user_id: { type: string }
+                      primary_goal: { type: string }
+                      secondary_goals: { type: array, items: { type: string } }
+                      target_skills: { type: array, items: { type: string } }
+                      available_equipment: { type: array, items: { type: string } }
+                      training_locations: { type: array, items: { type: string } }
+                      preferred_training_days: { type: array, items: { type: string } }
+                      preferred_session_minutes: { type: integer }
+                      weekly_session_goal: { type: integer }
+                      preferred_training_time: { type: string }
+                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, progression: { type: string } } }, squat: { type: object, properties: { max_reps: { type: integer }, progression: { type: string } } }, hollow_hold_seconds: { type: integer } } }
+                      skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
+                      readiness_rating: { type: integer }
+                      sleep_quality: { type: integer }
+                      soreness_level: { type: integer }
+                      pain_level: { type: integer }
+                      pain_areas: { type: array }
+                      pain_notes: { type: [string, 'null'] }
+                      starter_plan_key: { type: string }
+                      is_complete: { type: boolean }
+                      completed_at: { type: string }
+                      missing_sections: { type: array }
+      tags:
+        - Onboarding
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                complete:
+                  type: boolean
+                  description: 'When true, validates and marks onboarding complete.'
+                primary_goal:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'Primary training goal.'
+                  enum:
+                    - strength
+                    - hypertrophy
+                    - skill
+                    - endurance
+                    - general_fitness
+                    - mobility
+                    - conditioning
+                secondary_goals:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strength
+                      - hypertrophy
+                      - skill
+                      - endurance
+                      - general_fitness
+                      - mobility
+                      - conditioning
+                target_skills:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strict_push_up
+                      - strict_pull_up
+                      - strict_dip
+                      - muscle_up
+                      - l_sit
+                      - handstand
+                      - handstand_push_up
+                      - front_lever
+                      - back_lever
+                      - planche
+                      - pistol_squat
+                      - nordic_curl
+                      - one_arm_pull_up
+                      - human_flag
+                available_equipment:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - pull_up_bar
+                      - low_bar
+                      - dip_bars
+                      - parallel_bars
+                      - stall_bars
+                      - parallettes
+                      - rings
+                      - resistance_band
+                      - box_bench
+                      - weight_vest
+                      - dip_belt
+                      - weighted_backpack
+                      - suspension_trainer
+                      - ab_wheel
+                      - jump_rope
+                      - training_mat
+                training_locations:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - home
+                      - gym
+                      - park
+                      - travel
+                      - other
+                preferred_training_days:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - monday
+                      - tuesday
+                      - wednesday
+                      - thursday
+                      - friday
+                      - saturday
+                      - sunday
+                preferred_session_minutes:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Maximum session length in minutes. Must be at least 10. Must not be greater than 240.'
+                weekly_session_goal:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Target sessions per week. Must be at least 1. Must not be greater than 14.'
+                preferred_training_time:
+                  type: string
+                  description: 'Preferred training time.'
+                  enum:
+                    - morning
+                    - midday
+                    - evening
+                    - flexible
+                current_level_tests:
+                  type: object
+                  description: 'Baseline tests for starter recommendation placement.'
+                  properties:
+                    push_ups:
+                      type: object
+                      description: ''
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 200.' } }
+                    pull_ups:
+                      type: object
+                      description: ''
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, progression: { type: [string, 'null'], description: '', enum: [dead_hang, scapular_pull, inverted_row, band_assisted_pull_up, eccentric_pull_up, strict_pull_up, chest_to_bar_pull_up, weighted_pull_up] } }
+                    squat:
+                      type: object
+                      description: ''
+                      properties: { max_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 300.' }, progression: { type: [string, 'null'], description: '', enum: [box_squat, air_squat, reverse_lunge, split_squat, assisted_pistol, shrimp_squat, pistol_squat, weighted_pistol] } }
+                    hollow_hold_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                skill_statuses:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      status: { type: string, description: '', enum: [not_started, building_base, assisted, partial_range, single_rep, multiple_reps, short_hold, solid_hold, advanced_variation] }
+                      max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }
+                      best_hold_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' }
+                      notes: { type: [string, 'null'], description: 'Must not be greater than 300 characters.' }
+                    required:
+                      - status
+                readiness_rating:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Current readiness, 1-5. Must be at least 1. Must not be greater than 5.'
+                sleep_quality:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Recent sleep quality, 1-5. Must be at least 1. Must not be greater than 5.'
+                soreness_level:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Current soreness, 1-5. Must be at least 1. Must not be greater than 5.'
+                pain_level:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Current pain, 0-10. Must be at least 0. Must not be greater than 10.'
+                pain_areas:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - wrist
+                      - elbow
+                      - shoulder
+                      - neck
+                      - back
+                      - hip
+                      - knee
+                      - ankle
+                      - general
+                      - other
+                pain_notes:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'Private pain or limitation notes. Must not be greater than 1000 characters.'
+                starter_plan_key:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'Preferred starter plan shape.'
+                  enum:
+                    - full_body_3_day
+                    - upper_lower_4_day
+                    - push_pull_legs_3_to_6_day
+                    - skill_strength_split
+                    - short_maintenance
   /me/profile:
     get:
       summary: 'Get athlete profile'

@@ -15,6 +15,66 @@ namespace App\Models{
 /**
  * @property string $id
  * @property string $user_id
+ * @property string|null $primary_goal
+ * @property array<array-key, mixed> $secondary_goals
+ * @property array<array-key, mixed> $target_skills
+ * @property array<array-key, mixed> $available_equipment
+ * @property array<array-key, mixed> $training_locations
+ * @property array<array-key, mixed> $preferred_training_days
+ * @property int|null $preferred_session_minutes
+ * @property int|null $weekly_session_goal
+ * @property string $preferred_training_time
+ * @property array<array-key, mixed> $current_level_tests
+ * @property array<array-key, mixed> $skill_statuses
+ * @property int|null $readiness_rating
+ * @property int|null $sleep_quality
+ * @property int|null $soreness_level
+ * @property int|null $pain_level
+ * @property array<array-key, mixed> $pain_areas
+ * @property string|null $pain_notes
+ * @property string|null $starter_plan_key
+ * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\AthleteOnboardingFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding ownedBy(\App\Models\User|string|int $user)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereAvailableEquipment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCompletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCurrentLevelTests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainAreas($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredSessionMinutes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredTrainingDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredTrainingTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePrimaryGoal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereReadinessRating($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSecondaryGoals($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSkillStatuses($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSleepQuality($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSorenessLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereStarterPlanKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereTargetSkills($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereTrainingLocations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereWeeklySessionGoal($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperAthleteOnboarding {}
+}
+
+namespace App\Models{
+/**
+ * @property string $id
+ * @property string $user_id
  * @property string $display_name
  * @property string $timezone
  * @property string $unit_system
