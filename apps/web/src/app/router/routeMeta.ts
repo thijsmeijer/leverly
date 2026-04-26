@@ -32,6 +32,7 @@ export type RoutePlaceholderContent = {
 
 declare module 'vue-router' {
   interface RouteMeta {
+    allowIncompleteOnboarding?: boolean
     requiresAuth?: boolean
     section?: string
     title?: string

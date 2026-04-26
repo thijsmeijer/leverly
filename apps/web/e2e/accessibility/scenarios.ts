@@ -11,26 +11,56 @@ export const accessibilityScenarios: AccessibilityScenario[] = [
   {
     name: 'dashboard',
     path: '/app/dashboard',
+    setup: setupAuthenticatedCompletedOnboarding,
+  },
+  {
+    name: 'onboarding',
+    path: '/onboarding',
+    setup: setupAuthenticatedOnboardingDraft,
   },
   {
     name: 'profile settings',
     path: '/app/settings/profile',
-    setup: setupAuthenticatedProfile,
+    setup: setupAuthenticatedProfileWithCompletedOnboarding,
   },
   {
     name: 'equipment settings',
     path: '/app/settings/equipment',
-    setup: setupAuthenticatedProfile,
+    setup: setupAuthenticatedProfileWithCompletedOnboarding,
   },
 ]
 
-async function setupAuthenticatedProfile(page: Page): Promise<void> {
+async function setupAuthenticatedCompletedOnboarding(page: Page): Promise<void> {
+  await setupAuthenticatedUser(page)
+  await page.route('**/api/v1/me/onboarding', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: onboardingResponse({ is_complete: true }),
+    })
+  })
+}
+
+async function setupAuthenticatedOnboardingDraft(page: Page): Promise<void> {
+  await setupAuthenticatedUser(page)
+  await page.route('**/api/v1/me/onboarding', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: onboardingResponse(),
+    })
+  })
+}
+
+async function setupAuthenticatedProfileWithCompletedOnboarding(page: Page): Promise<void> {
+  await setupAuthenticatedCompletedOnboarding(page)
   await page.route('**/api/v1/me/profile', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
       json: profileResponse(),
     })
   })
+}
+
+async function setupAuthenticatedUser(page: Page): Promise<void> {
   await page.route('**/api/v1/me', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -43,6 +73,55 @@ async function setupAuthenticatedProfile(page: Page): Promise<void> {
       },
     })
   })
+}
+
+function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    data: {
+      available_equipment: ['pull_up_bar', 'rings'],
+      completed_at: null,
+      current_level_tests: {
+        hollow_hold_seconds: 35,
+        pull_ups: {
+          max_strict_reps: 4,
+          progression: 'strict_pull_up',
+        },
+        push_ups: {
+          max_strict_reps: 18,
+        },
+        squat: {
+          max_reps: 20,
+          progression: 'split_squat',
+        },
+      },
+      id: '01kb0b6h4az3er8g7vnh9k5m1a',
+      is_complete: false,
+      missing_sections: [],
+      pain_areas: ['wrist'],
+      pain_level: 2,
+      pain_notes: 'Wrists need warm-up.',
+      preferred_session_minutes: 60,
+      preferred_training_days: ['monday', 'wednesday', 'friday'],
+      preferred_training_time: 'evening',
+      primary_goal: 'skill',
+      readiness_rating: 4,
+      secondary_goals: ['strength'],
+      skill_statuses: {
+        handstand: {
+          best_hold_seconds: 20,
+          status: 'assisted',
+        },
+      },
+      sleep_quality: 4,
+      soreness_level: 2,
+      starter_plan_key: 'skill_strength_split',
+      target_skills: ['strict_pull_up', 'handstand'],
+      training_locations: ['home'],
+      user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',
+      weekly_session_goal: 3,
+      ...overrides,
+    },
+  }
 }
 
 function profileResponse() {

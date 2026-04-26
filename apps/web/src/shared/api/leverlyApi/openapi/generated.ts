@@ -58,6 +58,58 @@ export interface AthleteProfileResponse {
   readonly data: AthleteProfile
 }
 
+export interface OnboardingLevelTests {
+  readonly push_ups: {
+    readonly max_strict_reps: number | null
+  }
+  readonly pull_ups: {
+    readonly max_strict_reps: number | null
+    readonly progression: string | null
+  }
+  readonly squat: {
+    readonly max_reps: number | null
+    readonly progression: string | null
+  }
+  readonly hollow_hold_seconds: number | null
+}
+
+export interface OnboardingSkillStatus {
+  readonly status: string
+  readonly max_strict_reps?: number | null
+  readonly best_hold_seconds?: number | null
+  readonly notes?: string | null
+}
+
+export interface AthleteOnboarding {
+  readonly id: string
+  readonly user_id: string
+  readonly primary_goal: string | null
+  readonly secondary_goals: readonly string[]
+  readonly target_skills: readonly string[]
+  readonly available_equipment: readonly string[]
+  readonly training_locations: readonly string[]
+  readonly preferred_training_days: readonly string[]
+  readonly preferred_session_minutes: number | null
+  readonly weekly_session_goal: number | null
+  readonly preferred_training_time: string
+  readonly current_level_tests: OnboardingLevelTests
+  readonly skill_statuses: Readonly<Record<string, OnboardingSkillStatus>>
+  readonly readiness_rating: number | null
+  readonly sleep_quality: number | null
+  readonly soreness_level: number | null
+  readonly pain_level: number | null
+  readonly pain_areas: readonly string[]
+  readonly pain_notes: string | null
+  readonly starter_plan_key: string | null
+  readonly is_complete: boolean
+  readonly completed_at: string | null
+  readonly missing_sections: readonly string[]
+}
+
+export interface AthleteOnboardingResponse {
+  readonly data: AthleteOnboarding
+}
+
 export interface paths {
   readonly '/me': {
     readonly get: {
@@ -65,6 +117,26 @@ export interface paths {
         readonly 200: {
           readonly content: {
             readonly 'application/json': CurrentUserResponse
+          }
+        }
+      }
+    }
+  }
+  readonly '/me/onboarding': {
+    readonly get: {
+      readonly responses: {
+        readonly 200: {
+          readonly content: {
+            readonly 'application/json': AthleteOnboardingResponse
+          }
+        }
+      }
+    }
+    readonly patch: {
+      readonly responses: {
+        readonly 200: {
+          readonly content: {
+            readonly 'application/json': AthleteOnboardingResponse
           }
         }
       }

@@ -94,6 +94,45 @@ paths:
                         type: string
                       preferred_session_minutes:
                         type: integer
+  /me/onboarding:
+    get:
+      operationId: getOnboardingState
+      responses:
+        200:
+          description: Athlete onboarding.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current_level_tests:
+                        type: object
+                      is_complete:
+                        type: boolean
+                      missing_sections:
+                        type: array
+    patch:
+      operationId: updateOnboardingState
+      responses:
+        200:
+          description: Athlete onboarding.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current_level_tests:
+                        type: object
+                      is_complete:
+                        type: boolean
+                      missing_sections:
+                        type: array
 `
 
 describe('OpenAPI client generation', () => {
@@ -116,9 +155,13 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('export interface HealthResponse')
     expect(generated).toContain('export interface CurrentUserResponse')
     expect(generated).toContain('export interface AthleteProfileResponse')
+    expect(generated).toContain('export interface AthleteOnboardingResponse')
     expect(generated).toContain("readonly '/me'")
     expect(generated).toContain("readonly '/me/profile'")
+    expect(generated).toContain("readonly '/me/onboarding'")
     expect(generated).toContain('readonly patch')
+    expect(generated).toContain('readonly current_level_tests: OnboardingLevelTests')
+    expect(generated).toContain('readonly is_complete: boolean')
     expect(generated).toContain("readonly status: 'ok'")
     expect(generated).toContain('readonly timestamp: string')
     expect(generated).not.toContain('example')

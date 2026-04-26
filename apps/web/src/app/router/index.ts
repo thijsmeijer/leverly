@@ -1,13 +1,12 @@
 import { createRouter, createWebHistory, type RouterHistory, type RouteRecordRaw } from 'vue-router'
 import { dashboardRoutes } from '@/modules/dashboard'
+import { onboardingRoutes } from '@/modules/onboarding'
 import { settingsRoutes } from '@/modules/settings'
 import AppShell from '@/app/shell/AppShell.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
 import RegisterPage from '../pages/auth/RegisterPage.vue'
 import RoutePlaceholderPage from '../pages/placeholders/RoutePlaceholderPage.vue'
-import StandalonePlaceholderPage from '../pages/placeholders/StandalonePlaceholderPage.vue'
 import { routePlaceholders } from '../pages/placeholders/routePlaceholders'
-import { standalonePlaceholders } from '../pages/placeholders/standalonePlaceholders'
 
 const appPlaceholderRoutes: RouteRecordRaw[] = [
   {
@@ -163,15 +162,7 @@ export const routes: RouteRecordRaw[] = [
       title: 'Create account',
     },
   },
-  {
-    path: '/onboarding',
-    name: 'onboarding',
-    component: StandalonePlaceholderPage,
-    meta: {
-      title: 'Onboarding',
-      placeholder: standalonePlaceholders.onboarding,
-    },
-  },
+  ...onboardingRoutes,
   {
     path: '/:pathMatch(.*)*',
     redirect: { name: 'dashboard' },

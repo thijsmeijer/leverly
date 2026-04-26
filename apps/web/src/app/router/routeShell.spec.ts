@@ -41,6 +41,14 @@ describe('SPA route shell', () => {
     expect(shellRoutes.every((route) => typeof route.meta.title === 'string')).toBe(true)
   })
 
+  it('protects onboarding while allowing incomplete athletes to finish it', () => {
+    const router = createLeverlyRouter(createMemoryHistory())
+    const onboardingRoute = router.getRoutes().find((route) => route.name === 'onboarding')
+
+    expect(onboardingRoute?.meta.requiresAuth).toBe(true)
+    expect(onboardingRoute?.meta.allowIncompleteOnboarding).toBe(true)
+  })
+
   it('keeps mobile navigation compact and route-backed', () => {
     const router = createLeverlyRouter(createMemoryHistory())
     const routeNames = new Set(router.getRoutes().map((route) => String(route.name)))
