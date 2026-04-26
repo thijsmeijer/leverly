@@ -52,7 +52,7 @@ export interface ProfileSettingsForm {
   secondaryGoals: string[]
   secondaryTargetSkills: string[]
   sessionStructurePreferences: string[]
-  skillStatuses: Record<string, { bestHoldSeconds: string; maxStrictReps: string; notes: string; status: string }>
+  skillStatuses: Record<string, { bestHoldSeconds: string; maxReps: string; notes: string; status: string }>
   targetSkillsText: string
   timezone: string
   trainingAgeMonths: string

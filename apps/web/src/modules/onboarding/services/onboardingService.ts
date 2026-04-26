@@ -132,7 +132,7 @@ export function defaultOnboardingForm(): OnboardingForm {
         key,
         {
           bestHoldSeconds: '',
-          maxStrictReps: '',
+          maxReps: '',
           notes: '',
           status: skillStatusOptions[key][0]?.value ?? 'not_tested',
         },
@@ -375,7 +375,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
                 value.best_hold_seconds === null || value.best_hold_seconds === undefined
                   ? ''
                   : String(value.best_hold_seconds),
-              maxStrictReps:
+              maxReps:
                 value.max_strict_reps === null || value.max_strict_reps === undefined
                   ? ''
                   : String(value.max_strict_reps),
@@ -458,7 +458,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
               ? nullableInteger(value.bestHoldSeconds)
               : null,
             max_strict_reps: skillStatusMeasurements[key as (typeof skillStatusKeys)[number]].reps
-              ? nullableInteger(value.maxStrictReps)
+              ? nullableInteger(value.maxReps)
               : null,
             notes: value.notes.trim() || null,
             status: normalizeSkillStatus(key, value.status),

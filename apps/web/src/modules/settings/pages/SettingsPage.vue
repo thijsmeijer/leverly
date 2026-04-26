@@ -500,26 +500,26 @@ function removeWeightedMovement(index: number): void {
             <div class="grid gap-4 xl:grid-cols-2">
               <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
                 <h4 class="text-ink-primary text-sm font-semibold">Push-up strength</h4>
-                <p class="text-ink-muted mt-1 text-sm leading-5">Strict floor reps with a rigid bodyline.</p>
+                <p class="text-ink-muted mt-1 text-sm leading-5">Floor reps with a rigid bodyline.</p>
                 <ProfileTextField
                   id="profile-push-up-reps"
                   v-model="form.baselineTests.pushUpMaxReps"
                   class="mt-4"
                   input-mode="numeric"
-                  label="Max strict push-ups"
+                  label="Max push-ups"
                   placeholder="18"
                   type="number"
                 />
               </div>
               <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
                 <h4 class="text-ink-primary text-sm font-semibold">Pull-up strength</h4>
-                <p class="text-ink-muted mt-1 text-sm leading-5">Strict reps from a dead hang or 0 if not there yet.</p>
+                <p class="text-ink-muted mt-1 text-sm leading-5">Reps from a dead hang or 0 if not there yet.</p>
                 <ProfileTextField
                   id="profile-pull-up-reps"
                   v-model="form.baselineTests.pullUpMaxReps"
                   class="mt-4"
                   input-mode="numeric"
-                  label="Max strict pull-ups"
+                  label="Max pull-ups"
                   placeholder="4"
                   type="number"
                 />
@@ -532,7 +532,7 @@ function removeWeightedMovement(index: number): void {
                   v-model="form.baselineTests.dipMaxReps"
                   class="mt-4"
                   input-mode="numeric"
-                  label="Max strict dips"
+                  label="Max dips"
                   placeholder="6"
                   type="number"
                 />

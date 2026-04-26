@@ -7,11 +7,11 @@ namespace App\Domain\Training\Support;
 final class CalisthenicsRoadmapSuggester
 {
     private const array TARGET_LABELS = [
-        'strict_push_up' => 'Strict push-up',
+        'strict_push_up' => 'Push-up',
         'one_arm_push_up' => 'One-arm push-up',
-        'strict_pull_up' => 'Strict pull-up',
+        'strict_pull_up' => 'Pull-up',
         'weighted_pull_up' => 'Weighted pull-up',
-        'strict_dip' => 'Strict dip',
+        'strict_dip' => 'Dip',
         'ring_dip' => 'Ring dip',
         'weighted_dip' => 'Weighted dip',
         'muscle_up' => 'Muscle-up',
@@ -51,7 +51,7 @@ final class CalisthenicsRoadmapSuggester
                 'strict_push_up',
                 $signals['has_push_base'] ? 'Your pressing baseline can support direct push-up volume.' : 'Build the first clean push-up before heavier pressing goals.',
                 ['push_capacity', 'core_bodyline'],
-                $signals['has_push_base'] ? 'Build repeatable sets of 8 to 12 strict reps.' : 'Own incline or knee push-ups with a rigid bodyline.',
+                $signals['has_push_base'] ? 'Build repeatable sets of 8 to 12 reps.' : 'Own incline or knee push-ups with a rigid bodyline.',
                 ['handstand', 'strict_dip'],
             ),
         );
@@ -62,9 +62,9 @@ final class CalisthenicsRoadmapSuggester
             $bridge,
             self::track(
                 'strict_pull_up',
-                $signals['has_strict_pull_up'] ? 'Strict pull-ups are already in range for direct progression.' : 'Your current pulling number needs a bridge toward the first strict pull-up.',
+                $signals['has_pull_up'] ? 'Pull-ups are already in range for direct progression.' : 'Your current pulling number needs a bridge toward the first pull-up.',
                 ['pull_capacity', 'row_volume', 'core_bodyline'],
-                $signals['has_strict_pull_up'] ? 'Build toward 3 clean sets of 6 to 8.' : 'Accumulate quality pulling volume, scapular control, and controlled negatives.',
+                $signals['has_pull_up'] ? 'Build toward 3 clean sets of 6 to 8.' : 'Accumulate quality pulling volume, scapular control, and controlled negatives.',
                 ['l_sit', 'front_lever'],
             ),
         );
@@ -75,9 +75,9 @@ final class CalisthenicsRoadmapSuggester
             $bridge,
             self::track(
                 'strict_dip',
-                $signals['has_strict_dip'] ? 'Dip reps are ready for focused dip progression.' : 'Build pressing strength before strict dips become a main target.',
+                $signals['has_dip'] ? 'Dip reps are ready for focused dip progression.' : 'Build pressing strength before dips become a main target.',
                 ['dip_support', 'push_capacity', 'straight_arm_tolerance'],
-                $signals['has_strict_dip'] ? 'Build controlled depth for 3 sets of 6 to 8.' : 'Own clean push-ups and pain-free assisted dip depth.',
+                $signals['has_dip'] ? 'Build controlled depth for 3 sets of 6 to 8.' : 'Own clean push-ups and pain-free assisted dip depth.',
                 ['l_sit', 'ring_dip'],
             ),
         );
@@ -208,7 +208,7 @@ final class CalisthenicsRoadmapSuggester
                 'front_lever',
                 'Front lever should wait behind pull volume, rows, and hollow body strength.',
                 ['pull_capacity', 'row_volume', 'core_bodyline'],
-                'Reach strict pull-up capacity and strong horizontal rows first.',
+                'Reach pull-up capacity and strong horizontal rows first.',
                 ['strict_pull_up'],
             );
         }
@@ -236,7 +236,7 @@ final class CalisthenicsRoadmapSuggester
                 'ring_dip',
                 'Support strength is close enough to introduce ring stability carefully.',
                 ['dip_support', 'straight_arm_tolerance', 'push_capacity'],
-                'Own stable ring support before strict ring dip volume.',
+                'Own stable ring support before ring dip volume.',
                 ['strict_dip', 'l_sit'],
             );
         } else {
@@ -244,7 +244,7 @@ final class CalisthenicsRoadmapSuggester
                 'ring_dip',
                 'Ring dips should wait until bar dips and support holds are stable.',
                 ['dip_support', 'straight_arm_tolerance'],
-                'Build strict bar dips and ring support first.',
+                'Build bar dips and ring support first.',
                 ['strict_dip'],
             );
         }
@@ -270,7 +270,7 @@ final class CalisthenicsRoadmapSuggester
         if ($signals['weighted_pull_ready']) {
             $unlocked[] = self::track(
                 'weighted_pull_up',
-                'Strict pull-up volume is high enough to start measured added-load work.',
+                'Pull-up volume is high enough to start measured added-load work.',
                 ['pull_capacity', 'weighted_strength'],
                 'Build repeatable sets before testing heavier loads.',
                 ['strict_pull_up'],
@@ -278,9 +278,9 @@ final class CalisthenicsRoadmapSuggester
         } else {
             $longTerm[] = self::track(
                 'weighted_pull_up',
-                'Weighted pulling should come after consistent strict pull-up sets.',
+                'Weighted pulling should come after consistent pull-up sets.',
                 ['pull_capacity', 'weighted_strength'],
-                'Reach roughly 3 sets of 8 strict pull-ups.',
+                'Reach roughly 3 sets of 8 pull-ups.',
                 ['strict_pull_up'],
             );
         }
@@ -290,7 +290,7 @@ final class CalisthenicsRoadmapSuggester
                 'one_arm_pull_up',
                 'Your weighted pulling signal can support controlled unilateral pulling prep.',
                 ['weighted_strength', 'pull_capacity', 'straight_arm_tolerance'],
-                'Use assisted one-arm work while preserving strict bilateral strength.',
+                'Use assisted one-arm work while preserving bilateral strength.',
                 ['weighted_pull_up', 'front_lever'],
             );
         } else {
@@ -373,10 +373,10 @@ final class CalisthenicsRoadmapSuggester
         $hasBarbellSquatBase = $barbellSquatReps >= 3 && $barbellSquatRatio >= 0.75;
 
         $hasPushBase = $pushReps >= 1;
-        $hasStrictPullUp = $pullReps >= 1;
-        $hasPullBase = $hasStrictPullUp;
-        $hasStrictDip = $dipReps >= 1;
-        $hasDipBase = $hasStrictDip || $pushReps >= 10;
+        $hasPullUp = $pullReps >= 1;
+        $hasPullBase = $hasPullUp;
+        $hasDip = $dipReps >= 1;
+        $hasDipBase = $hasDip || $pushReps >= 10;
         $wristBlocked = in_array($mobility['wrist_extension'] ?? 'not_tested', ['blocked', 'painful'], true);
         $shoulderBlocked = in_array($mobility['shoulder_flexion'] ?? 'not_tested', ['blocked', 'painful'], true);
         $ankleBlocked = in_array($mobility['ankle_dorsiflexion'] ?? 'not_tested', ['blocked', 'painful'], true);
@@ -389,15 +389,15 @@ final class CalisthenicsRoadmapSuggester
             'hollow_hold' => $hollowHold,
             'has_push_base' => $hasPushBase,
             'has_pull_base' => $hasPullBase,
-            'has_strict_pull_up' => $hasStrictPullUp,
+            'has_pull_up' => $hasPullUp,
             'has_dip_base' => $hasDipBase,
-            'has_strict_dip' => $hasStrictDip,
+            'has_dip' => $hasDip,
             'handstand_ready' => $hasPushBase && $hollowHold >= 20 && $handstandReadyByStatus && ! $wristBlocked && ! $shoulderBlocked,
             'l_sit_ready' => $hasDipBase && ($hollowHold >= 20 || $lSitReadyByStatus),
             'pistol_ready' => $hasBarbellSquatBase && ! $ankleBlocked,
             'front_lever_bridge' => $hasPullBase && $pullReps >= 3 && $hollowHold >= 20,
             'muscle_up_bridge' => $pullReps >= 3 && $dipReps >= 3,
-            'ring_dip_bridge' => $hasStrictDip && $dipReps >= 3,
+            'ring_dip_bridge' => $hasDip && $dipReps >= 3,
             'planche_bridge' => $pushReps >= 15 && $hollowHold >= 25 && ! $wristBlocked,
             'weighted_pull_ready' => $pullReps >= 8,
             'one_arm_pull_ready' => $weightedPullRatio >= 0.45,

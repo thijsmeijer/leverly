@@ -352,7 +352,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
             value.best_hold_seconds === null || value.best_hold_seconds === undefined
               ? ''
               : String(value.best_hold_seconds),
-          maxStrictReps:
+          maxReps:
             value.max_strict_reps === null || value.max_strict_reps === undefined ? '' : String(value.max_strict_reps),
           notes: value.notes ?? '',
           status: value.status,

@@ -21,7 +21,7 @@ export interface OnboardingLevelTestsForm {
 
 export interface OnboardingSkillStatusForm {
   bestHoldSeconds: string
-  maxStrictReps: string
+  maxReps: string
   notes: string
   status: string
 }

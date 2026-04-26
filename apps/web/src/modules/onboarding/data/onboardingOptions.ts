@@ -52,17 +52,17 @@ export const priorSportOptions: ChoiceOption[] = [
 
 export const targetSkillOptions: ChoiceOption[] = [
   {
-    label: 'Strict push-up',
+    label: 'Push-up',
     value: 'strict_push_up',
     description: 'Build clean pressing volume without sagging hips.',
   },
   {
     label: 'One-arm push-up',
     value: 'one_arm_push_up',
-    description: 'Build unilateral pressing with strict anti-rotation control.',
+    description: 'Build unilateral pressing with anti-rotation control.',
   },
   {
-    label: 'Strict pull-up',
+    label: 'Pull-up',
     value: 'strict_pull_up',
     description: 'Build the pulling base toward clean full reps.',
   },
@@ -71,14 +71,14 @@ export const targetSkillOptions: ChoiceOption[] = [
     value: 'weighted_pull_up',
     description: 'Treat pulling strength like a measurable lift.',
   },
-  { label: 'Strict dip', value: 'strict_dip', description: 'Own support strength and controlled depth.' },
+  { label: 'Dip', value: 'strict_dip', description: 'Own support strength and controlled depth.' },
   { label: 'Ring dip', value: 'ring_dip', description: 'Build stable support and ring pressing control.' },
-  { label: 'Weighted dip', value: 'weighted_dip', description: 'Progress strict dips with measured external load.' },
+  { label: 'Weighted dip', value: 'weighted_dip', description: 'Progress dips with measured external load.' },
   { label: 'Muscle-up', value: 'muscle_up', description: 'Connect explosive pulling, transition, and dip strength.' },
   {
     label: 'Weighted muscle-up',
     value: 'weighted_muscle_up',
-    description: 'Peak strict transition strength with load.',
+    description: 'Peak transition strength with load.',
   },
   { label: 'L-sit', value: 'l_sit', description: 'Train compression, straight-arm support, and midline control.' },
   { label: 'V-sit', value: 'v_sit', description: 'Extend compression and support strength beyond L-sit.' },
@@ -216,7 +216,7 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'High pull-up', value: 'high_pull_up' },
     { label: 'Band-assisted muscle-up', value: 'band_assisted_muscle_up' },
     { label: 'Negative muscle-up', value: 'negative_muscle_up' },
-    { label: 'Strict muscle-up', value: 'strict_muscle_up' },
+    { label: 'Muscle-up', value: 'strict_muscle_up' },
   ],
   one_arm_pull_up: [
     { label: 'Not tested', value: 'not_tested' },
@@ -224,7 +224,7 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'Typewriter pull-up', value: 'typewriter_pull_up' },
     { label: 'Assisted one-arm pull-up', value: 'assisted_one_arm_pull_up' },
     { label: 'One-arm negative', value: 'one_arm_pull_up_negative' },
-    { label: 'Strict one-arm pull-up', value: 'strict_one_arm_pull_up' },
+    { label: 'One-arm pull-up', value: 'strict_one_arm_pull_up' },
   ],
   pistol_squat: [
     { label: 'Not tested', value: 'not_tested' },

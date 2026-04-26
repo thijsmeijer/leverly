@@ -22,7 +22,7 @@ describe('OnboardingPage', () => {
     await flushPromises()
 
     expect(wrapper.find('h1').text()).toContain('Level up your skills')
-    expect(wrapper.text()).toContain('Strict pull-up')
+    expect(wrapper.text()).toContain('Pull-up')
     expect(wrapper.text()).toContain('Handstand')
     expect(wrapper.text()).toContain('Context')
     expect(wrapper.text()).toContain('Equipment')
@@ -186,9 +186,9 @@ function roadmapSuggestions() {
       {
         base_focus_areas: ['pull_capacity', 'row_volume'],
         compatible_secondary_skills: ['l_sit'],
-        label: 'Strict pull-up',
+        label: 'Pull-up',
         next_gate: 'Build toward 3 clean sets of 6 to 8.',
-        reason: 'Strict pull-ups are already in range for direct progression.',
+        reason: 'Pull-ups are already in range for direct progression.',
         skill: 'strict_pull_up',
       },
     ],

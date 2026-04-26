@@ -523,14 +523,14 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
                 <div class="mb-4">
                   <h4 class="text-ink-primary text-base font-semibold">Push-up strength</h4>
-                  <p class="text-ink-muted mt-1 text-sm leading-5">Strict floor reps with a rigid bodyline.</p>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">Floor reps with a rigid bodyline.</p>
                 </div>
                 <div class="max-w-sm">
                   <OnboardingNumberField
                     id="onboarding-push-ups"
                     v-model="onboarding.form.currentLevelTests.pushUpMaxReps"
                     :error="errorFor('currentLevelTests.pushUpMaxReps')"
-                    label="Max strict reps"
+                    label="Max reps"
                     :max="200"
                     :min="0"
                     placeholder="18"
@@ -542,16 +542,14 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
                 <div class="mb-4">
                   <h4 class="text-ink-primary text-base font-semibold">Pull-up strength</h4>
-                  <p class="text-ink-muted mt-1 text-sm leading-5">
-                    Strict reps from a dead hang or 0 if not there yet.
-                  </p>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">Reps from a dead hang or 0 if not there yet.</p>
                 </div>
                 <div class="max-w-sm">
                   <OnboardingNumberField
                     id="onboarding-pull-ups"
                     v-model="onboarding.form.currentLevelTests.pullUpMaxReps"
                     :error="errorFor('currentLevelTests.pullUpMaxReps')"
-                    label="Max strict reps"
+                    label="Max reps"
                     :max="100"
                     :min="0"
                     placeholder="4"
@@ -651,7 +649,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                   <OnboardingNumberField
                     v-if="skillStatusMeasurements[skill].reps"
                     :id="`onboarding-${skill}-reps`"
-                    v-model="onboarding.form.skillStatuses[skill].maxStrictReps"
+                    v-model="onboarding.form.skillStatuses[skill].maxReps"
                     :label="skillStatusMeasurements[skill].reps"
                     :max="100"
                     :min="0"
