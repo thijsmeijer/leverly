@@ -44,7 +44,6 @@ return new class extends Migration
             $table->json('preferred_training_days');
             $table->unsignedSmallInteger('preferred_session_minutes')->nullable();
             $table->unsignedTinyInteger('weekly_session_goal')->nullable();
-            $table->string('preferred_training_time', 32)->default('flexible');
             $table->string('progression_pace', 32)->default('balanced');
             $table->string('intensity_preference', 32)->default('auto');
             $table->string('effort_tracking_preference', 32)->default('simple');

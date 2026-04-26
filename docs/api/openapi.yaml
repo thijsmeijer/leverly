@@ -89,7 +89,6 @@ paths:
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
-                      preferred_training_time: { type: string }
                       current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, hollow_hold_seconds: { type: integer } }, description: 'Baseline push-up, pull-up, squat, and hollow hold tests.' }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
                       mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
@@ -151,7 +150,6 @@ paths:
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
-                      preferred_training_time: { type: string }
                       current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, hollow_hold_seconds: { type: integer } } }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
                       mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
@@ -440,15 +438,7 @@ paths:
                   type:
                     - integer
                     - 'null'
-                  description: 'Target sessions per week. Must be at least 1. Must not be greater than 14.'
-                preferred_training_time:
-                  type: string
-                  description: 'Preferred training time.'
-                  enum:
-                    - morning
-                    - midday
-                    - evening
-                    - flexible
+                  description: 'Maximum training sessions per week. Must be at least 1. Must not be greater than 14.'
                 current_level_tests:
                   type: object
                   description: 'Baseline tests for starter recommendation placement.'
@@ -612,7 +602,6 @@ paths:
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
-                      preferred_training_time: { type: string }
                       progression_pace: { type: string }
                       intensity_preference: { type: string }
                       effort_tracking_preference: { type: string }
@@ -675,7 +664,6 @@ paths:
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
-                      preferred_training_time: { type: string }
                       progression_pace: { type: string }
                       intensity_preference: { type: string }
                       effort_tracking_preference: { type: string }
@@ -1037,15 +1025,7 @@ paths:
                   type:
                     - integer
                     - 'null'
-                  description: 'Target sessions per week. Must be at least 1. Must not be greater than 14.'
-                preferred_training_time:
-                  type: string
-                  description: 'Preferred training time.'
-                  enum:
-                    - morning
-                    - midday
-                    - evening
-                    - flexible
+                  description: 'Maximum training sessions per week. Must be at least 1. Must not be greater than 14.'
                 progression_pace:
                   type: string
                   description: 'Preferred progression pace.'

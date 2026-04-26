@@ -63,7 +63,6 @@ final class AthleteOnboardingOptions
             'preferred_training_days' => [],
             'preferred_session_minutes' => null,
             'weekly_session_goal' => null,
-            'preferred_training_time' => 'flexible',
             'current_level_tests' => self::emptyLevelTests(),
             'skill_statuses' => [],
             'mobility_checks' => self::emptyMobilityChecks(),
@@ -314,7 +313,6 @@ final class AthleteOnboardingOptions
             'preferred_training_days' => $onboarding->preferred_training_days ?? [],
             'preferred_session_minutes' => $onboarding->preferred_session_minutes,
             'weekly_session_goal' => $onboarding->weekly_session_goal,
-            'preferred_training_time' => $onboarding->preferred_training_time,
             'current_level_tests' => $onboarding->current_level_tests ?? self::emptyLevelTests(),
             'skill_statuses' => $onboarding->skill_statuses ?? [],
             'mobility_checks' => $onboarding->mobility_checks ?? self::emptyMobilityChecks(),
@@ -358,7 +356,6 @@ final class AthleteOnboardingOptions
             'preferred_training_days',
             'preferred_session_minutes',
             'weekly_session_goal',
-            'preferred_training_time',
             'roadmap_suggestions',
         ] as $key) {
             if (array_key_exists($key, $data)) {

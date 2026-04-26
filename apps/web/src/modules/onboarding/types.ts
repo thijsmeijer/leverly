@@ -43,7 +43,6 @@ export interface OnboardingForm {
   painNotes: string
   preferredSessionMinutes: string
   preferredTrainingDays: string[]
-  preferredTrainingTime: string
   priorSportBackground: string[]
   primaryTargetSkill: string
   primaryGoal: string

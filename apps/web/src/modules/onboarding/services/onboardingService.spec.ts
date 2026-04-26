@@ -239,7 +239,6 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       pain_notes: 'Wrists need warm-up.',
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday', 'friday'],
-      preferred_training_time: 'evening',
       prior_sport_background: ['strength_training'],
       primary_goal: 'skill',
       primary_target_skill: 'handstand',

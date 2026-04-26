@@ -72,7 +72,6 @@ class AthleteProfileFactory extends Factory
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],
             'preferred_session_minutes' => 60,
             'weekly_session_goal' => 3,
-            'preferred_training_time' => 'evening',
             'progression_pace' => 'balanced',
             'intensity_preference' => 'auto',
             'effort_tracking_preference' => 'simple',

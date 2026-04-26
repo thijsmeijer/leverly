@@ -50,7 +50,6 @@ class AthleteProfileResource extends JsonResource
             'preferred_training_days' => $this->preferred_training_days ?? [],
             'preferred_session_minutes' => $this->preferred_session_minutes,
             'weekly_session_goal' => $this->weekly_session_goal,
-            'preferred_training_time' => $this->preferred_training_time,
             'progression_pace' => $this->progression_pace,
             'intensity_preference' => $this->intensity_preference,
             'effort_tracking_preference' => $this->effort_tracking_preference,

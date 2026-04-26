@@ -45,7 +45,6 @@ export interface ProfileSettingsForm {
   mobilityChecks: Record<string, string>
   preferredSessionMinutes: string
   preferredTrainingDays: string[]
-  preferredTrainingTime: string
   priorSportBackground: string[]
   primaryGoal: string
   primaryTargetSkill: string

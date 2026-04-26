@@ -18,7 +18,6 @@ import {
   mobilityCheckOptions,
   mobilityStatusOptions,
   mobilityTestInstructions,
-  onboardingTrainingTimeOptions,
   painAreaOptions,
   painOptions,
   priorSportOptions,
@@ -739,7 +738,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
           v-if="activeStep === 'availability'"
           eyebrow="Step 5"
           title="Set the schedule Leverly can actually use."
-          description="The first plan should fit your week before it tries to be ambitious. Choose training days, session ceiling, and the weekly rhythm."
+          description="The first plan should fit your week before it tries to be ambitious. Choose training days, session ceiling, and max sessions per week."
         >
           <div class="space-y-6">
             <OnboardingChoiceGrid
@@ -750,7 +749,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               name="onboarding-training-days"
               :options="trainingDayOptions"
             />
-            <div class="grid gap-5 md:grid-cols-3">
+            <div class="grid gap-5 md:grid-cols-2">
               <OnboardingNumberField
                 id="onboarding-session-minutes"
                 v-model="onboarding.form.preferredSessionMinutes"
@@ -765,17 +764,10 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 id="onboarding-weekly-sessions"
                 v-model="onboarding.form.weeklySessionGoal"
                 :error="errorFor('weeklySessionGoal')"
-                label="Weekly sessions"
+                label="Max sessions per week"
                 :max="14"
                 :min="1"
                 placeholder="3"
-              />
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.preferredTrainingTime"
-                columns="compact"
-                label="Training time"
-                name="onboarding-training-time"
-                :options="onboardingTrainingTimeOptions"
               />
             </div>
           </div>

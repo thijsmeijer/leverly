@@ -175,7 +175,7 @@ describe('settingsService', () => {
       displayName: 'Add the name you want shown in Leverly.',
       preferredSessionMinutes: 'Maximum session length must be 10 to 240 minutes.',
       secondaryGoals: 'Choose up to two secondary goals that fit your primary goal.',
-      weeklySessionGoal: 'Weekly sessions must be between 1 and 14.',
+      weeklySessionGoal: 'Max sessions per week must be between 1 and 14.',
     })
   })
 })
@@ -218,7 +218,6 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       },
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday'],
-      preferred_training_time: 'evening',
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       progression_pace: 'balanced',

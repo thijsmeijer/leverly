@@ -36,7 +36,6 @@ type ProfileUpdateBody = {
   readonly mobility_checks: Record<string, string>
   readonly preferred_session_minutes: number | null
   readonly preferred_training_days: string[]
-  readonly preferred_training_time: string
   readonly prior_sport_background: string[]
   readonly primary_goal: string | null
   readonly primary_target_skill: string | null
@@ -106,7 +105,6 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     mobilityChecks: Object.fromEntries(mobilityCheckOptions.map((option) => [option.value, 'not_tested'])),
     preferredSessionMinutes: '45',
     preferredTrainingDays: [],
-    preferredTrainingTime: 'flexible',
     priorSportBackground: [],
     primaryGoal: 'strength',
     primaryTargetSkill: '',
@@ -234,7 +232,7 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
     form.weeklySessionGoal,
     1,
     14,
-    'Weekly sessions must be between 1 and 14.',
+    'Max sessions per week must be between 1 and 14.',
   )
 
   const compatibleGoals = compatibleSecondaryGoals[form.primaryGoal] ?? []
@@ -337,7 +335,6 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     preferredSessionMinutes:
       profile.preferred_session_minutes === null ? '' : String(profile.preferred_session_minutes),
     preferredTrainingDays: [...profile.preferred_training_days],
-    preferredTrainingTime: profile.preferred_training_time,
     priorSportBackground: [...(profile.prior_sport_background ?? [])],
     primaryGoal: profile.primary_goal ?? 'strength',
     primaryTargetSkill: profile.primary_target_skill ?? '',
@@ -433,7 +430,6 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     mobility_checks: { ...form.mobilityChecks },
     preferred_session_minutes: nullableNumber(form.preferredSessionMinutes),
     preferred_training_days: form.preferredTrainingDays,
-    preferred_training_time: form.preferredTrainingTime,
     prior_sport_background: [...form.priorSportBackground],
     primary_goal: form.primaryGoal || null,
     primary_target_skill: form.primaryTargetSkill || null,
@@ -541,7 +537,6 @@ function mapServerField(field: string): keyof ProfileSettingsForm | null {
     mobility_checks: 'mobilityChecks',
     preferred_session_minutes: 'preferredSessionMinutes',
     preferred_training_days: 'preferredTrainingDays',
-    preferred_training_time: 'preferredTrainingTime',
     prior_sport_background: 'priorSportBackground',
     primary_goal: 'primaryGoal',
     primary_target_skill: 'primaryTargetSkill',

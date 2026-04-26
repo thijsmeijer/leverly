@@ -35,7 +35,6 @@ return new class extends Migration
             $table->json('preferred_training_days');
             $table->unsignedSmallInteger('preferred_session_minutes')->nullable();
             $table->unsignedTinyInteger('weekly_session_goal')->nullable();
-            $table->string('preferred_training_time', 32)->default('flexible');
             $table->json('current_level_tests');
             $table->json('skill_statuses');
             $table->json('mobility_checks');

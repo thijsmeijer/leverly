@@ -48,7 +48,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'preferred_training_days',
     'preferred_session_minutes',
     'weekly_session_goal',
-    'preferred_training_time',
     'progression_pace',
     'intensity_preference',
     'effort_tracking_preference',

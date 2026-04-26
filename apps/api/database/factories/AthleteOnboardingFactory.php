@@ -45,7 +45,6 @@ class AthleteOnboardingFactory extends Factory
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],
             'preferred_session_minutes' => 60,
             'weekly_session_goal' => 3,
-            'preferred_training_time' => 'evening',
             'current_level_tests' => [
                 'push_ups' => ['max_strict_reps' => 18],
                 'pull_ups' => ['max_strict_reps' => 4],

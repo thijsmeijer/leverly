@@ -31,7 +31,6 @@ import {
   targetSkillOptions,
   trainingDayOptions,
   trainingLocationOptions,
-  trainingTimeOptions,
   unitSystemOptions,
   weightedExperienceOptions,
   weightedMovementOptions,
@@ -171,8 +170,7 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
     errors.trainingLocations ||
     errors.preferredTrainingDays ||
     errors.preferredSessionMinutes ||
-    errors.weeklySessionGoal ||
-    errors.preferredTrainingTime
+    errors.weeklySessionGoal
   ) {
     return 'setup'
   }
@@ -677,7 +675,7 @@ function removeWeightedMovement(index: number): void {
           />
         </div>
 
-        <div class="mt-5 grid gap-4 md:grid-cols-3">
+        <div class="mt-5 grid gap-4 md:grid-cols-2">
           <ProfileTextField
             id="preferred-session-minutes"
             v-model="form.preferredSessionMinutes"
@@ -693,16 +691,9 @@ function removeWeightedMovement(index: number): void {
             v-model="form.weeklySessionGoal"
             :error="fieldErrors.weeklySessionGoal"
             input-mode="numeric"
-            label="Weekly sessions"
+            label="Max sessions per week"
             placeholder="3"
             type="number"
-          />
-          <ProfileSelectField
-            id="preferred-training-time"
-            v-model="form.preferredTrainingTime"
-            :error="fieldErrors.preferredTrainingTime"
-            label="Preferred time"
-            :options="trainingTimeOptions"
           />
         </div>
       </ProfileFormSection>

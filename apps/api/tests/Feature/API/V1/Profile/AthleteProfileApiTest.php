@@ -135,7 +135,6 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.base_focus_areas', [])
             ->assertJsonPath('data.long_term_target_skills', [])
             ->assertJsonPath('data.mobility_checks.wrist_extension', 'not_tested')
-            ->assertJsonPath('data.preferred_training_time', 'flexible')
             ->assertJsonPath('data.progression_pace', 'balanced')
             ->assertJsonPath('data.intensity_preference', 'auto');
     }
@@ -184,7 +183,6 @@ class AthleteProfileApiTest extends TestCase
             'preferred_training_days' => ['funday'],
             'preferred_session_minutes' => 5,
             'weekly_session_goal' => 15,
-            'preferred_training_time' => 'midnight',
             'progression_pace' => 'reckless',
             'intensity_preference' => 'maximum',
             'effort_tracking_preference' => 'vibes',
@@ -228,7 +226,6 @@ class AthleteProfileApiTest extends TestCase
                 'preferred_training_days.0',
                 'preferred_session_minutes',
                 'weekly_session_goal',
-                'preferred_training_time',
                 'progression_pace',
                 'intensity_preference',
                 'effort_tracking_preference',
@@ -299,7 +296,6 @@ class AthleteProfileApiTest extends TestCase
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],
             'preferred_session_minutes' => 60,
             'weekly_session_goal' => 4,
-            'preferred_training_time' => 'evening',
             'progression_pace' => 'balanced',
             'intensity_preference' => 'auto',
             'effort_tracking_preference' => 'rir',

@@ -36,7 +36,6 @@ namespace App\Models{
  * @property array<array-key, mixed> $preferred_training_days
  * @property int|null $preferred_session_minutes
  * @property int|null $weekly_session_goal
- * @property string $preferred_training_time
  * @property array<array-key, mixed> $current_level_tests
  * @property array<array-key, mixed> $skill_statuses
  * @property array<array-key, mixed> $mobility_checks
@@ -76,7 +75,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredSessionMinutes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredTrainingDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredTrainingTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePrimaryGoal($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePrimaryTargetSkill($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePriorSportBackground($value)
@@ -135,7 +133,6 @@ namespace App\Models{
  * @property array<array-key, mixed> $preferred_training_days
  * @property int|null $preferred_session_minutes
  * @property int|null $weekly_session_goal
- * @property string $preferred_training_time
  * @property string $progression_pace
  * @property string $intensity_preference
  * @property string $effort_tracking_preference
@@ -170,7 +167,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereMovementLimitations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePreferredSessionMinutes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePreferredTrainingDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePreferredTrainingTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePrimaryGoal($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePrimaryTargetSkill($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePriorSportBackground($value)

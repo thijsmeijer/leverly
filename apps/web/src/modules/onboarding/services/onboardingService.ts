@@ -51,7 +51,6 @@ type OnboardingUpdateBody = {
   readonly pain_notes: string | null
   readonly preferred_session_minutes: number | null
   readonly preferred_training_days: string[]
-  readonly preferred_training_time: string
   readonly prior_sport_background: string[]
   readonly primary_goal: string | null
   readonly primary_target_skill: string | null
@@ -121,7 +120,6 @@ export function defaultOnboardingForm(): OnboardingForm {
     painNotes: '',
     preferredSessionMinutes: '45',
     preferredTrainingDays: [],
-    preferredTrainingTime: 'flexible',
     priorSportBackground: [],
     primaryTargetSkill: '',
     primaryGoal: 'skill',
@@ -357,7 +355,6 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
         ? defaults.preferredSessionMinutes
         : String(onboarding.preferred_session_minutes),
     preferredTrainingDays: [...onboarding.preferred_training_days],
-    preferredTrainingTime: onboarding.preferred_training_time,
     priorSportBackground: [...onboarding.prior_sport_background],
     primaryTargetSkill: onboarding.primary_target_skill ?? defaults.primaryTargetSkill,
     primaryGoal: onboarding.primary_goal ?? defaults.primaryGoal,
@@ -445,7 +442,6 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     pain_notes: form.painNotes.trim() || null,
     preferred_session_minutes: nullableInteger(form.preferredSessionMinutes),
     preferred_training_days: [...form.preferredTrainingDays],
-    preferred_training_time: form.preferredTrainingTime,
     prior_sport_background: [...form.priorSportBackground],
     primary_goal: form.primaryGoal || null,
     primary_target_skill: form.primaryTargetSkill || null,
@@ -584,7 +580,6 @@ function serverKeyToField(key: string): string {
     pain_notes: 'painNotes',
     preferred_session_minutes: 'preferredSessionMinutes',
     preferred_training_days: 'preferredTrainingDays',
-    preferred_training_time: 'preferredTrainingTime',
     prior_sport_background: 'priorSportBackground',
     primary_goal: 'primaryGoal',
     primary_target_skill: 'primaryTargetSkill',

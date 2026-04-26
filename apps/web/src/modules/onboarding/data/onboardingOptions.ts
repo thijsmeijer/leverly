@@ -7,7 +7,6 @@ import {
   limitationAreaOptions,
   trainingDayOptions,
   trainingLocationOptions,
-  trainingTimeOptions,
 } from '@/modules/settings'
 
 import type { ChoiceOption } from '../types'
@@ -327,7 +326,6 @@ export const painOptions: ChoiceOption[] = Array.from({ length: 11 }, (_, value)
 }))
 
 export const painAreaOptions = limitationAreaOptions
-export const onboardingTrainingTimeOptions = trainingTimeOptions
 
 export const mobilityCheckOptions: ChoiceOption[] = [
   { label: 'Wrist extension', value: 'wrist_extension', description: 'Planche, handstand, and push-up loading.' },

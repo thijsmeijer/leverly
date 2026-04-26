@@ -221,7 +221,6 @@ class AthleteOnboardingApiTest extends TestCase
             'preferred_training_days' => ['funday'],
             'preferred_session_minutes' => 5,
             'weekly_session_goal' => 15,
-            'preferred_training_time' => 'midnight',
             'current_level_tests' => [
                 'push_ups' => ['max_strict_reps' => -1],
                 'pull_ups' => ['max_strict_reps' => -1],
@@ -270,7 +269,6 @@ class AthleteOnboardingApiTest extends TestCase
                 'preferred_training_days.0',
                 'preferred_session_minutes',
                 'weekly_session_goal',
-                'preferred_training_time',
                 'current_level_tests.push_ups.max_strict_reps',
                 'current_level_tests.pull_ups.max_strict_reps',
                 'current_level_tests.dips.max_strict_reps',
@@ -342,7 +340,6 @@ class AthleteOnboardingApiTest extends TestCase
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],
             'preferred_session_minutes' => 60,
             'weekly_session_goal' => 3,
-            'preferred_training_time' => 'evening',
             'current_level_tests' => [
                 'push_ups' => ['max_strict_reps' => 18],
                 'pull_ups' => ['max_strict_reps' => 4],

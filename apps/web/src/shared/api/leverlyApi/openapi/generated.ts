@@ -118,7 +118,6 @@ export interface AthleteProfile {
   readonly preferred_training_days: readonly string[]
   readonly preferred_session_minutes: number | null
   readonly weekly_session_goal: number | null
-  readonly preferred_training_time: string
   readonly progression_pace: string
   readonly intensity_preference: string
   readonly effort_tracking_preference: string
@@ -178,7 +177,6 @@ export interface AthleteOnboarding {
   readonly preferred_training_days: readonly string[]
   readonly preferred_session_minutes: number | null
   readonly weekly_session_goal: number | null
-  readonly preferred_training_time: string
   readonly current_level_tests: OnboardingLevelTests
   readonly skill_statuses: Readonly<Record<string, OnboardingSkillStatus>>
   readonly mobility_checks: Readonly<Record<string, string>>

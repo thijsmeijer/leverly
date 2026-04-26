@@ -103,7 +103,6 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       },
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday'],
-      preferred_training_time: 'evening',
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       progression_pace: 'balanced',

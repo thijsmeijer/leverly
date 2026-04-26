@@ -13,7 +13,6 @@ export {
   targetSkillOptions,
   trainingDayOptions,
   trainingLocationOptions,
-  trainingTimeOptions,
   weightedExperienceOptions,
   weightedMovementOptions,
 } from './data/profileOptions'

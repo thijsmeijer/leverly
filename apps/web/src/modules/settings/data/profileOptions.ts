@@ -345,13 +345,6 @@ export const trainingLocationOptions: ChoiceOption[] = [
   { label: 'Travel', value: 'travel' },
 ]
 
-export const trainingTimeOptions: ChoiceOption[] = [
-  { label: 'Morning', value: 'morning' },
-  { label: 'Midday', value: 'midday' },
-  { label: 'Evening', value: 'evening' },
-  { label: 'Flexible', value: 'flexible' },
-]
-
 export const progressionPaceOptions: ChoiceOption[] = [
   { label: 'Conservative', value: 'conservative', description: 'Small jumps with more time to adapt.' },
   { label: 'Balanced', value: 'balanced', description: 'Progress when your evidence is strong.' },

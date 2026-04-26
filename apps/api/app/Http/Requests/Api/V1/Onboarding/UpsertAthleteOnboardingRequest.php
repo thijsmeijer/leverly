@@ -55,7 +55,6 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'preferred_training_days.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TRAINING_DAYS)],
             'preferred_session_minutes' => ['sometimes', 'nullable', 'integer', 'min:10', 'max:240'],
             'weekly_session_goal' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:14'],
-            'preferred_training_time' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::TRAINING_TIMES)],
             'current_level_tests' => ['sometimes', 'array:push_ups,pull_ups,dips,squat,hollow_hold_seconds'],
             'current_level_tests.push_ups' => ['sometimes', 'array:max_strict_reps'],
             'current_level_tests.push_ups.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:200'],
@@ -134,8 +133,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'training_locations' => ['description' => 'Where the athlete can train.', 'example' => ['home', 'park']],
             'preferred_training_days' => ['description' => 'Training days available for scheduling.', 'example' => ['monday', 'wednesday', 'friday']],
             'preferred_session_minutes' => ['description' => 'Maximum session length in minutes.', 'example' => 60],
-            'weekly_session_goal' => ['description' => 'Target sessions per week.', 'example' => 3],
-            'preferred_training_time' => ['description' => 'Preferred training time.', 'example' => 'evening'],
+            'weekly_session_goal' => ['description' => 'Maximum training sessions per week.', 'example' => 3],
             'current_level_tests' => [
                 'description' => 'Baseline tests for starter recommendation placement.',
                 'example' => [
