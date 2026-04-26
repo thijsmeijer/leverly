@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Training\Support;
 
+use App\Domain\Training\Roadmap\RoadmapInput;
+use App\Domain\Training\Roadmap\RoadmapResult;
+
 final class CalisthenicsRoadmapSuggester
 {
     private const array TARGET_LABELS = [
@@ -31,12 +34,11 @@ final class CalisthenicsRoadmapSuggester
     ];
 
     /**
-     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public static function suggest(array $data): array
+    public static function suggest(RoadmapInput $input): array
     {
-        $signals = self::signals($data);
+        $signals = self::signals($input);
 
         $unlocked = [];
         $bridge = [];
@@ -137,7 +139,7 @@ final class CalisthenicsRoadmapSuggester
         }
 
         self::addAdvancedTracks($signals, $unlocked, $bridge, $longTerm, $deferred);
-        self::addRequestedAspirations($data, $unlocked, $bridge, $longTerm, $deferred);
+        self::addRequestedAspirations($input, $unlocked, $bridge, $longTerm, $deferred);
 
         $baseFocusAreas = self::uniqueStrings(array_slice(array_merge(
             ...array_map(
@@ -146,16 +148,16 @@ final class CalisthenicsRoadmapSuggester
             ),
         ), 0, 4));
 
-        return [
+        return RoadmapResult::fromTrackBuckets($input, $signals, [
             'level' => self::level($signals),
             'summary' => self::summary($signals),
-            'body_context' => self::bodyContext($data),
+            'body_context' => self::bodyContext($input),
             'base_focus_areas' => $baseFocusAreas,
             'unlocked_tracks' => self::dedupeTracks($unlocked),
             'bridge_tracks' => self::dedupeTracks($bridge),
             'long_term_tracks' => self::dedupeTracks($longTerm),
             'deferred_tracks' => self::dedupeTracks($deferred),
-        ];
+        ])->toArray();
     }
 
     /**
@@ -174,16 +176,7 @@ final class CalisthenicsRoadmapSuggester
      */
     public static function empty(): array
     {
-        return [
-            'level' => 'foundation',
-            'summary' => 'Complete the baseline tests to unlock a useful roadmap.',
-            'body_context' => ['notes' => []],
-            'base_focus_areas' => [],
-            'unlocked_tracks' => [],
-            'bridge_tracks' => [],
-            'long_term_tracks' => [],
-            'deferred_tracks' => [],
-        ];
+        return RoadmapResult::empty()->toArray();
     }
 
     /**
@@ -305,17 +298,16 @@ final class CalisthenicsRoadmapSuggester
     }
 
     /**
-     * @param  array<string, mixed>  $data
      * @param  list<array<string, mixed>>  $unlocked
      * @param  list<array<string, mixed>>  $bridge
      * @param  list<array<string, mixed>>  $longTerm
      * @param  list<array<string, mixed>>  $deferred
      */
-    private static function addRequestedAspirations(array $data, array $unlocked, array $bridge, array &$longTerm, array &$deferred): void
+    private static function addRequestedAspirations(RoadmapInput $input, array $unlocked, array $bridge, array &$longTerm, array &$deferred): void
     {
         $activeSlugs = self::trackSlugs([...$unlocked, ...$bridge]);
         $knownSlugs = self::trackSlugs([...$unlocked, ...$bridge, ...$longTerm, ...$deferred]);
-        $requested = is_array($data['long_term_target_skills'] ?? null) ? $data['long_term_target_skills'] : [];
+        $requested = $input->longTermAspirations;
 
         foreach ($requested as $skill) {
             if (! is_string($skill) || in_array($skill, $activeSlugs, true) || in_array($skill, $knownSlugs, true)) {
@@ -337,24 +329,23 @@ final class CalisthenicsRoadmapSuggester
     }
 
     /**
-     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    private static function signals(array $data): array
+    private static function signals(RoadmapInput $input): array
     {
-        $tests = is_array($data['current_level_tests'] ?? null) ? $data['current_level_tests'] : [];
+        $tests = $input->baselineTests;
         $pushUps = is_array($tests['push_ups'] ?? null) ? $tests['push_ups'] : [];
         $pullUps = is_array($tests['pull_ups'] ?? null) ? $tests['pull_ups'] : [];
         $dips = is_array($tests['dips'] ?? null) ? $tests['dips'] : [];
         $squat = is_array($tests['squat'] ?? null) ? $tests['squat'] : [];
-        $skillStatuses = is_array($data['skill_statuses'] ?? null) ? $data['skill_statuses'] : [];
-        $mobility = is_array($data['mobility_checks'] ?? null) ? $data['mobility_checks'] : [];
+        $skillStatuses = is_array($input->goalModules['skill_statuses'] ?? null) ? $input->goalModules['skill_statuses'] : [];
+        $mobility = is_array($input->goalModules['mobility_checks'] ?? null) ? $input->goalModules['mobility_checks'] : [];
 
         $pushReps = self::intValue($pushUps['max_strict_reps'] ?? null);
         $pullReps = self::intValue($pullUps['max_strict_reps'] ?? null);
         $dipReps = self::intValue($dips['max_strict_reps'] ?? null);
         $barbellSquatReps = self::intValue($squat['barbell_reps'] ?? null);
-        $barbellSquatRatio = self::barbellSquatRatio($data);
+        $barbellSquatRatio = self::barbellSquatRatio($input);
         $hollowHold = self::intValue($tests['hollow_hold_seconds'] ?? null);
         $handstandStatus = is_array($skillStatuses['handstand'] ?? null) ? $skillStatuses['handstand'] : [];
         $lSitStatus = is_array($skillStatuses['l_sit'] ?? null) ? $skillStatuses['l_sit'] : [];
@@ -380,7 +371,7 @@ final class CalisthenicsRoadmapSuggester
         $wristBlocked = in_array($mobility['wrist_extension'] ?? 'not_tested', ['blocked', 'painful'], true);
         $shoulderBlocked = in_array($mobility['shoulder_flexion'] ?? 'not_tested', ['blocked', 'painful'], true);
         $ankleBlocked = in_array($mobility['ankle_dorsiflexion'] ?? 'not_tested', ['blocked', 'painful'], true);
-        $weightedPullRatio = self::weightedPullRatio($data);
+        $weightedPullRatio = self::weightedPullRatio($input);
 
         return [
             'push_reps' => $pushReps,
@@ -438,18 +429,17 @@ final class CalisthenicsRoadmapSuggester
     }
 
     /**
-     * @param  array<string, mixed>  $data
      * @return array{notes: list<string>}
      */
-    private static function bodyContext(array $data): array
+    private static function bodyContext(RoadmapInput $input): array
     {
         $notes = [];
-        $age = self::intValue($data['age_years'] ?? null);
-        $trainingAge = self::intValue($data['training_age_months'] ?? null);
-        $bodyweight = self::numberValue($data['current_bodyweight_value'] ?? null);
-        $height = self::numberValue($data['height_value'] ?? null);
-        $heightUnit = $data['height_unit'] ?? 'cm';
-        $bodyweightUnit = $data['bodyweight_unit'] ?? 'kg';
+        $age = self::intValue($input->profileContext['age_years'] ?? null);
+        $trainingAge = self::intValue($input->trainingContext['training_age_months'] ?? null);
+        $bodyweight = self::numberValue($input->profileContext['current_bodyweight_value'] ?? null);
+        $height = self::numberValue($input->profileContext['height_value'] ?? null);
+        $heightUnit = $input->profileContext['height_unit'] ?? 'cm';
+        $bodyweightUnit = $input->profileContext['bodyweight_unit'] ?? 'kg';
 
         if ($age >= 40) {
             $notes[] = 'Use a slightly longer ramp-up and keep recovery checks in the first blocks.';
@@ -467,15 +457,15 @@ final class CalisthenicsRoadmapSuggester
         return ['notes' => $notes];
     }
 
-    private static function weightedPullRatio(array $data): float
+    private static function weightedPullRatio(RoadmapInput $input): float
     {
-        $bodyweight = self::numberValue($data['current_bodyweight_value'] ?? null);
+        $bodyweight = self::numberValue($input->profileContext['current_bodyweight_value'] ?? null);
         if ($bodyweight <= 0.0) {
             return 0.0;
         }
 
-        $bodyweightUnit = $data['bodyweight_unit'] ?? 'kg';
-        $weightedBaselines = is_array($data['weighted_baselines'] ?? null) ? $data['weighted_baselines'] : [];
+        $bodyweightUnit = $input->profileContext['bodyweight_unit'] ?? 'kg';
+        $weightedBaselines = is_array($input->goalModules['weighted_baselines'] ?? null) ? $input->goalModules['weighted_baselines'] : [];
         $unit = $weightedBaselines['unit'] ?? $bodyweightUnit;
         $movements = is_array($weightedBaselines['movements'] ?? null) ? $weightedBaselines['movements'] : [];
 
@@ -500,10 +490,10 @@ final class CalisthenicsRoadmapSuggester
         return 0.0;
     }
 
-    private static function barbellSquatRatio(array $data): float
+    private static function barbellSquatRatio(RoadmapInput $input): float
     {
-        $bodyweight = self::numberValue($data['current_bodyweight_value'] ?? null);
-        $tests = is_array($data['current_level_tests'] ?? null) ? $data['current_level_tests'] : [];
+        $bodyweight = self::numberValue($input->profileContext['current_bodyweight_value'] ?? null);
+        $tests = $input->baselineTests;
         $squat = is_array($tests['squat'] ?? null) ? $tests['squat'] : [];
         $load = self::numberValue($squat['barbell_load_value'] ?? null);
 

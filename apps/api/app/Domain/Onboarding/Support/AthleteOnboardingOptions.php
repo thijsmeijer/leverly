@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Onboarding\Support;
 
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Roadmap\RoadmapInputMapper;
 use App\Domain\Training\Support\CalisthenicsPlacementOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
@@ -150,7 +151,9 @@ final class AthleteOnboardingOptions
             $merged['current_level_tests'] = CalisthenicsPlacementOptions::normalizeLevelTests($merged['current_level_tests']);
         }
 
-        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest($merged);
+        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest(
+            RoadmapInputMapper::fromAthleteData($merged),
+        );
 
         return $merged;
     }

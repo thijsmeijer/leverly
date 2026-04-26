@@ -77,6 +77,15 @@ paths:
                         type: number
                       roadmap_suggestions:
                         type: object
+                        properties:
+                          version:
+                            type: string
+                          primary_goal:
+                            type: object
+                          eta_range:
+                            type: object
+                          intermediate:
+                            type: object
                       preferred_session_minutes:
                         type: integer
                       primary_target_skill:
@@ -112,6 +121,15 @@ paths:
                         type: number
                       roadmap_suggestions:
                         type: object
+                        properties:
+                          version:
+                            type: string
+                          primary_goal:
+                            type: object
+                          eta_range:
+                            type: object
+                          intermediate:
+                            type: object
                       preferred_session_minutes:
                         type: integer
                       primary_target_skill:
@@ -144,6 +162,15 @@ paths:
                         type: number
                       roadmap_suggestions:
                         type: object
+                        properties:
+                          version:
+                            type: string
+                          primary_goal:
+                            type: object
+                          eta_range:
+                            type: object
+                          intermediate:
+                            type: object
                       primary_target_skill:
                         type: string
                       mobility_checks:
@@ -175,6 +202,15 @@ paths:
                         type: number
                       roadmap_suggestions:
                         type: object
+                        properties:
+                          version:
+                            type: string
+                          primary_goal:
+                            type: object
+                          eta_range:
+                            type: object
+                          intermediate:
+                            type: object
                       primary_target_skill:
                         type: string
                       mobility_checks:
@@ -208,6 +244,8 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('export interface CurrentUserResponse')
     expect(generated).toContain('export interface AthleteProfileResponse')
     expect(generated).toContain('export interface AthleteOnboardingResponse')
+    expect(generated).toContain('readonly version: string')
+    expect(generated).toContain('readonly eta_range: RoadmapEtaRange')
     expect(generated).toContain("readonly '/me'")
     expect(generated).toContain("readonly '/me/profile'")
     expect(generated).toContain("readonly '/me/onboarding'")

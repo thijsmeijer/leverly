@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api\V1\Onboarding;
 
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Roadmap\RoadmapInputMapper;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use Illuminate\Foundation\Http\FormRequest;
@@ -317,7 +318,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
 
         $candidate = AthleteOnboardingOptions::mergeForCompletion($current, $this->all());
         $activeSkillSlugs = CalisthenicsRoadmapSuggester::activeSkillSlugs(
-            CalisthenicsRoadmapSuggester::suggest($candidate),
+            CalisthenicsRoadmapSuggester::suggest(RoadmapInputMapper::fromAthleteData($candidate)),
         );
 
         foreach ($targetSkills as $index => $targetSkill) {

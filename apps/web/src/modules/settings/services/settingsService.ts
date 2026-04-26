@@ -1,4 +1,5 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
+import { emptyRoadmapSuggestions, mapRoadmapSuggestions } from '@/modules/roadmap'
 
 import { compatibleSecondaryGoals, equipmentOptions, mobilityCheckOptions } from '../data/profileOptions'
 import type { ProfileFieldErrors, ProfileSettingsForm, ProfileSettingsState } from '../types'
@@ -109,6 +110,7 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     primaryGoal: 'strength',
     primaryTargetSkill: '',
     progressionPace: 'balanced',
+    roadmapSuggestions: emptyRoadmapSuggestions(),
     secondaryGoals: [],
     secondaryTargetSkills: [],
     sessionStructurePreferences: [],
@@ -339,6 +341,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     primaryGoal: profile.primary_goal ?? 'strength',
     primaryTargetSkill: profile.primary_target_skill ?? '',
     progressionPace: profile.progression_pace,
+    roadmapSuggestions: mapRoadmapSuggestions(profile.roadmap_suggestions),
     secondaryGoals: profile.secondary_goals.filter((goal) =>
       (compatibleSecondaryGoals[profile.primary_goal ?? 'strength'] ?? []).includes(goal),
     ),

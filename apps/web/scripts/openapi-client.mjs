@@ -58,6 +58,9 @@ export function findContractProblems(openApiSource) {
     ['athlete profile age property', 'age_years:'],
     ['athlete profile height property', 'height_value:'],
     ['athlete profile roadmap suggestions property', 'roadmap_suggestions:'],
+    ['athlete profile roadmap version property', 'version:'],
+    ['athlete profile roadmap primary goal property', 'primary_goal:'],
+    ['athlete profile roadmap eta range property', 'eta_range:'],
     ['athlete profile primary target skill property', 'primary_target_skill:'],
     ['athlete profile baseline tests property', 'baseline_tests:'],
     ['athlete profile mobility checks property', 'mobility_checks:'],
@@ -69,6 +72,8 @@ export function findContractProblems(openApiSource) {
     ['athlete onboarding age property', 'age_years:'],
     ['athlete onboarding height property', 'height_value:'],
     ['athlete onboarding roadmap suggestions property', 'roadmap_suggestions:'],
+    ['athlete onboarding roadmap version property', 'version:'],
+    ['athlete onboarding roadmap intermediate property', 'intermediate:'],
     ['athlete onboarding level tests property', 'current_level_tests:'],
     ['athlete onboarding primary target skill property', 'primary_target_skill:'],
     ['athlete onboarding mobility checks property', 'mobility_checks:'],
@@ -169,9 +174,95 @@ export interface RoadmapTrack {
   readonly compatible_secondary_skills: readonly string[]
 }
 
+export interface RoadmapNode {
+  readonly id: string
+  readonly label: string
+}
+
+export interface RoadmapEtaRange {
+  readonly min_weeks: number | null
+  readonly max_weeks: number | null
+  readonly label: string
+}
+
+export interface RoadmapConfidence {
+  readonly level: string
+  readonly score: number | null
+  readonly reasons: readonly string[]
+}
+
+export interface RoadmapBlocker {
+  readonly key: string
+  readonly label: string
+  readonly severity: string
+  readonly message: string
+}
+
+export interface RoadmapUnlockCondition {
+  readonly skill: string
+  readonly label: string
+  readonly status: string
+}
+
+export interface RoadmapGoal {
+  readonly skill: string
+  readonly label: string
+  readonly lane: string
+  readonly current_progression_node: RoadmapNode
+  readonly next_node: RoadmapNode
+  readonly next_milestone: RoadmapNode
+  readonly eta_range: RoadmapEtaRange
+  readonly confidence: RoadmapConfidence
+  readonly blockers: readonly RoadmapBlocker[]
+  readonly unlock_conditions: readonly RoadmapUnlockCondition[]
+  readonly compatibility_tags: readonly string[]
+  readonly explanation: string
+}
+
+export interface RoadmapFoundationLane {
+  readonly slug: string
+  readonly label: string
+  readonly focus_areas: readonly string[]
+  readonly current_progression_node: RoadmapNode
+  readonly next_node: RoadmapNode
+  readonly next_milestone: RoadmapNode
+}
+
+export interface RoadmapExplanation {
+  readonly summary: string
+  readonly why_this_goal: readonly string[]
+  readonly watch_out_for: readonly string[]
+  readonly fallback: string
+}
+
+export interface RoadmapIntermediate {
+  readonly progression_graph_placement: Readonly<Record<string, unknown>>
+  readonly domain_scores: Readonly<Record<string, unknown>>
+  readonly domain_uncertainty: Readonly<Record<string, unknown>>
+  readonly hard_gate_results: readonly Readonly<Record<string, unknown>>[]
+  readonly readiness_scores: readonly Readonly<Record<string, unknown>>[]
+  readonly compatibility_costs: readonly Readonly<Record<string, unknown>>[]
+  readonly eta_modifiers: readonly Readonly<Record<string, unknown>>[]
+}
+
 export interface RoadmapSuggestions {
+  readonly version: string
   readonly level: string
   readonly summary: string
+  readonly primary_goal: RoadmapGoal | null
+  readonly compatible_secondary_goal: RoadmapGoal | null
+  readonly foundation_lane: RoadmapFoundationLane
+  readonly deferred_goals: readonly RoadmapGoal[]
+  readonly current_progression_node: RoadmapNode
+  readonly next_node: RoadmapNode
+  readonly next_milestone: RoadmapNode
+  readonly eta_range: RoadmapEtaRange
+  readonly confidence: RoadmapConfidence
+  readonly blockers: readonly RoadmapBlocker[]
+  readonly unlock_conditions: readonly RoadmapUnlockCondition[]
+  readonly compatibility_tags: readonly string[]
+  readonly explanation: RoadmapExplanation
+  readonly intermediate: RoadmapIntermediate
   readonly body_context: {
     readonly notes: readonly string[]
   }

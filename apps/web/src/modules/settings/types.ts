@@ -1,3 +1,5 @@
+import type { RoadmapSuggestions } from '@/modules/roadmap'
+
 export type UnitSystem = 'imperial' | 'metric'
 export type BodyweightUnit = 'kg' | 'lb'
 
@@ -49,6 +51,7 @@ export interface ProfileSettingsForm {
   primaryGoal: string
   primaryTargetSkill: string
   progressionPace: string
+  roadmapSuggestions: RoadmapSuggestions
   secondaryGoals: string[]
   secondaryTargetSkills: string[]
   sessionStructurePreferences: string[]

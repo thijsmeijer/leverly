@@ -38,7 +38,25 @@ describe('onboardingService', () => {
         longTermTargetSkills: ['planche'],
         primaryTargetSkill: 'handstand',
         roadmapSuggestions: {
+          baseFocusAreas: ['pull_capacity', 'core_bodyline'],
+          blockers: [{ key: 'wrist_extension' }],
+          compatibleSecondaryGoal: {
+            skill: 'strict_pull_up',
+          },
+          confidence: {
+            level: 'medium',
+            score: 0.72,
+          },
+          etaRange: {
+            label: '8-16 weeks',
+            maxWeeks: 16,
+            minWeeks: 8,
+          },
           level: 'intermediate',
+          primaryGoal: {
+            skill: 'handstand',
+          },
+          version: 'roadmap.v2',
         },
         targetSkills: ['strict_pull_up', 'handstand'],
         trainingAgeMonths: '18',
@@ -272,10 +290,19 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
 
 function roadmapSuggestions() {
   return {
+    version: 'roadmap.v2',
     base_focus_areas: ['pull_capacity', 'core_bodyline'],
     body_context: {
       notes: [],
     },
+    blockers: [
+      {
+        key: 'wrist_extension',
+        label: 'Wrist extension',
+        severity: 'watch',
+        message: 'Wrist extension is limited, so keep handstand volume progressive.',
+      },
+    ],
     bridge_tracks: [
       {
         base_focus_areas: ['pull_capacity', 'row_volume'],
@@ -286,7 +313,74 @@ function roadmapSuggestions() {
         skill: 'strict_pull_up',
       },
     ],
+    deferred_goals: [
+      {
+        skill: 'one_arm_pull_up',
+        label: 'One-arm pull-up',
+        lane: 'deferred',
+        current_progression_node: { id: 'one_arm_pull_up.locked', label: 'Locked' },
+        next_node: { id: 'weighted_pull_up.base', label: 'Build weighted pull-up base' },
+        next_milestone: { id: 'weighted_pull_up.strong_base', label: 'Heavy weighted pull-up base' },
+        eta_range: { min_weeks: 52, max_weeks: 104, label: '12-24+ months' },
+        confidence: { level: 'low', score: 0.42, reasons: ['Advanced pulling metrics are incomplete.'] },
+        blockers: [],
+        unlock_conditions: [],
+        compatibility_tags: ['pull', 'elbow_flexor_load'],
+        explanation: 'Deferred until weighted pulling is stronger.',
+      },
+    ],
     deferred_tracks: [],
+    compatibility_tags: ['overhead', 'wrist_extension', 'skill_practice'],
+    compatible_secondary_goal: {
+      skill: 'strict_pull_up',
+      label: 'Pull-up',
+      lane: 'secondary',
+      current_progression_node: { id: 'strict_pull_up.current', label: 'Current pull-up base' },
+      next_node: { id: 'strict_pull_up.next', label: 'Build repeatable sets' },
+      next_milestone: { id: 'strict_pull_up.milestone', label: '3 sets of 6 to 8' },
+      eta_range: { min_weeks: 6, max_weeks: 12, label: '6-12 weeks' },
+      confidence: { level: 'medium', score: 0.7, reasons: ['Pull-up reps are measured.'] },
+      blockers: [],
+      unlock_conditions: [],
+      compatibility_tags: ['pull', 'foundation'],
+      explanation: 'Pairs well as a strength support lane.',
+    },
+    confidence: {
+      level: 'medium',
+      score: 0.72,
+      reasons: ['Baseline tests are complete enough for a first block.'],
+    },
+    current_progression_node: { id: 'handstand.current', label: 'Wall line and entry work' },
+    eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+    explanation: {
+      summary: 'Handstand is the clearest first roadmap priority from the current assessment.',
+      why_this_goal: ['Handstand pairs with the current pressing and bodyline base.'],
+      watch_out_for: ['Keep wrist loading progressive.'],
+      fallback: 'Keep handstand as line practice if wrists feel irritated.',
+    },
+    foundation_lane: {
+      slug: 'foundation_strength',
+      label: 'Foundation strength',
+      focus_areas: ['pull_capacity', 'core_bodyline'],
+      current_progression_node: { id: 'foundation.current', label: 'Measured foundation' },
+      next_node: { id: 'foundation.next', label: 'Build repeatable base volume' },
+      next_milestone: { id: 'foundation.milestone', label: 'Stable weekly base' },
+    },
+    intermediate: {
+      compatibility_costs: [{ skill: 'strict_pull_up', cost: 0.12, reasons: ['Low overlap with handstand.'] }],
+      domain_scores: {
+        vertical_pull: { score: 0.4, inputs: ['pull_ups'], label: 'Vertical pull' },
+      },
+      domain_uncertainty: {
+        vertical_pull: { score: 0.2, missing_inputs: [] },
+      },
+      eta_modifiers: [{ key: 'training_age', multiplier: 1, reason: 'Training age supports normal ramp.' }],
+      hard_gate_results: [{ key: 'pain', passed: true, severity: 'watch', message: 'Pain is low.' }],
+      progression_graph_placement: {
+        primary: { skill: 'handstand', node: 'handstand.current', completion: 0.45 },
+      },
+      readiness_scores: [{ skill: 'handstand', score: 0.68, reasons: ['Pressing and hollow data are present.'] }],
+    },
     level: 'intermediate',
     long_term_tracks: [
       {
@@ -298,6 +392,22 @@ function roadmapSuggestions() {
         skill: 'planche',
       },
     ],
+    next_milestone: { id: 'handstand.milestone', label: '30-second wall line' },
+    next_node: { id: 'handstand.next', label: 'Build wall line consistency' },
+    primary_goal: {
+      skill: 'handstand',
+      label: 'Handstand',
+      lane: 'primary',
+      current_progression_node: { id: 'handstand.current', label: 'Wall line and entry work' },
+      next_node: { id: 'handstand.next', label: 'Build wall line consistency' },
+      next_milestone: { id: 'handstand.milestone', label: '30-second wall line' },
+      eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+      confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete enough for a first block.'] },
+      blockers: [],
+      unlock_conditions: [{ skill: 'handstand', label: 'Pain-free wrist loading' }],
+      compatibility_tags: ['overhead', 'wrist_extension', 'skill_practice'],
+      explanation: 'Handstand is the clearest first roadmap priority from the current assessment.',
+    },
     summary: 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
     unlocked_tracks: [
       {

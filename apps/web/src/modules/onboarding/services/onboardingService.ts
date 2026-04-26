@@ -1,4 +1,5 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
+import { emptyRoadmapSuggestions, mapRoadmapSuggestions } from '@/modules/roadmap'
 
 import {
   mobilityCheckOptions,
@@ -360,7 +361,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     primaryGoal: onboarding.primary_goal ?? defaults.primaryGoal,
     readinessRating:
       onboarding.readiness_rating === null ? defaults.readinessRating : String(onboarding.readiness_rating),
-    roadmapSuggestions: onboarding.roadmap_suggestions,
+    roadmapSuggestions: mapRoadmapSuggestions(onboarding.roadmap_suggestions),
     secondaryGoals: [...onboarding.secondary_goals],
     secondaryTargetSkills: [...onboarding.secondary_target_skills],
     skillStatuses: {
@@ -614,21 +615,6 @@ function isServerValidationBody(body: unknown): body is ServerValidationBody {
   return typeof body === 'object' && body !== null
 }
 
-function emptyRoadmapSuggestions(): OnboardingRoadmapSuggestions {
-  return {
-    base_focus_areas: [],
-    body_context: {
-      notes: [],
-    },
-    bridge_tracks: [],
-    deferred_tracks: [],
-    level: 'foundation',
-    long_term_tracks: [],
-    summary: 'Complete the baseline tests to unlock a useful roadmap.',
-    unlocked_tracks: [],
-  }
-}
-
 function activeRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
-  return [...suggestions.unlocked_tracks, ...suggestions.bridge_tracks].map((track) => track.skill)
+  return [...suggestions.unlockedTracks, ...suggestions.bridgeTracks].map((track) => track.skill)
 }

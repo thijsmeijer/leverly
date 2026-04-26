@@ -45,7 +45,24 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.secondary_target_skills.0', 'strict_pull_up')
             ->assertJsonPath('data.long_term_target_skills.0', 'planche')
             ->assertJsonPath('data.base_focus_areas.0', 'pull_capacity')
+            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
             ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
+            ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
+            ->assertJsonPath('data.roadmap_suggestions.compatible_secondary_goal.skill', 'strict_pull_up')
+            ->assertJsonPath('data.roadmap_suggestions.foundation_lane.slug', 'foundation_strength')
+            ->assertJsonPath('data.roadmap_suggestions.current_progression_node.id', 'handstand.current')
+            ->assertJsonPath('data.roadmap_suggestions.next_node.id', 'handstand.next')
+            ->assertJsonPath('data.roadmap_suggestions.next_milestone.id', 'handstand.milestone')
+            ->assertJsonPath('data.roadmap_suggestions.eta_range.min_weeks', 8)
+            ->assertJsonPath('data.roadmap_suggestions.eta_range.max_weeks', 16)
+            ->assertJsonPath('data.roadmap_suggestions.confidence.level', 'medium')
+            ->assertJsonPath('data.roadmap_suggestions.blockers.0.key', 'wrist_extension')
+            ->assertJsonPath('data.roadmap_suggestions.unlock_conditions.0.skill', 'handstand')
+            ->assertJsonPath('data.roadmap_suggestions.compatibility_tags.0', 'overhead')
+            ->assertJsonPath('data.roadmap_suggestions.explanation.summary', 'Handstand is the clearest first roadmap priority from the current assessment.')
+            ->assertJsonPath('data.roadmap_suggestions.intermediate.progression_graph_placement.primary.skill', 'handstand')
+            ->assertJsonPath('data.roadmap_suggestions.intermediate.domain_scores.vertical_pull.score', 0.4)
+            ->assertJsonPath('data.roadmap_suggestions.intermediate.hard_gate_results.0.key', 'pain')
             ->assertJsonPath('data.roadmap_suggestions.unlocked_tracks.0.skill', 'strict_push_up')
             ->assertJsonPath('data.current_level_tests.push_ups.max_strict_reps', 18)
             ->assertJsonPath('data.current_level_tests.pull_ups.max_strict_reps', 4)
@@ -89,7 +106,9 @@ class AthleteOnboardingApiTest extends TestCase
         $this->assertSame(['strict_pull_up'], $profile->secondary_target_skills);
         $this->assertSame(['planche'], $profile->long_term_target_skills);
         $this->assertSame(['pull_capacity', 'core_bodyline', 'handstand_line'], $profile->base_focus_areas);
+        $this->assertSame('roadmap.v2', $profile->roadmap_suggestions['version']);
         $this->assertSame('intermediate', $profile->roadmap_suggestions['level']);
+        $this->assertSame('handstand', $profile->roadmap_suggestions['primary_goal']['skill']);
         $this->assertSame(['pull_up_bar', 'rings', 'parallettes'], $profile->available_equipment);
         $this->assertSame(100, $profile->baseline_tests['squat']['barbell_load_value']);
         $this->assertSame('limited', $profile->mobility_checks['wrist_extension']);

@@ -20,6 +20,59 @@ use Knuckles\Scribe\Attributes\ResponseField;
 
 class AthleteOnboardingController extends Controller
 {
+    private const array ROADMAP_EXAMPLE = [
+        'version' => 'roadmap.v2',
+        'level' => 'intermediate',
+        'summary' => 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
+        'primary_goal' => [
+            'skill' => 'handstand',
+            'label' => 'Handstand',
+            'lane' => 'primary',
+        ],
+        'compatible_secondary_goal' => [
+            'skill' => 'strict_pull_up',
+            'label' => 'Pull-up',
+            'lane' => 'secondary',
+        ],
+        'foundation_lane' => [
+            'slug' => 'foundation_strength',
+            'label' => 'Foundation strength',
+            'focus_areas' => ['pull_capacity', 'core_bodyline'],
+        ],
+        'deferred_goals' => [
+            ['skill' => 'planche', 'label' => 'Planche', 'lane' => 'deferred'],
+        ],
+        'current_progression_node' => ['id' => 'handstand.current', 'label' => 'Handstand placement'],
+        'next_node' => ['id' => 'handstand.next', 'label' => 'Build a clean line and controlled balance entries.'],
+        'next_milestone' => ['id' => 'handstand.milestone', 'label' => 'Build a clean line and controlled balance entries.'],
+        'eta_range' => ['min_weeks' => 8, 'max_weeks' => 16, 'label' => '8-16 weeks'],
+        'confidence' => ['level' => 'medium', 'score' => 0.72, 'reasons' => ['Baseline tests are complete enough for a first block.']],
+        'blockers' => [],
+        'unlock_conditions' => [['skill' => 'handstand', 'label' => 'Build a clean line and controlled balance entries.', 'status' => 'next']],
+        'compatibility_tags' => ['overhead', 'wrist_extension', 'skill_practice'],
+        'explanation' => [
+            'summary' => 'Handstand is the clearest first roadmap priority from the current assessment.',
+            'why_this_goal' => ['Your pressing, bodyline, shoulder, and wrist signals are ready for regular handstand practice.'],
+            'watch_out_for' => [],
+            'fallback' => 'If readiness drops, keep the same target and use the previous easier progression.',
+        ],
+        'intermediate' => [
+            'progression_graph_placement' => ['primary' => ['skill' => 'handstand', 'node' => 'handstand.current', 'completion' => 0.58]],
+            'domain_scores' => ['vertical_pull' => ['label' => 'Vertical pull', 'score' => 0.4, 'inputs' => ['pull_ups']]],
+            'domain_uncertainty' => ['vertical_pull' => ['score' => 0, 'missing_inputs' => []]],
+            'hard_gate_results' => [['key' => 'pain', 'passed' => true, 'severity' => 'watch', 'message' => 'Pain is low enough for normal conservative placement.']],
+            'readiness_scores' => [['skill' => 'handstand', 'score' => 0.58, 'reasons' => ['Handstand placement is supported.']]],
+            'compatibility_costs' => [['skill' => 'strict_pull_up', 'cost' => 0.12, 'reasons' => ['Overlap is acceptable for a secondary exposure.']]],
+            'eta_modifiers' => [['key' => 'training_age', 'multiplier' => 1, 'reason' => 'Training history supports a normal ramp.']],
+        ],
+        'body_context' => ['notes' => []],
+        'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
+        'unlocked_tracks' => [],
+        'bridge_tracks' => [],
+        'long_term_tracks' => [],
+        'deferred_tracks' => [],
+    ];
+
     #[Group('Onboarding')]
     #[Endpoint('Get onboarding state', 'Returns the signed-in athlete onboarding draft or completed onboarding answers.')]
     #[Authenticated]
@@ -42,7 +95,7 @@ class AthleteOnboardingController extends Controller
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['planche'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
-            'roadmap_suggestions' => ['level' => 'intermediate', 'summary' => 'Ready for focused skill work.'],
+            'roadmap_suggestions' => self::ROADMAP_EXAMPLE,
             'available_equipment' => ['pull_up_bar', 'rings'],
             'training_locations' => ['home'],
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],
@@ -110,7 +163,7 @@ class AthleteOnboardingController extends Controller
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['planche'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
-            'roadmap_suggestions' => ['level' => 'intermediate', 'summary' => 'Ready for focused skill work.'],
+            'roadmap_suggestions' => self::ROADMAP_EXAMPLE,
             'available_equipment' => ['pull_up_bar', 'rings'],
             'training_locations' => ['home'],
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],

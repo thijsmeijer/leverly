@@ -66,15 +66,15 @@ const chosenSkills = computed(() =>
     .map((option) => option.label),
 )
 const activeRoadmapTracks = computed(() => [
-  ...onboarding.form.roadmapSuggestions.unlocked_tracks,
-  ...onboarding.form.roadmapSuggestions.bridge_tracks,
+  ...onboarding.form.roadmapSuggestions.unlockedTracks,
+  ...onboarding.form.roadmapSuggestions.bridgeTracks,
 ])
 const activeRoadmapSkillValues = computed(() => activeRoadmapTracks.value.map((track) => track.skill))
 const activeRoadmapOptions = computed(() =>
   activeRoadmapTracks.value.map((track) => ({
-    description: `${track.reason} Next gate: ${track.next_gate}`,
+    description: `${track.reason} Next gate: ${track.nextGate}`,
     label: track.label,
-    meta: onboarding.form.roadmapSuggestions.unlocked_tracks.some((unlocked) => unlocked.skill === track.skill)
+    meta: onboarding.form.roadmapSuggestions.unlockedTracks.some((unlocked) => unlocked.skill === track.skill)
       ? 'Ready now'
       : 'Bridge',
     value: track.skill,
@@ -85,13 +85,13 @@ const longTermRoadmapOptions = computed(() =>
     .filter((option) => !onboarding.form.targetSkills.includes(option.value))
     .map((option) => {
       const suggested = [
-        ...onboarding.form.roadmapSuggestions.long_term_tracks,
-        ...onboarding.form.roadmapSuggestions.deferred_tracks,
+        ...onboarding.form.roadmapSuggestions.longTermTracks,
+        ...onboarding.form.roadmapSuggestions.deferredTracks,
       ].find((track) => track.skill === option.value)
 
       return suggested
         ? {
-            description: `${suggested.reason} ${suggested.next_gate}`,
+            description: `${suggested.reason} ${suggested.nextGate}`,
             label: suggested.label,
             meta: 'Later',
             value: suggested.skill,
@@ -100,7 +100,7 @@ const longTermRoadmapOptions = computed(() =>
     }),
 )
 const suggestedBaseFocusOptions = computed(() => {
-  const suggested = onboarding.form.roadmapSuggestions.base_focus_areas
+  const suggested = onboarding.form.roadmapSuggestions.baseFocusAreas
 
   if (!suggested.length) {
     return baseFocusOptions
@@ -197,8 +197,8 @@ watch(
       onboarding.form.targetSkills.includes(skill),
     )
 
-    if (onboarding.form.baseFocusAreas.length === 0 && onboarding.form.roadmapSuggestions.base_focus_areas.length) {
-      onboarding.form.baseFocusAreas = [...onboarding.form.roadmapSuggestions.base_focus_areas].slice(0, 4)
+    if (onboarding.form.baseFocusAreas.length === 0 && onboarding.form.roadmapSuggestions.baseFocusAreas.length) {
+      onboarding.form.baseFocusAreas = [...onboarding.form.roadmapSuggestions.baseFocusAreas].slice(0, 4)
     }
   },
   { deep: true },
@@ -788,10 +788,10 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 </p>
               </div>
               <ul
-                v-if="onboarding.form.roadmapSuggestions.body_context.notes.length"
+                v-if="onboarding.form.roadmapSuggestions.bodyContext.notes.length"
                 class="text-ink-secondary mt-4 grid gap-2 text-sm leading-6"
               >
-                <li v-for="note in onboarding.form.roadmapSuggestions.body_context.notes" :key="note">
+                <li v-for="note in onboarding.form.roadmapSuggestions.bodyContext.notes" :key="note">
                   {{ note }}
                 </li>
               </ul>

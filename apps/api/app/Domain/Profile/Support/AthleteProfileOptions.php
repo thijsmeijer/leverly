@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Profile\Support;
 
+use App\Domain\Training\Roadmap\RoadmapInputMapper;
 use App\Domain\Training\Support\CalisthenicsPlacementOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteProfile;
@@ -273,7 +274,9 @@ final class AthleteProfileOptions
 
         $roadmapSource = $merged;
         $roadmapSource['current_level_tests'] = $merged['baseline_tests'] ?? CalisthenicsPlacementOptions::emptyLevelTests();
-        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest($roadmapSource);
+        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest(
+            RoadmapInputMapper::fromAthleteData($roadmapSource),
+        );
 
         return $merged;
     }
