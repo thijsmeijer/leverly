@@ -1,7 +1,9 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 
-import { mobilityCheckOptions, skillStatusKeys } from '../data/onboardingOptions'
+import { mobilityCheckOptions, skillStatusKeys, skillStatusOptions } from '../data/onboardingOptions'
 import type { OnboardingFieldErrors, OnboardingForm, OnboardingRoadmapSuggestions, OnboardingState } from '../types'
+
+const onboardingSkillStatusKeys = new Set<string>(skillStatusKeys)
 
 type ServerValidationBody = {
   readonly errors?: Record<string, string[]>
@@ -159,7 +161,7 @@ export function defaultOnboardingForm(): OnboardingForm {
           bestHoldSeconds: '',
           maxStrictReps: '',
           notes: '',
-          status: 'not_started',
+          status: skillStatusOptions[key][0]?.value ?? 'not_tested',
         },
       ]),
     ),
@@ -278,24 +280,13 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
 
   if (step === 'level') {
     addNumberError(errors, 'currentLevelTests.pushUpMaxReps', form.currentLevelTests.pushUpMaxReps, 0, 200)
+    addNumberError(errors, 'currentLevelTests.pushUpFormQuality', form.currentLevelTests.pushUpFormQuality, 1, 5)
+    addNumberError(errors, 'currentLevelTests.pullUpMaxReps', form.currentLevelTests.pullUpMaxReps, 0, 100)
+    addNumberError(errors, 'currentLevelTests.pullUpFormQuality', form.currentLevelTests.pullUpFormQuality, 1, 5)
     addNumberError(errors, 'currentLevelTests.rowMaxReps', form.currentLevelTests.rowMaxReps, 0, 200)
+    addNumberError(errors, 'currentLevelTests.dipMaxReps', form.currentLevelTests.dipMaxReps, 0, 100)
+    addNumberError(errors, 'currentLevelTests.squatMaxReps', form.currentLevelTests.squatMaxReps, 0, 300)
     addNumberError(errors, 'currentLevelTests.hollowHoldSeconds', form.currentLevelTests.hollowHoldSeconds, 0, 600)
-
-    if (!form.currentLevelTests.pushUpProgression && !form.currentLevelTests.pushUpMaxReps) {
-      errors['currentLevelTests.pushUpProgression'] = 'Choose your current push-up level or add strict reps.'
-    }
-
-    if (!form.currentLevelTests.rowProgression && !form.currentLevelTests.rowMaxReps) {
-      errors['currentLevelTests.rowProgression'] = 'Choose your current row level or add row reps.'
-    }
-
-    if (!form.currentLevelTests.pullUpProgression && !form.currentLevelTests.pullUpMaxReps) {
-      errors['currentLevelTests.pullUpProgression'] = 'Choose your current pulling level or add strict reps.'
-    }
-
-    if (!form.currentLevelTests.squatProgression && !form.currentLevelTests.squatMaxReps) {
-      errors['currentLevelTests.squatProgression'] = 'Choose your current squat level or add reps.'
-    }
   }
 
   if (step === 'mobility') {
@@ -437,21 +428,23 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     skillStatuses: {
       ...defaults.skillStatuses,
       ...Object.fromEntries(
-        Object.entries(onboarding.skill_statuses).map(([key, value]) => [
-          key,
-          {
-            bestHoldSeconds:
-              value.best_hold_seconds === null || value.best_hold_seconds === undefined
-                ? ''
-                : String(value.best_hold_seconds),
-            maxStrictReps:
-              value.max_strict_reps === null || value.max_strict_reps === undefined
-                ? ''
-                : String(value.max_strict_reps),
-            notes: value.notes ?? '',
-            status: value.status,
-          },
-        ]),
+        Object.entries(onboarding.skill_statuses)
+          .filter(([key]) => onboardingSkillStatusKeys.has(key))
+          .map(([key, value]) => [
+            key,
+            {
+              bestHoldSeconds:
+                value.best_hold_seconds === null || value.best_hold_seconds === undefined
+                  ? ''
+                  : String(value.best_hold_seconds),
+              maxStrictReps:
+                value.max_strict_reps === null || value.max_strict_reps === undefined
+                  ? ''
+                  : String(value.max_strict_reps),
+              notes: value.notes ?? '',
+              status: normalizeSkillStatus(key, value.status),
+            },
+          ]),
       ),
     },
     sleepQuality: onboarding.sleep_quality === null ? defaults.sleepQuality : String(onboarding.sleep_quality),
@@ -535,15 +528,17 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     secondary_goals: [...form.secondaryGoals],
     secondary_target_skills: [...form.secondaryTargetSkills],
     skill_statuses: Object.fromEntries(
-      Object.entries(form.skillStatuses).map(([key, value]) => [
-        key,
-        {
-          best_hold_seconds: nullableInteger(value.bestHoldSeconds),
-          max_strict_reps: nullableInteger(value.maxStrictReps),
-          notes: value.notes.trim() || null,
-          status: value.status,
-        },
-      ]),
+      Object.entries(form.skillStatuses)
+        .filter(([key]) => onboardingSkillStatusKeys.has(key))
+        .map(([key, value]) => [
+          key,
+          {
+            best_hold_seconds: nullableInteger(value.bestHoldSeconds),
+            max_strict_reps: nullableInteger(value.maxStrictReps),
+            notes: value.notes.trim() || null,
+            status: normalizeSkillStatus(key, value.status),
+          },
+        ]),
     ),
     sleep_quality: nullableInteger(form.sleepQuality),
     soreness_level: nullableInteger(form.sorenessLevel),
@@ -573,38 +568,64 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
   return body
 }
 
-function nullableInteger(value: string): number | null {
-  if (!value.trim()) {
+function nullableInteger(value: number | string | null | undefined): number | null {
+  const text = textValue(value)
+
+  if (!text) {
     return null
   }
 
-  const parsed = Number(value)
+  const parsed = Number(text)
 
   return Number.isFinite(parsed) ? Math.trunc(parsed) : null
 }
 
-function nullableNumber(value: string): number | null {
-  if (!value.trim()) {
+function nullableNumber(value: number | string | null | undefined): number | null {
+  const text = textValue(value)
+
+  if (!text) {
     return null
   }
 
-  const parsed = Number(value)
+  const parsed = Number(text)
 
   return Number.isFinite(parsed) ? parsed : null
 }
 
-function addNumberError(errors: OnboardingFieldErrors, key: string, value: string, min: number, max: number): void {
-  if (!value.trim()) {
+function addNumberError(
+  errors: OnboardingFieldErrors,
+  key: string,
+  value: number | string,
+  min: number,
+  max: number,
+): void {
+  const text = textValue(value)
+
+  if (!text) {
     errors[key] = `Enter a number from ${min} to ${max}.`
 
     return
   }
 
-  const parsed = Number(value)
+  const parsed = Number(text)
 
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
     errors[key] = `Enter a number from ${min} to ${max}.`
   }
+}
+
+function textValue(value: number | string | null | undefined): string {
+  return String(value ?? '').trim()
+}
+
+function normalizeSkillStatus(key: string, status: string): string {
+  if (!onboardingSkillStatusKeys.has(key)) {
+    return status
+  }
+
+  const options = skillStatusOptions[key as (typeof skillStatusKeys)[number]]
+
+  return options.some((option) => option.value === status) ? status : (options[0]?.value ?? 'not_tested')
 }
 
 function mapServerValidationErrors(body: unknown): OnboardingFieldErrors {
@@ -658,8 +679,13 @@ function serverKeyToField(key: string): string {
   return key
     .replace('current_level_tests.', 'currentLevelTests.')
     .replace('push_ups.max_strict_reps', 'pushUpMaxReps')
+    .replace('push_ups.form_quality', 'pushUpFormQuality')
+    .replace('rows.max_strict_reps', 'rowMaxReps')
+    .replace('dips.max_strict_reps', 'dipMaxReps')
+    .replace('dips.support_hold_seconds', 'dipSupportHoldSeconds')
     .replace('pull_ups.max_strict_reps', 'pullUpMaxReps')
     .replace('pull_ups.progression', 'pullUpProgression')
+    .replace('pull_ups.form_quality', 'pullUpFormQuality')
     .replace('squat.max_reps', 'squatMaxReps')
     .replace('squat.progression', 'squatProgression')
     .replace('hollow_hold_seconds', 'hollowHoldSeconds')

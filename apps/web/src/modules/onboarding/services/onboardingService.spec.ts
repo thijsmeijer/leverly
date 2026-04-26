@@ -135,6 +135,39 @@ describe('onboardingService', () => {
     } satisfies Pick<OnboardingValidationError, 'errors'>)
   })
 
+  it('serializes numeric values emitted by browser number inputs', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(jsonResponse(onboardingResponse()))
+
+    configureLeverlyApiClient({
+      fetcher,
+      getCsrfToken: () => 'csrf-token',
+    })
+
+    const form = {
+      ...defaultOnboardingForm(),
+      priorSportBackground: ['none'],
+    }
+
+    Object.assign(form, {
+      ageYears: 29,
+      currentBodyweightValue: 72.5,
+      heightValue: 178,
+      trainingAgeMonths: 18,
+    })
+
+    await expect(saveOnboarding(form)).resolves.toMatchObject({
+      onboardingId: '01kb0b6h4az3er8g7vnh9k5m1a',
+    })
+
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"age_years":29')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"current_bodyweight_value":72.5')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"height_value":178')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"training_age_months":18')
+  })
+
   it('validates required step inputs locally', () => {
     expect(
       validateOnboardingStep(
@@ -142,22 +175,28 @@ describe('onboardingService', () => {
           ...defaultOnboardingForm(),
           currentLevelTests: {
             ...defaultOnboardingForm().currentLevelTests,
+            dipMaxReps: '',
             hollowHoldSeconds: '',
-            pullUpProgression: '',
-            pushUpProgression: '',
-            rowProgression: '',
-            squatProgression: '',
+            pullUpFormQuality: '',
+            pullUpMaxReps: '',
+            pushUpFormQuality: '',
+            pushUpMaxReps: '',
+            rowMaxReps: '',
+            squatMaxReps: '',
           },
           targetSkills: [],
         },
         'level',
       ),
     ).toMatchObject({
+      'currentLevelTests.dipMaxReps': 'Enter a number from 0 to 100.',
       'currentLevelTests.hollowHoldSeconds': 'Enter a number from 0 to 600.',
-      'currentLevelTests.pullUpProgression': 'Choose your current pulling level or add strict reps.',
-      'currentLevelTests.pushUpProgression': 'Choose your current push-up level or add strict reps.',
-      'currentLevelTests.rowProgression': 'Choose your current row level or add row reps.',
-      'currentLevelTests.squatProgression': 'Choose your current squat level or add reps.',
+      'currentLevelTests.pullUpFormQuality': 'Enter a number from 1 to 5.',
+      'currentLevelTests.pullUpMaxReps': 'Enter a number from 0 to 100.',
+      'currentLevelTests.pushUpFormQuality': 'Enter a number from 1 to 5.',
+      'currentLevelTests.pushUpMaxReps': 'Enter a number from 0 to 200.',
+      'currentLevelTests.rowMaxReps': 'Enter a number from 0 to 200.',
+      'currentLevelTests.squatMaxReps': 'Enter a number from 0 to 300.',
     })
   })
 })

@@ -418,7 +418,6 @@ paths:
                       - gym
                       - park
                       - travel
-                      - other
                 preferred_training_days:
                   type: array
                   description: ''
@@ -498,7 +497,7 @@ paths:
                   items:
                     type: object
                     properties:
-                      status: { type: string, description: '', enum: [not_started, building_base, assisted, partial_range, single_rep, multiple_reps, short_hold, solid_hold, advanced_variation] }
+                      status: { type: string, description: '', enum: [not_tested, not_started, building_base, assisted, partial_range, single_rep, multiple_reps, short_hold, solid_hold, advanced_variation, archer_pull_up, assisted_one_arm_pull_up, advanced_tuck_back_lever, advanced_tuck_front_lever, advanced_tuck_planche, band_assisted_muscle_up, box_pistol, chest_to_bar_pull_up, chest_to_wall_handstand, compression_lift, elevated_pike_push_up, elevated_press_lean, explosive_pull_up, freestanding_handstand, freestanding_kick_up, freestanding_press_to_handstand, frog_stand, full_back_lever, full_front_lever, full_human_flag, full_l_sit, full_pistol_squat, full_wall_hspu, negative_muscle_up, one_arm_pull_up_negative, one_leg_front_lever, one_leg_l_sit, partial_wall_hspu, pike_push_up, pistol_negative, planche_lean, side_plank, skin_the_cat_prep, split_squat, straddle_back_lever, straddle_front_lever, straddle_human_flag, straddle_planche, straddle_press_negative, strict_muscle_up, strict_one_arm_pull_up, tuck_back_lever, tuck_front_lever, tuck_human_flag, tuck_l_sit, tuck_planche, tuck_support, typewriter_pull_up, v_sit_prep, vertical_flag_hold, wall_handstand_shoulder_taps, wall_hspu_negative, wall_plank, wall_press_negative] }
                       max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }
                       best_hold_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' }
                       notes: { type: [string, 'null'], description: 'Must not be greater than 300 characters.' }
@@ -962,7 +961,6 @@ paths:
                       - gym
                       - park
                       - travel
-                      - other
                 movement_limitations:
                   type: array
                   description: ''

@@ -70,7 +70,7 @@ final class AthleteProfileOptions
         'training_mat',
     ];
 
-    public const array TRAINING_LOCATIONS = ['home', 'gym', 'park', 'travel', 'other'];
+    public const array TRAINING_LOCATIONS = ['home', 'gym', 'park', 'travel'];
 
     public const array TRAINING_DAYS = [
         'monday',

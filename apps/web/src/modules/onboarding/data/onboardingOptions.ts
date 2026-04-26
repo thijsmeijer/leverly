@@ -202,8 +202,6 @@ export const squatProgressionOptions: ChoiceOption[] = [
 ]
 
 export const skillStatusKeys = [
-  'dip',
-  'ring_dip',
   'muscle_up',
   'l_sit',
   'handstand',
@@ -212,14 +210,12 @@ export const skillStatusKeys = [
   'back_lever',
   'planche',
   'pistol_squat',
-  'nordic_curl',
   'one_arm_pull_up',
   'human_flag',
   'press_to_handstand',
 ] as const
 
 export const skillStatusLabels: Record<(typeof skillStatusKeys)[number], string> = {
-  dip: 'Dip',
   back_lever: 'Back lever',
   front_lever: 'Front lever',
   handstand: 'Handstand',
@@ -227,25 +223,102 @@ export const skillStatusLabels: Record<(typeof skillStatusKeys)[number], string>
   human_flag: 'Human flag',
   l_sit: 'L-sit',
   muscle_up: 'Muscle-up',
-  nordic_curl: 'Nordic curl',
   one_arm_pull_up: 'One-arm pull-up',
   planche: 'Planche',
   pistol_squat: 'Pistol squat',
   press_to_handstand: 'Press to handstand',
-  ring_dip: 'Ring dip',
 }
 
-export const skillStatusOptions: ChoiceOption[] = [
-  { label: 'Not started', value: 'not_started' },
-  { label: 'Building base', value: 'building_base' },
-  { label: 'Assisted', value: 'assisted' },
-  { label: 'Partial range', value: 'partial_range' },
-  { label: 'Single rep', value: 'single_rep' },
-  { label: 'Multiple reps', value: 'multiple_reps' },
-  { label: 'Short hold', value: 'short_hold' },
-  { label: 'Solid hold', value: 'solid_hold' },
-  { label: 'Advanced variation', value: 'advanced_variation' },
-]
+export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], ChoiceOption[]> = {
+  back_lever: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Skin-the-cat prep', value: 'skin_the_cat_prep' },
+    { label: 'Tuck back lever', value: 'tuck_back_lever' },
+    { label: 'Advanced tuck', value: 'advanced_tuck_back_lever' },
+    { label: 'Straddle back lever', value: 'straddle_back_lever' },
+    { label: 'Full back lever', value: 'full_back_lever' },
+  ],
+  front_lever: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Tuck front lever', value: 'tuck_front_lever' },
+    { label: 'Advanced tuck', value: 'advanced_tuck_front_lever' },
+    { label: 'One-leg front lever', value: 'one_leg_front_lever' },
+    { label: 'Straddle front lever', value: 'straddle_front_lever' },
+    { label: 'Full front lever', value: 'full_front_lever' },
+  ],
+  handstand: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Wall plank', value: 'wall_plank' },
+    { label: 'Chest-to-wall line', value: 'chest_to_wall_handstand' },
+    { label: 'Wall shoulder taps', value: 'wall_handstand_shoulder_taps' },
+    { label: 'Freestanding kick-up', value: 'freestanding_kick_up' },
+    { label: 'Freestanding hold', value: 'freestanding_handstand' },
+  ],
+  handstand_push_up: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Pike push-up', value: 'pike_push_up' },
+    { label: 'Elevated pike push-up', value: 'elevated_pike_push_up' },
+    { label: 'Wall negative', value: 'wall_hspu_negative' },
+    { label: 'Partial wall HSPU', value: 'partial_wall_hspu' },
+    { label: 'Full wall HSPU', value: 'full_wall_hspu' },
+  ],
+  human_flag: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Side plank', value: 'side_plank' },
+    { label: 'Vertical flag hold', value: 'vertical_flag_hold' },
+    { label: 'Tuck flag', value: 'tuck_human_flag' },
+    { label: 'Straddle flag', value: 'straddle_human_flag' },
+    { label: 'Full human flag', value: 'full_human_flag' },
+  ],
+  l_sit: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Tuck support', value: 'tuck_support' },
+    { label: 'One-leg L-sit', value: 'one_leg_l_sit' },
+    { label: 'Tuck L-sit', value: 'tuck_l_sit' },
+    { label: 'Full L-sit', value: 'full_l_sit' },
+    { label: 'V-sit prep', value: 'v_sit_prep' },
+  ],
+  muscle_up: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Explosive pull-up', value: 'explosive_pull_up' },
+    { label: 'Chest-to-bar pull-up', value: 'chest_to_bar_pull_up' },
+    { label: 'Band-assisted muscle-up', value: 'band_assisted_muscle_up' },
+    { label: 'Negative muscle-up', value: 'negative_muscle_up' },
+    { label: 'Strict muscle-up', value: 'strict_muscle_up' },
+  ],
+  one_arm_pull_up: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Archer pull-up', value: 'archer_pull_up' },
+    { label: 'Typewriter pull-up', value: 'typewriter_pull_up' },
+    { label: 'Assisted one-arm pull-up', value: 'assisted_one_arm_pull_up' },
+    { label: 'One-arm negative', value: 'one_arm_pull_up_negative' },
+    { label: 'Strict one-arm pull-up', value: 'strict_one_arm_pull_up' },
+  ],
+  pistol_squat: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Split squat', value: 'split_squat' },
+    { label: 'Box pistol', value: 'box_pistol' },
+    { label: 'Assisted pistol', value: 'assisted_pistol' },
+    { label: 'Pistol negative', value: 'pistol_negative' },
+    { label: 'Full pistol squat', value: 'full_pistol_squat' },
+  ],
+  planche: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Planche lean', value: 'planche_lean' },
+    { label: 'Frog stand', value: 'frog_stand' },
+    { label: 'Tuck planche', value: 'tuck_planche' },
+    { label: 'Advanced tuck planche', value: 'advanced_tuck_planche' },
+    { label: 'Straddle planche', value: 'straddle_planche' },
+  ],
+  press_to_handstand: [
+    { label: 'Not tested', value: 'not_tested' },
+    { label: 'Compression lift', value: 'compression_lift' },
+    { label: 'Elevated press lean', value: 'elevated_press_lean' },
+    { label: 'Wall press negative', value: 'wall_press_negative' },
+    { label: 'Straddle press negative', value: 'straddle_press_negative' },
+    { label: 'Freestanding press', value: 'freestanding_press_to_handstand' },
+  ],
+}
 
 export const starterPlanOptions: ChoiceOption[] = [
   {
@@ -306,12 +379,40 @@ export const painAreaOptions = limitationAreaOptions
 export const onboardingTrainingTimeOptions = trainingTimeOptions
 
 export const mobilityCheckOptions: ChoiceOption[] = [
-  { label: 'Wrist extension', value: 'wrist_extension', description: 'Planche, handstand, push-up comfort.' },
-  { label: 'Shoulder flexion', value: 'shoulder_flexion', description: 'Handstand and overhead pressing line.' },
+  { label: 'Wrist extension', value: 'wrist_extension', description: 'Planche, handstand, and push-up loading.' },
+  { label: 'Shoulder flexion', value: 'shoulder_flexion', description: 'Handstand line and overhead pressing.' },
   { label: 'Shoulder extension', value: 'shoulder_extension', description: 'Dips, rings, and back lever tolerance.' },
-  { label: 'Ankle dorsiflexion', value: 'ankle_dorsiflexion', description: 'Squat and pistol depth.' },
-  { label: 'Pancake/compression', value: 'pancake_compression', description: 'L-sit, V-sit, and press work.' },
+  { label: 'Ankle dorsiflexion', value: 'ankle_dorsiflexion', description: 'Squat depth and single-leg progressions.' },
+  { label: 'Pancake/compression', value: 'pancake_compression', description: 'L-sit, V-sit, and press preparation.' },
 ]
+
+export const mobilityTestInstructions: Record<string, { clear: string; test: string }> = {
+  ankle_dorsiflexion: {
+    clear:
+      'Clear means your knee reaches the wall on both sides without the heel lifting, the arch collapsing, or ankle pain.',
+    test: 'Try a knee-to-wall test with toes roughly 8 to 10 cm from the wall. Keep the heel down and drive the knee over the toes.',
+  },
+  pancake_compression: {
+    clear:
+      'Clear means you can hinge from the hips and create a strong forward tilt without cramps, sharp hamstring pain, or low-back strain.',
+    test: 'Sit in a straddle or pike with knees straight. Reach forward, then try a small straight-leg lift or active compression hold.',
+  },
+  shoulder_extension: {
+    clear:
+      'Clear means the arms move behind the torso without front-shoulder pinching, elbow bend, or a forced chest flare.',
+    test: 'Stand tall and reach straight arms behind you, or place hands on a box behind your hips and gently load the position.',
+  },
+  shoulder_flexion: {
+    clear:
+      'Clear means your arms reach close to your ears without bending the elbows, flaring the ribs, shrugging hard, or causing pain.',
+    test: 'Stand with ribs down and raise straight arms overhead. A wall test is useful if you can keep the low back neutral.',
+  },
+  wrist_extension: {
+    clear:
+      'Clear means you can load the position without palm lift, sharp wrist pain, or a strong need to turn the hands out.',
+    test: 'Place the palm flat on the floor or a table with the elbow straight, then gently shift the shoulder past the wrist.',
+  },
+}
 
 export const mobilityStatusOptions: ChoiceOption[] = [
   { label: 'Not tested', value: 'not_tested' },

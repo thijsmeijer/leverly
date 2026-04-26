@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { UiButton } from '@/shared/ui'
 import OnboardingChoiceGrid from '../components/OnboardingChoiceGrid.vue'
@@ -11,26 +11,22 @@ import {
   baseFocusOptions,
   bodyweightUnitOptions,
   compatibleSecondaryGoals,
-  dipProgressionOptions,
   equipmentCategories,
   experienceLevelOptions,
   goalOptions,
   heightUnitOptions,
   mobilityCheckOptions,
   mobilityStatusOptions,
+  mobilityTestInstructions,
   onboardingTrainingTimeOptions,
   painAreaOptions,
   painOptions,
   priorSportOptions,
-  pullUpProgressionOptions,
-  pushUpProgressionOptions,
   readinessOptions,
-  rowProgressionOptions,
   sorenessOptions,
   skillStatusKeys,
   skillStatusLabels,
   skillStatusOptions,
-  squatProgressionOptions,
   starterPlanOptions,
   targetSkillOptions,
   trainingDayOptions,
@@ -46,7 +42,12 @@ const route = useRoute()
 const router = useRouter()
 const onboarding = useOnboardingStore()
 
+type StepScrollTarget = {
+  scrollIntoView?: (options?: { behavior?: 'smooth'; block?: 'start' }) => void
+}
+
 const activeStep = ref<OnboardingStepId>('context')
+const activeStepTop = ref<StepScrollTarget | null>(null)
 const clientErrors = ref<OnboardingFieldErrors>({})
 const { activeIndex, canContinue, canGoBack, progressPercent, steps } = useOnboardingSteps(activeStep)
 const currentErrors = computed(() => ({ ...clientErrors.value, ...onboarding.fieldErrors }))
@@ -135,14 +136,9 @@ const chosenSchedule = computed(() =>
     : 'Schedule not set',
 )
 const placementPreview = computed(() => {
-  const push =
-    onboarding.form.currentLevelTests.pushUpProgression ||
-    `${onboarding.form.currentLevelTests.pushUpMaxReps || 0} push-ups`
-  const pull =
-    onboarding.form.currentLevelTests.pullUpProgression ||
-    `${onboarding.form.currentLevelTests.pullUpMaxReps || 0} pull-ups`
-  const row =
-    onboarding.form.currentLevelTests.rowProgression || `${onboarding.form.currentLevelTests.rowMaxReps || 0} rows`
+  const push = `${onboarding.form.currentLevelTests.pushUpMaxReps || 0} push-ups`
+  const pull = `${onboarding.form.currentLevelTests.pullUpMaxReps || 0} pull-ups`
+  const dip = `${onboarding.form.currentLevelTests.dipMaxReps || 0} dips`
   const mobilityFlags = Object.entries(onboarding.form.mobilityChecks)
     .filter(([, status]) => ['limited', 'blocked', 'painful'].includes(status))
     .map(([key]) => mobilityCheckOptions.find((option) => option.value === key)?.label ?? key)
@@ -156,7 +152,7 @@ const placementPreview = computed(() => {
       : 'Base focus not selected',
     mobility: mobilityFlags.length ? mobilityFlags.slice(0, 3).join(', ') : 'No major position blockers marked',
     primary: primaryTargetLabel.value,
-    tests: `${push}, ${pull}, ${row}`,
+    tests: `${push}, ${pull}, ${dip}`,
   }
 })
 const redirectPath = computed(() =>
@@ -217,6 +213,10 @@ watch(
   },
 )
 
+watch(activeStep, () => {
+  void scrollToActiveStepTop()
+})
+
 onMounted(() => {
   void onboarding.load()
 })
@@ -242,6 +242,14 @@ function selectStep(step: OnboardingStepId): void {
 
   clientErrors.value = {}
   activeStep.value = step
+}
+
+async function scrollToActiveStepTop(): Promise<void> {
+  await nextTick()
+
+  if (typeof activeStepTop.value?.scrollIntoView === 'function') {
+    activeStepTop.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 async function goBack(): Promise<void> {
@@ -329,11 +337,10 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               </span>
             </div>
             <h1 class="text-ink-primary mt-4 max-w-3xl text-3xl font-semibold tracking-normal sm:text-4xl">
-              Find the strongest path for your next calisthenics block.
+              Level up your skills.
             </h1>
             <p class="text-ink-secondary mt-4 max-w-3xl text-base leading-7">
-              Start with your body context, available setup, and baseline tests. Leverly turns that into a realistic
-              roadmap before you choose active skill targets.
+              Leverly turns your data into achievable roadmaps and helps you reach your goals.
             </p>
             <div class="mt-6 flex flex-wrap gap-3">
               <UiButton variant="secondary" @click="onboarding.saveDraft()">Save draft</UiButton>
@@ -384,12 +391,12 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         {{ onboarding.saveError }}
       </div>
 
-      <form class="space-y-5" novalidate @submit.prevent="completeOnboarding">
+      <form ref="activeStepTop" class="scroll-mt-6 space-y-5" novalidate @submit.prevent="completeOnboarding">
         <OnboardingStepPanel
           v-if="activeStep === 'context'"
           eyebrow="Step 1"
           title="Start with the athlete behind the skills."
-          description="Age, training age, body size, and sport background change how aggressive a first block should be. This keeps the roadmap specific instead of generic."
+          description="Give Leverly the essentials so your first roadmap feels personal, realistic, and worth training for."
         >
           <div class="space-y-6">
             <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -434,7 +441,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 :suffix="onboarding.form.heightUnit"
               />
             </div>
-            <div class="grid gap-5 lg:grid-cols-3">
+            <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_14rem]">
               <OnboardingChoiceGrid
                 v-model="onboarding.form.bodyweightUnit"
                 columns="compact"
@@ -449,24 +456,25 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 name="onboarding-height-unit"
                 :options="heightUnitOptions"
               />
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.experienceLevel"
-                columns="compact"
-                label="Training level"
-                name="onboarding-experience"
-                :options="experienceLevelOptions"
-              />
             </div>
             <OnboardingChoiceGrid
               v-model="onboarding.form.priorSportBackground"
               :error="errorFor('priorSportBackground')"
               help="Choose up to four. Pick 'None yet' if you are starting without a useful carryover."
-              label="Relevant background"
+              label="Training background"
               :max-selections="4"
               multiple
               name="onboarding-prior-sport"
               :options="priorSportOptions"
             />
+            <div class="space-y-3">
+              <OnboardingChoiceGrid
+                v-model="onboarding.form.experienceLevel"
+                label="Calisthenics level"
+                name="onboarding-experience"
+                :options="experienceLevelOptions"
+              />
+            </div>
           </div>
         </OnboardingStepPanel>
 
@@ -474,7 +482,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
           v-if="activeStep === 'equipment'"
           eyebrow="Step 2"
           title="Map the places and tools you can rely on."
-          description="Equipment changes the progression path. A pull-up bar, rings, low bar, bands, or parallettes can unlock very different recommendations."
+          description="Exercise recommendations and progression options will be based on the tools you actually have available."
         >
           <div class="space-y-6">
             <OnboardingChoiceGrid
@@ -500,158 +508,169 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         <OnboardingStepPanel
           v-if="activeStep === 'level'"
           eyebrow="Step 4"
-          title="Place your current progressions."
-          description="These quick tests tell Leverly whether to suggest reps, assistance, holds, regressions, or harder variations."
+          title="Test your current baseline."
+          description="These quick tests help Leverly create a program specific to you."
         >
-          <div class="space-y-6">
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.currentLevelTests.pushUpProgression"
-              :error="errorFor('currentLevelTests.pushUpProgression')"
-              label="Current push-up progression"
-              name="onboarding-push-up-progression"
-              :options="pushUpProgressionOptions"
-            />
-          </div>
-
-          <div class="mt-6 grid gap-5 lg:grid-cols-3">
-            <OnboardingNumberField
-              id="onboarding-push-ups"
-              v-model="onboarding.form.currentLevelTests.pushUpMaxReps"
-              :error="errorFor('currentLevelTests.pushUpMaxReps')"
-              label="Max strict push-ups"
-              :max="200"
-              :min="0"
-              placeholder="18"
-              suffix="reps"
-            />
-            <OnboardingNumberField
-              id="onboarding-push-up-form"
-              v-model="onboarding.form.currentLevelTests.pushUpFormQuality"
-              label="Push-up form quality"
-              :max="5"
-              :min="1"
-              placeholder="4"
-              suffix="/5"
-            />
-            <OnboardingNumberField
-              id="onboarding-hollow-hold"
-              v-model="onboarding.form.currentLevelTests.hollowHoldSeconds"
-              :error="errorFor('currentLevelTests.hollowHoldSeconds')"
-              label="Best hollow hold"
-              :max="600"
-              :min="0"
-              placeholder="35"
-              suffix="sec"
-            />
-          </div>
-
-          <div class="mt-6 grid gap-6 xl:grid-cols-2">
-            <div class="space-y-4">
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.currentLevelTests.pullUpProgression"
-                :error="errorFor('currentLevelTests.pullUpProgression')"
-                label="Current pull-up progression"
-                name="onboarding-pull-up-progression"
-                :options="pullUpProgressionOptions"
-              />
-              <OnboardingNumberField
-                id="onboarding-pull-ups"
-                v-model="onboarding.form.currentLevelTests.pullUpMaxReps"
-                label="Strict pull-ups if you have them"
-                :max="100"
-                :min="0"
-                placeholder="4"
-                suffix="reps"
-              />
-              <OnboardingNumberField
-                id="onboarding-pull-up-form"
-                v-model="onboarding.form.currentLevelTests.pullUpFormQuality"
-                label="Pull-up form quality"
-                :max="5"
-                :min="1"
-                placeholder="4"
-                suffix="/5"
-              />
-              <label class="block space-y-2">
-                <span class="text-ink-primary text-sm font-semibold">Assistance used if any</span>
-                <input
-                  v-model="onboarding.form.currentLevelTests.pullUpAssistance"
-                  class="border-line-subtle bg-surface-primary text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
-                  placeholder="Example: light band, foot support"
-                />
-              </label>
+          <section class="space-y-4">
+            <div>
+              <h3 class="text-ink-primary text-lg font-semibold">Required baseline tests</h3>
+              <p class="text-ink-secondary mt-1 text-sm leading-6">
+                Use clean, repeatable reps. Enter 0 when you cannot perform a movement yet so the first block starts
+                from the right bridge.
+              </p>
             </div>
+            <div class="grid gap-4 xl:grid-cols-2">
+              <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
+                <div class="mb-4">
+                  <h4 class="text-ink-primary text-base font-semibold">Push-up strength</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">Strict floor reps with a rigid bodyline.</p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <OnboardingNumberField
+                    id="onboarding-push-ups"
+                    v-model="onboarding.form.currentLevelTests.pushUpMaxReps"
+                    :error="errorFor('currentLevelTests.pushUpMaxReps')"
+                    label="Max strict reps"
+                    :max="200"
+                    :min="0"
+                    placeholder="18"
+                    suffix="reps"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-push-up-form"
+                    v-model="onboarding.form.currentLevelTests.pushUpFormQuality"
+                    :error="errorFor('currentLevelTests.pushUpFormQuality')"
+                    label="Form quality"
+                    :max="5"
+                    :min="1"
+                    placeholder="4"
+                    suffix="/5"
+                  />
+                </div>
+              </div>
 
-            <div class="space-y-4">
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.currentLevelTests.rowProgression"
-                :error="errorFor('currentLevelTests.rowProgression')"
-                label="Current row progression"
-                name="onboarding-row-progression"
-                :options="rowProgressionOptions"
-              />
-              <OnboardingNumberField
-                id="onboarding-row-reps"
-                v-model="onboarding.form.currentLevelTests.rowMaxReps"
-                label="Best row reps at that level"
-                :max="200"
-                :min="0"
-                placeholder="12"
-                suffix="reps"
-              />
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.currentLevelTests.squatProgression"
-                :error="errorFor('currentLevelTests.squatProgression')"
-                label="Current squat or pistol progression"
-                name="onboarding-squat-progression"
-                :options="squatProgressionOptions"
-              />
-              <OnboardingNumberField
-                id="onboarding-squat-reps"
-                v-model="onboarding.form.currentLevelTests.squatMaxReps"
-                label="Best clean reps at that level"
-                :max="300"
-                :min="0"
-                placeholder="20"
-                suffix="reps"
-              />
-            </div>
-          </div>
+              <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
+                <div class="mb-4">
+                  <h4 class="text-ink-primary text-base font-semibold">Pull-up strength</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">
+                    Strict reps from a dead hang or 0 if not there yet.
+                  </p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <OnboardingNumberField
+                    id="onboarding-pull-ups"
+                    v-model="onboarding.form.currentLevelTests.pullUpMaxReps"
+                    :error="errorFor('currentLevelTests.pullUpMaxReps')"
+                    label="Max strict reps"
+                    :max="100"
+                    :min="0"
+                    placeholder="4"
+                    suffix="reps"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-pull-up-form"
+                    v-model="onboarding.form.currentLevelTests.pullUpFormQuality"
+                    :error="errorFor('currentLevelTests.pullUpFormQuality')"
+                    label="Form quality"
+                    :max="5"
+                    :min="1"
+                    placeholder="4"
+                    suffix="/5"
+                  />
+                </div>
+                <label class="mt-3 block space-y-2">
+                  <span class="text-ink-primary text-sm font-semibold">Assistance used if any</span>
+                  <input
+                    v-model="onboarding.form.currentLevelTests.pullUpAssistance"
+                    class="border-line-subtle bg-surface-primary text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
+                    placeholder="Example: light band, foot support"
+                  />
+                </label>
+              </div>
 
-          <div class="mt-6 grid gap-6 xl:grid-cols-2">
-            <div class="space-y-4">
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.currentLevelTests.dipProgression"
-                label="Current dip/support progression"
-                name="onboarding-dip-progression"
-                :options="dipProgressionOptions"
-              />
-              <div class="grid gap-3 sm:grid-cols-2">
-                <OnboardingNumberField
-                  id="onboarding-dip-reps"
-                  v-model="onboarding.form.currentLevelTests.dipMaxReps"
-                  label="Clean dip reps"
-                  :max="100"
-                  :min="0"
-                  placeholder="6"
-                  suffix="reps"
-                />
-                <OnboardingNumberField
-                  id="onboarding-dip-support"
-                  v-model="onboarding.form.currentLevelTests.dipSupportHoldSeconds"
-                  label="Support hold"
-                  :max="600"
-                  :min="0"
-                  placeholder="25"
-                  suffix="sec"
-                />
+              <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
+                <div class="mb-4">
+                  <h4 class="text-ink-primary text-base font-semibold">Rows and dips</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">
+                    Horizontal pulling plus support pressing capacity.
+                  </p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <OnboardingNumberField
+                    id="onboarding-row-reps"
+                    v-model="onboarding.form.currentLevelTests.rowMaxReps"
+                    :error="errorFor('currentLevelTests.rowMaxReps')"
+                    label="Row reps"
+                    :max="200"
+                    :min="0"
+                    placeholder="12"
+                    suffix="reps"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-dip-reps"
+                    v-model="onboarding.form.currentLevelTests.dipMaxReps"
+                    :error="errorFor('currentLevelTests.dipMaxReps')"
+                    label="Dip reps"
+                    :max="100"
+                    :min="0"
+                    placeholder="6"
+                    suffix="reps"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-dip-support"
+                    v-model="onboarding.form.currentLevelTests.dipSupportHoldSeconds"
+                    label="Support hold"
+                    :max="600"
+                    :min="0"
+                    placeholder="25"
+                    suffix="sec"
+                  />
+                </div>
+              </div>
+
+              <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
+                <div class="mb-4">
+                  <h4 class="text-ink-primary text-base font-semibold">Legs and bodyline</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">Simple strength and trunk control signals.</p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <OnboardingNumberField
+                    id="onboarding-squat-reps"
+                    v-model="onboarding.form.currentLevelTests.squatMaxReps"
+                    :error="errorFor('currentLevelTests.squatMaxReps')"
+                    label="Bodyweight squat reps"
+                    :max="300"
+                    :min="0"
+                    placeholder="20"
+                    suffix="reps"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-hollow-hold"
+                    v-model="onboarding.form.currentLevelTests.hollowHoldSeconds"
+                    :error="errorFor('currentLevelTests.hollowHoldSeconds')"
+                    label="Hollow hold"
+                    :max="600"
+                    :min="0"
+                    placeholder="35"
+                    suffix="sec"
+                  />
+                </div>
               </div>
             </div>
-            <div class="grid gap-3 sm:grid-cols-2">
+          </section>
+
+          <section class="mt-7 space-y-4">
+            <div>
+              <h3 class="text-ink-primary text-lg font-semibold">Extra useful signals</h3>
+              <p class="text-ink-secondary mt-1 text-sm leading-6">
+                These are optional, but they help place hanging, handstand, compression, and posterior-chain work.
+              </p>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <OnboardingNumberField
                 id="onboarding-dead-hang"
                 v-model="onboarding.form.currentLevelTests.deadHangSeconds"
-                label="Best dead hang"
+                label="Dead hang"
                 :max="600"
                 :min="0"
                 placeholder="30"
@@ -660,7 +679,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               <OnboardingNumberField
                 id="onboarding-arch-hold"
                 v-model="onboarding.form.currentLevelTests.archHoldSeconds"
-                label="Best arch hold"
+                label="Arch hold"
                 :max="600"
                 :min="0"
                 placeholder="25"
@@ -685,20 +704,21 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 suffix="sec"
               />
             </div>
-          </div>
+          </section>
 
           <section class="mt-7 space-y-4">
             <div>
-              <h3 class="text-ink-primary text-lg font-semibold">Optional skill statuses</h3>
+              <h3 class="text-ink-primary text-lg font-semibold">Optional skill progressions</h3>
               <p class="text-ink-secondary mt-1 text-sm leading-6">
-                Add only what you know. These help avoid suggesting skill work that skips your current base.
+                Add only skills you have actually tested. Pick the closest progression, then add reps or hold time if
+                you know it.
               </p>
             </div>
             <div class="grid gap-4 lg:grid-cols-2">
               <div
                 v-for="skill in skillStatusKeys"
                 :key="skill"
-                class="border-line-subtle bg-surface-primary rounded-card border p-4"
+                class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4"
               >
                 <label class="block space-y-2">
                   <span class="text-ink-primary text-sm font-semibold">{{ skillStatusLabels[skill] }}</span>
@@ -706,7 +726,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                     v-model="onboarding.form.skillStatuses[skill].status"
                     class="border-line-subtle bg-surface-elevated text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
                   >
-                    <option v-for="option in skillStatusOptions" :key="option.value" :value="option.value">
+                    <option v-for="option in skillStatusOptions[skill]" :key="option.value" :value="option.value">
                       {{ option.label }}
                     </option>
                   </select>
@@ -715,7 +735,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                   <OnboardingNumberField
                     :id="`onboarding-${skill}-reps`"
                     v-model="onboarding.form.skillStatuses[skill].maxStrictReps"
-                    label="Clean reps"
+                    label="Best reps"
                     :max="100"
                     :min="0"
                     placeholder="0"
@@ -738,26 +758,57 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         <OnboardingStepPanel
           v-if="activeStep === 'mobility'"
           eyebrow="Step 3"
-          title="Check positions that change the recommendation."
-          description="A skill can be limited by mobility or tissue tolerance before strength. Mark only what you know right now."
+          title="What are your current mobility limits?"
+          description="Test each position and choose the status that best matches what you can do today."
         >
           <div class="space-y-6">
             <div
               v-for="check in mobilityCheckOptions"
               :key="check.value"
-              class="border-line-subtle bg-surface-primary rounded-card grid gap-4 border p-4 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] lg:items-center"
+              class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4 sm:p-5"
             >
-              <div>
-                <h3 class="text-ink-primary text-sm font-semibold">{{ check.label }}</h3>
-                <p class="text-ink-secondary mt-1 text-sm leading-6">{{ check.description }}</p>
+              <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,32rem)]">
+                <div class="space-y-3">
+                  <div>
+                    <h3 class="text-ink-primary text-base font-semibold">{{ check.label }}</h3>
+                    <p class="text-ink-secondary mt-1 text-sm leading-6">{{ check.description }}</p>
+                  </div>
+                  <div class="bg-surface-muted border-line-subtle rounded-control border p-3">
+                    <p class="text-ink-primary text-xs font-semibold tracking-[0.14em] uppercase">How to test</p>
+                    <p class="text-ink-secondary mt-2 text-sm leading-6">
+                      {{ mobilityTestInstructions[check.value].test }}
+                    </p>
+                    <p class="text-ink-muted mt-2 text-xs leading-5">
+                      {{ mobilityTestInstructions[check.value].clear }}
+                    </p>
+                  </div>
+                </div>
+
+                <fieldset class="space-y-3" :aria-label="`${check.label} status`">
+                  <legend class="text-ink-primary text-sm font-semibold">Current status</legend>
+                  <div class="grid gap-2 sm:grid-cols-5 xl:grid-cols-1">
+                    <label
+                      v-for="status in mobilityStatusOptions"
+                      :key="status.value"
+                      class="rounded-control focus-within:ring-accent-primary focus-within:ring-offset-surface-primary flex min-h-11 cursor-pointer items-center justify-center border px-3 py-2 text-center text-sm font-semibold transition duration-200 focus-within:ring-2 focus-within:ring-offset-2"
+                      :class="
+                        onboarding.form.mobilityChecks[check.value] === status.value
+                          ? 'border-accent-primary bg-accent-primary-soft text-ink-primary shadow-card'
+                          : 'border-line-subtle bg-surface-elevated text-ink-secondary hover:border-line-strong hover:bg-surface-overlay hover:shadow-card-soft'
+                      "
+                    >
+                      <input
+                        v-model="onboarding.form.mobilityChecks[check.value]"
+                        class="sr-only"
+                        :name="`onboarding-mobility-${check.value}`"
+                        type="radio"
+                        :value="status.value"
+                      />
+                      <span>{{ status.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
               </div>
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.mobilityChecks[check.value]"
-                columns="compact"
-                :label="`${check.label} status`"
-                :name="`onboarding-mobility-${check.value}`"
-                :options="mobilityStatusOptions"
-              />
             </div>
             <p v-if="errorFor('mobilityChecks')" class="text-status-danger text-sm leading-5">
               {{ errorFor('mobilityChecks') }}

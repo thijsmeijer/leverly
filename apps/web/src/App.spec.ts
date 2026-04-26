@@ -29,7 +29,7 @@ describe('App', () => {
       route: '/onboarding',
     })
 
-    expect(wrapper.text()).toContain('Find the strongest path for your next calisthenics block')
+    expect(wrapper.text()).toContain('Level up your skills')
     expect(wrapper.text()).toContain('Start with the athlete behind the skills.')
     expect(wrapper.find('[aria-label="Mobile primary"]').exists()).toBe(false)
   })

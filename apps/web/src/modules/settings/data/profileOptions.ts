@@ -414,7 +414,6 @@ export const trainingLocationOptions: ChoiceOption[] = [
   { label: 'Gym', value: 'gym' },
   { label: 'Park', value: 'park' },
   { label: 'Travel', value: 'travel' },
-  { label: 'Other', value: 'other' },
 ]
 
 export const trainingTimeOptions: ChoiceOption[] = [

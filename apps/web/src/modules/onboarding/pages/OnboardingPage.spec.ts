@@ -21,7 +21,7 @@ describe('OnboardingPage', () => {
     })
     await flushPromises()
 
-    expect(wrapper.find('h1').text()).toContain('Find the strongest path')
+    expect(wrapper.find('h1').text()).toContain('Level up your skills')
     expect(wrapper.text()).toContain('Strict pull-up')
     expect(wrapper.text()).toContain('Handstand')
     expect(wrapper.text()).toContain('Context')

@@ -226,21 +226,26 @@ final class AthleteOnboardingOptions
         $pushUps = is_array($levelTests['push_ups'] ?? null) ? $levelTests['push_ups'] : [];
         $rows = is_array($levelTests['rows'] ?? null) ? $levelTests['rows'] : [];
         $pullUps = is_array($levelTests['pull_ups'] ?? null) ? $levelTests['pull_ups'] : [];
+        $dips = is_array($levelTests['dips'] ?? null) ? $levelTests['dips'] : [];
         $squat = is_array($levelTests['squat'] ?? null) ? $levelTests['squat'] : [];
 
-        if (! is_int($pushUps['max_strict_reps'] ?? null) && ! is_string($pushUps['progression'] ?? null)) {
+        if (! is_int($pushUps['max_strict_reps'] ?? null)) {
             $missing[] = 'push_up_test';
         }
 
-        if (! is_int($rows['max_strict_reps'] ?? null) && ! is_string($rows['progression'] ?? null)) {
+        if (! is_int($rows['max_strict_reps'] ?? null)) {
             $missing[] = 'row_test';
         }
 
-        if (! is_int($pullUps['max_strict_reps'] ?? null) && ! is_string($pullUps['progression'] ?? null)) {
+        if (! is_int($pullUps['max_strict_reps'] ?? null)) {
             $missing[] = 'pull_up_test';
         }
 
-        if (! is_int($squat['max_reps'] ?? null) && ! is_string($squat['progression'] ?? null)) {
+        if (! is_int($dips['max_strict_reps'] ?? null)) {
+            $missing[] = 'dip_test';
+        }
+
+        if (! is_int($squat['max_reps'] ?? null)) {
             $missing[] = 'squat_test';
         }
 

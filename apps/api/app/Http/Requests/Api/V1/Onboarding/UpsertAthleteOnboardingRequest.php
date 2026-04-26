@@ -92,7 +92,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'current_level_tests.support_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
             'current_level_tests.wall_handstand_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
             'current_level_tests.l_sit_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
-            'skill_statuses' => ['sometimes', 'array:dip,ring_dip,muscle_up,l_sit,handstand,handstand_push_up,front_lever,back_lever,planche,pistol_squat,nordic_curl,one_arm_pull_up,human_flag,press_to_handstand'],
+            'skill_statuses' => ['sometimes', 'array:muscle_up,l_sit,handstand,handstand_push_up,front_lever,back_lever,planche,pistol_squat,one_arm_pull_up,human_flag,press_to_handstand'],
             'skill_statuses.*' => ['array:status,max_strict_reps,best_hold_seconds,notes'],
             'skill_statuses.*.status' => ['required', 'string', Rule::in(AthleteOnboardingOptions::SKILL_STATUSES)],
             'skill_statuses.*.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
