@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/app/stores/sessionStore'
 import { leverlyBrand } from '@/shared/brand'
-import { UiBadge } from '@/shared/ui'
 import {
   appNavigationItems,
   mobileNavigationItems,
@@ -45,47 +44,39 @@ async function signOut(): Promise<void> {
 <template>
   <div class="bg-surface-inverse text-ink-primary min-h-screen lg:flex">
     <aside
-      class="text-ink-inverse shadow-shell border-white/10 bg-[linear-gradient(180deg,var(--surface-inverse),#0b1110)] px-6 py-7 max-lg:hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-r"
+      class="border-line-subtle bg-surface-elevated px-6 py-7 max-lg:hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:flex-col lg:border-r"
       aria-label="Primary"
     >
       <RouterLink
         :to="{ name: 'dashboard' }"
-        class="rounded-control focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse inline-flex min-h-11 flex-col justify-center outline-none focus-visible:ring-2 focus-visible:ring-offset-4"
+        class="rounded-control focus-visible:ring-accent-primary focus-visible:ring-offset-surface-elevated inline-flex min-h-11 flex-col justify-center outline-none focus-visible:ring-2 focus-visible:ring-offset-4"
       >
-        <span class="text-2xl font-semibold tracking-normal">{{ leverlyBrand.productName }}</span>
-        <span class="text-ink-inverse/60 mt-1 text-sm leading-5">{{ leverlyBrand.tagline }}</span>
+        <span class="text-ink-primary text-2xl font-semibold tracking-normal">{{ leverlyBrand.productName }}</span>
+        <span class="text-ink-muted mt-1 text-sm leading-5">{{ leverlyBrand.tagline }}</span>
       </RouterLink>
 
       <nav class="mt-9 space-y-7" aria-label="Application sections">
         <section v-for="group in navigationGroups" :key="group.name" class="space-y-2">
-          <p class="text-ink-inverse/45 px-3 text-xs font-semibold tracking-[0.18em] uppercase">
+          <p class="text-accent-primary px-3 text-xs font-semibold tracking-[0.18em] uppercase">
             {{ group.label }}
           </p>
           <RouterLink
             v-for="item in group.items"
             :key="item.routeName"
             :to="item.to"
-            class="rounded-control focus-visible:ring-accent-primary focus-visible:ring-offset-surface-inverse block border px-3 py-3 transition duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            class="rounded-control focus-visible:ring-accent-primary focus-visible:ring-offset-surface-elevated block border px-3 py-3 transition duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             :class="
               isActive(item)
-                ? 'text-ink-inverse border-white/20 bg-white/15'
-                : 'text-ink-inverse/70 hover:text-ink-inverse border-transparent hover:border-white/15 hover:bg-white/10'
+                ? 'border-accent-primary/40 bg-accent-primary-soft text-ink-primary shadow-card-soft'
+                : 'text-ink-secondary hover:text-ink-primary hover:border-line-subtle hover:bg-surface-overlay border-transparent'
             "
             :aria-current="isActive(item) ? 'page' : undefined"
           >
             <span class="block text-sm font-semibold">{{ item.label }}</span>
-            <span class="mt-1 block text-xs leading-5 opacity-70">{{ item.description }}</span>
+            <span class="text-ink-muted mt-1 block text-xs leading-5">{{ item.description }}</span>
           </RouterLink>
         </section>
       </nav>
-
-      <div class="rounded-card mt-8 border border-white/10 bg-white/10 p-4">
-        <UiBadge tone="warning">Next focus</UiBadge>
-        <p class="text-ink-inverse mt-3 text-sm font-semibold">Start with clean evidence.</p>
-        <p class="text-ink-inverse/70 mt-2 text-sm leading-6">
-          Log form, effort, and pain before any progression changes.
-        </p>
-      </div>
     </aside>
 
     <div

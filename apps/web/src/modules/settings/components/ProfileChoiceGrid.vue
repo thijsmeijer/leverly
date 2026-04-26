@@ -65,7 +65,9 @@ function isDisabled(value: string): boolean {
     <legend class="text-ink-primary text-sm font-semibold">{{ label }}</legend>
     <div
       class="grid gap-3"
-      :class="columns === 'compact' ? 'grid-cols-2 sm:grid-cols-4 lg:grid-cols-7' : 'sm:grid-cols-2 xl:grid-cols-3'"
+      :class="
+        columns === 'compact' ? 'grid-cols-[repeat(auto-fit,minmax(5.25rem,1fr))]' : 'sm:grid-cols-2 xl:grid-cols-3'
+      "
     >
       <label
         v-for="option in options"
