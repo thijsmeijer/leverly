@@ -15,7 +15,6 @@ import {
   compatibleSecondaryGoals,
   deloadPreferenceOptions,
   effortTrackingOptions,
-  equipmentOptions,
   experienceLevelOptions,
   goalOptions,
   intensityPreferenceOptions,
@@ -57,8 +56,8 @@ const primaryGoalLabel = computed(
 const activeSection = ref<ProfileSectionId>('basics')
 const profileSections: Array<{ id: ProfileSectionId; label: string; summary: string }> = [
   { id: 'basics', label: 'Basics', summary: 'Account and units' },
-  { id: 'training', label: 'Training', summary: 'Level and goals' },
-  { id: 'setup', label: 'Setup', summary: 'Equipment and schedule' },
+  { id: 'training', label: 'Training', summary: 'Goals and tools' },
+  { id: 'setup', label: 'Schedule', summary: 'Places and session shape' },
   { id: 'coaching', label: 'Coaching', summary: 'Recommendation style' },
   { id: 'limitations', label: 'Limitations', summary: 'Pain flags and notes' },
 ]
@@ -234,8 +233,8 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
         aria-labelledby="profile-tab-training"
         role="tabpanel"
         eyebrow="Training profile"
-        title="Experience and goals"
-        description="Set one main outcome, then add up to two compatible support goals so recommendations stay focused."
+        title="Experience, goals, and tools"
+        description="Set the main outcome, support goals, and equipment context that shape your recommendations."
       >
         <div class="grid gap-4 md:grid-cols-3">
           <ProfileTextField
@@ -292,6 +291,22 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
             placeholder="Freestanding handstand&#10;Strict muscle-up"
             :rows="3"
           />
+          <div
+            class="border-line-subtle bg-surface-primary rounded-card flex flex-col gap-3 border p-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <h3 class="text-ink-primary text-sm font-semibold">Training tools</h3>
+              <p class="text-ink-secondary mt-1 text-sm leading-6">
+                {{ selectedEquipmentCount }} available for exercise recommendations.
+              </p>
+            </div>
+            <RouterLink
+              :to="{ name: 'settings-equipment' }"
+              class="border-line-subtle bg-surface-elevated text-ink-secondary hover:border-line-strong hover:text-ink-primary rounded-control inline-flex min-h-10 items-center justify-center border px-3 text-sm font-semibold transition"
+            >
+              Review equipment
+            </RouterLink>
+          </div>
         </div>
       </ProfileFormSection>
 
@@ -301,34 +316,10 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
         aria-labelledby="profile-tab-setup"
         role="tabpanel"
         eyebrow="Training setup"
-        title="Equipment and schedule"
-        description="Match recommendations to the tools, places, and session shape you can reliably use."
+        title="Schedule and session shape"
+        description="Set where, when, and how often you can train."
       >
         <div class="space-y-5">
-          <div class="space-y-3">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h3 class="text-ink-primary text-sm font-semibold">Available equipment</h3>
-                <p class="text-ink-secondary mt-1 text-sm leading-6">
-                  Use this quick checklist here, or open the full equipment page for presets and coverage details.
-                </p>
-              </div>
-              <RouterLink
-                :to="{ name: 'settings-equipment' }"
-                class="border-line-subtle bg-surface-primary text-ink-secondary hover:border-line-strong hover:text-ink-primary rounded-control inline-flex min-h-10 items-center justify-center border px-3 text-sm font-semibold transition"
-              >
-                Manage equipment
-              </RouterLink>
-            </div>
-            <ProfileChoiceGrid
-              v-model="form.availableEquipment"
-              :error="fieldErrors.availableEquipment"
-              label="Equipment"
-              multiple
-              name="available-equipment"
-              :options="equipmentOptions"
-            />
-          </div>
           <ProfileChoiceGrid
             v-model="form.trainingLocations"
             columns="compact"

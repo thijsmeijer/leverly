@@ -59,7 +59,7 @@ describe('SettingsPage', () => {
     expect(wrapper.find('#profile-panel-setup').exists()).toBe(true)
   })
 
-  it('saves changed equipment, days, and session length through the profile API', async () => {
+  it('keeps equipment context with training while setup stays schedule focused', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse(profileResponse()))
@@ -76,8 +76,18 @@ describe('SettingsPage', () => {
     })
     await flushPromises()
 
+    await wrapper.find('#profile-tab-training').trigger('click')
+
+    expect(wrapper.text()).toContain('Training tools')
+    expect(wrapper.text()).toContain('2 available for exercise recommendations.')
+    expect(wrapper.find('a[href="/app/settings/equipment"]').text()).toContain('Review equipment')
+
     await wrapper.find('#profile-tab-setup').trigger('click')
-    await wrapper.find('input[name="available-equipment"][value="parallettes"]').setValue(true)
+
+    expect(wrapper.text()).toContain('Schedule and session shape')
+    expect(wrapper.text()).not.toContain('Training tools')
+    expect(wrapper.find('input[name="available-equipment"]').exists()).toBe(false)
+
     await wrapper.find('input[name="preferred-training-days"][value="friday"]').setValue(true)
     await wrapper.find('#preferred-session-minutes').setValue('45')
     await wrapper.find('form').trigger('submit')
@@ -91,7 +101,6 @@ describe('SettingsPage', () => {
         method: 'PATCH',
       }),
     )
-    expect(String(fetcher.mock.calls[2]?.[1]?.body)).toContain('"parallettes"')
     expect(String(fetcher.mock.calls[2]?.[1]?.body)).toContain('"friday"')
     expect(wrapper.text()).toContain('Profile settings saved.')
   })

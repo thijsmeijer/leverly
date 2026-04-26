@@ -11,7 +11,7 @@ describe('EquipmentSettingsPage', () => {
     resetLeverlyApiClient()
   })
 
-  it('loads a categorized equipment manager with selected state and coverage', async () => {
+  it('loads a categorized equipment manager with selected card states', async () => {
     configureLeverlyApiClient({
       fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(profileResponse())),
     })
@@ -24,14 +24,14 @@ describe('EquipmentSettingsPage', () => {
     expect(wrapper.find('#equipment-settings-heading').text()).toContain('Tell Leverly')
     expect(wrapper.text()).toContain('Bars and stations')
     expect(wrapper.text()).toContain('Skill supports')
-    expect(wrapper.text()).toContain('2 items selected')
     expect(wrapper.find<HTMLInputElement>('input[name="equipment"][value="pull_up_bar"]').element.checked).toBe(true)
     expect(wrapper.find<HTMLInputElement>('input[name="equipment"][value="low_bar"]').element.checked).toBe(false)
-    expect(wrapper.text()).toContain('Vertical pulling')
-    expect(wrapper.text()).toContain('Ring strength')
+    expect(wrapper.text()).not.toContain('Fast setup')
+    expect(wrapper.text()).not.toContain('Recommendation coverage')
+    expect(wrapper.text()).not.toContain('Selected')
   })
 
-  it('adds a preset and saves equipment through the profile API', async () => {
+  it('toggles equipment and saves through the profile API', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse(profileResponse()))
@@ -39,7 +39,7 @@ describe('EquipmentSettingsPage', () => {
       .mockResolvedValueOnce(
         jsonResponse(
           profileResponse({
-            available_equipment: ['pull_up_bar', 'rings', 'resistance_band', 'suspension_trainer', 'jump_rope'],
+            available_equipment: ['pull_up_bar', 'rings', 'low_bar', 'ab_wheel'],
           }),
         ),
       )
@@ -54,10 +54,8 @@ describe('EquipmentSettingsPage', () => {
     })
     await flushPromises()
 
-    await wrapper
-      .findAll('button')
-      .find((button) => button.text().includes('Travel kit'))
-      ?.trigger('click')
+    await wrapper.find<HTMLInputElement>('input[name="equipment"][value="low_bar"]').setValue(true)
+    await wrapper.find<HTMLInputElement>('input[name="equipment"][value="ab_wheel"]').setValue(true)
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
@@ -65,11 +63,11 @@ describe('EquipmentSettingsPage', () => {
       3,
       '/api/v1/me/profile',
       expect.objectContaining({
-        body: expect.stringContaining('"suspension_trainer"'),
+        body: expect.stringContaining('"low_bar"'),
         method: 'PATCH',
       }),
     )
-    expect(String(fetcher.mock.calls[2]?.[1]?.body)).toContain('"jump_rope"')
+    expect(String(fetcher.mock.calls[2]?.[1]?.body)).toContain('"ab_wheel"')
     expect(wrapper.text()).toContain('Equipment settings saved.')
   })
 })

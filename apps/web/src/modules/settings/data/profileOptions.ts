@@ -12,12 +12,6 @@ export type EquipmentCategory = {
   readonly title: string
 }
 
-export type EquipmentPreset = {
-  readonly description: string
-  readonly equipment: string[]
-  readonly label: string
-}
-
 export const unitSystemOptions: ChoiceOption[] = [
   { label: 'Metric', value: 'metric', description: 'Kilograms and centimeters.' },
   { label: 'Imperial', value: 'imperial', description: 'Pounds and familiar US units.' },
@@ -202,34 +196,6 @@ export const equipmentCategories: EquipmentCategory[] = [
 export const equipmentOptions: ChoiceOption[] = equipmentCategories.flatMap((category) =>
   category.items.map(({ description, label, value }) => ({ description, label, value })),
 )
-
-export const equipmentPresets: EquipmentPreset[] = [
-  {
-    label: 'Minimal home',
-    description: 'Compact setup for most beginner-to-intermediate home progressions.',
-    equipment: ['pull_up_bar', 'resistance_band', 'parallettes', 'training_mat'],
-  },
-  {
-    label: 'Park bars',
-    description: 'Outdoor setup for pulling, dips, support holds, and skill practice.',
-    equipment: ['pull_up_bar', 'low_bar', 'dip_bars', 'parallel_bars'],
-  },
-  {
-    label: 'Rings setup',
-    description: 'High-value setup for scalable pulling, support strength, and ring skills.',
-    equipment: ['pull_up_bar', 'rings', 'resistance_band', 'training_mat'],
-  },
-  {
-    label: 'Weighted strength',
-    description: 'For athletes loading dips, pull-ups, push-ups, squats, and accessories.',
-    equipment: ['pull_up_bar', 'dip_bars', 'dip_belt', 'weight_vest', 'weighted_backpack'],
-  },
-  {
-    label: 'Travel kit',
-    description: 'Portable options for sessions away from the usual training place.',
-    equipment: ['resistance_band', 'suspension_trainer', 'jump_rope', 'training_mat'],
-  },
-]
 
 export const trainingDayOptions: ChoiceOption[] = [
   { label: 'Mon', value: 'monday' },
