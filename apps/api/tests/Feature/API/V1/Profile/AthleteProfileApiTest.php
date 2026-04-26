@@ -50,7 +50,7 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
             ->assertJsonPath('data.available_equipment.3', 'rings')
             ->assertJsonPath('data.movement_limitations.0.area', 'wrist')
-            ->assertJsonPath('data.baseline_tests.rows.progression', 'inverted_row')
+            ->assertJsonPath('data.baseline_tests.squat.barbell_load_value', 100)
             ->assertJsonPath('data.mobility_checks.wrist_extension', 'limited')
             ->assertJsonPath('data.weighted_baselines.experience', 'repetition_work')
             ->assertJsonPath('data.preferred_training_days.2', 'friday')
@@ -272,20 +272,14 @@ class AthleteProfileApiTest extends TestCase
                 ],
             ],
             'baseline_tests' => [
-                'push_ups' => ['progression' => 'strict_push_up', 'max_strict_reps' => 18, 'form_quality' => 4],
-                'rows' => ['progression' => 'inverted_row', 'max_strict_reps' => 12],
-                'pull_ups' => ['max_strict_reps' => 4, 'progression' => 'strict_pull_up', 'assistance' => null, 'form_quality' => 4],
-                'dips' => ['progression' => 'bar_dip', 'max_strict_reps' => 6, 'support_hold_seconds' => 25],
-                'squat' => ['max_reps' => 20, 'progression' => 'split_squat'],
+                'push_ups' => ['max_strict_reps' => 18],
+                'pull_ups' => ['max_strict_reps' => 4],
+                'dips' => ['max_strict_reps' => 6],
+                'squat' => ['barbell_load_value' => 100, 'barbell_reps' => 5],
                 'hollow_hold_seconds' => 35,
-                'arch_hold_seconds' => 25,
-                'dead_hang_seconds' => 30,
-                'support_hold_seconds' => 25,
-                'wall_handstand_seconds' => 25,
-                'l_sit_hold_seconds' => 8,
             ],
             'skill_statuses' => [
-                'handstand' => ['status' => 'assisted', 'best_hold_seconds' => 20],
+                'handstand' => ['status' => 'freestanding_kick_up', 'best_hold_seconds' => 20],
             ],
             'mobility_checks' => [
                 'wrist_extension' => 'limited',

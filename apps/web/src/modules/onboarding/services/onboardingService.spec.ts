@@ -27,13 +27,12 @@ describe('onboardingService', () => {
         baseFocusAreas: ['pull_capacity', 'core_bodyline'],
         currentBodyweightValue: '72.5',
         currentLevelTests: {
+          dipMaxReps: '6',
           hollowHoldSeconds: '35',
           pullUpMaxReps: '4',
-          pullUpProgression: 'strict_pull_up',
           pushUpMaxReps: '18',
-          rowProgression: 'inverted_row',
-          squatMaxReps: '20',
-          squatProgression: 'split_squat',
+          squatBarbellLoadValue: '100',
+          squatBarbellReps: '5',
         },
         heightValue: '178',
         longTermTargetSkills: ['planche'],
@@ -68,14 +67,12 @@ describe('onboardingService', () => {
       currentBodyweightValue: '72.5',
       currentLevelTests: {
         ...defaultOnboardingForm().currentLevelTests,
+        dipMaxReps: '6',
         hollowHoldSeconds: '35',
         pullUpMaxReps: '4',
-        pullUpProgression: 'strict_pull_up',
-        pushUpProgression: 'strict_push_up',
         pushUpMaxReps: '18',
-        rowProgression: 'inverted_row',
-        squatMaxReps: '20',
-        squatProgression: 'split_squat',
+        squatBarbellLoadValue: '100',
+        squatBarbellReps: '5',
       },
       heightValue: '178',
       longTermTargetSkills: ['planche'],
@@ -106,6 +103,7 @@ describe('onboardingService', () => {
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"target_skills":["strict_pull_up","handstand"]')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"age_years":29')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"hollow_hold_seconds":35')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"barbell_load_value":100')
   })
 
   it('maps server validation errors to onboarding fields', async () => {
@@ -177,12 +175,10 @@ describe('onboardingService', () => {
             ...defaultOnboardingForm().currentLevelTests,
             dipMaxReps: '',
             hollowHoldSeconds: '',
-            pullUpFormQuality: '',
             pullUpMaxReps: '',
-            pushUpFormQuality: '',
             pushUpMaxReps: '',
-            rowMaxReps: '',
-            squatMaxReps: '',
+            squatBarbellLoadValue: '',
+            squatBarbellReps: '',
           },
           targetSkills: [],
         },
@@ -191,12 +187,10 @@ describe('onboardingService', () => {
     ).toMatchObject({
       'currentLevelTests.dipMaxReps': 'Enter a number from 0 to 100.',
       'currentLevelTests.hollowHoldSeconds': 'Enter a number from 0 to 600.',
-      'currentLevelTests.pullUpFormQuality': 'Enter a number from 1 to 5.',
       'currentLevelTests.pullUpMaxReps': 'Enter a number from 0 to 100.',
-      'currentLevelTests.pushUpFormQuality': 'Enter a number from 1 to 5.',
       'currentLevelTests.pushUpMaxReps': 'Enter a number from 0 to 200.',
-      'currentLevelTests.rowMaxReps': 'Enter a number from 0 to 200.',
-      'currentLevelTests.squatMaxReps': 'Enter a number from 0 to 300.',
+      'currentLevelTests.squatBarbellLoadValue': 'Enter a number from 0 to 1000.',
+      'currentLevelTests.squatBarbellReps': 'Enter a number from 0 to 30.',
     })
   })
 })
@@ -211,36 +205,20 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       completed_at: null,
       current_bodyweight_value: 72.5,
       current_level_tests: {
-        arch_hold_seconds: 25,
-        dead_hang_seconds: 30,
         dips: {
           max_strict_reps: 6,
-          progression: 'bar_dip',
-          support_hold_seconds: 25,
         },
         hollow_hold_seconds: 35,
-        l_sit_hold_seconds: 8,
         pull_ups: {
-          assistance: null,
-          form_quality: 4,
           max_strict_reps: 4,
-          progression: 'strict_pull_up',
         },
         push_ups: {
-          form_quality: 4,
           max_strict_reps: 18,
-          progression: 'strict_push_up',
-        },
-        rows: {
-          max_strict_reps: 12,
-          progression: 'inverted_row',
         },
         squat: {
-          max_reps: 20,
-          progression: 'split_squat',
+          barbell_load_value: 100,
+          barbell_reps: 5,
         },
-        support_hold_seconds: 25,
-        wall_handstand_seconds: 20,
       },
       experience_level: 'intermediate',
       height_unit: 'cm',
@@ -272,7 +250,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       skill_statuses: {
         handstand: {
           best_hold_seconds: 20,
-          status: 'assisted',
+          status: 'freestanding_kick_up',
         },
       },
       sleep_quality: 4,

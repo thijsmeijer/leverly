@@ -269,6 +269,10 @@ final class AthleteProfileOptions
             }
         }
 
+        if (is_array($merged['baseline_tests'] ?? null)) {
+            $merged['baseline_tests'] = CalisthenicsPlacementOptions::normalizeLevelTests($merged['baseline_tests']);
+        }
+
         $roadmapSource = $merged;
         $roadmapSource['current_level_tests'] = $merged['baseline_tests'] ?? CalisthenicsPlacementOptions::emptyLevelTests();
         $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest($roadmapSource);

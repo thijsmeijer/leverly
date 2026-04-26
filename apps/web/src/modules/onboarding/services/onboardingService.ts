@@ -1,6 +1,11 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 
-import { mobilityCheckOptions, skillStatusKeys, skillStatusOptions } from '../data/onboardingOptions'
+import {
+  mobilityCheckOptions,
+  skillStatusKeys,
+  skillStatusMeasurements,
+  skillStatusOptions,
+} from '../data/onboardingOptions'
 import type { OnboardingFieldErrors, OnboardingForm, OnboardingRoadmapSuggestions, OnboardingState } from '../types'
 
 const onboardingSkillStatusKeys = new Set<string>(skillStatusKeys)
@@ -21,36 +26,20 @@ type OnboardingUpdateBody = {
   readonly complete?: boolean
   readonly current_bodyweight_value: number | null
   readonly current_level_tests: {
-    readonly arch_hold_seconds: number | null
-    readonly dead_hang_seconds: number | null
     readonly dips: {
       readonly max_strict_reps: number | null
-      readonly progression: string | null
-      readonly support_hold_seconds: number | null
     }
     readonly hollow_hold_seconds: number | null
-    readonly l_sit_hold_seconds: number | null
     readonly pull_ups: {
-      readonly assistance: string | null
-      readonly form_quality: number | null
       readonly max_strict_reps: number | null
-      readonly progression: string | null
     }
     readonly push_ups: {
-      readonly form_quality: number | null
       readonly max_strict_reps: number | null
-      readonly progression: string | null
-    }
-    readonly rows: {
-      readonly max_strict_reps: number | null
-      readonly progression: string | null
     }
     readonly squat: {
-      readonly max_reps: number | null
-      readonly progression: string | null
+      readonly barbell_load_value: number | null
+      readonly barbell_reps: number | null
     }
-    readonly support_hold_seconds: number | null
-    readonly wall_handstand_seconds: number | null
   }
   readonly experience_level: string
   readonly height_unit: string
@@ -115,26 +104,12 @@ export function defaultOnboardingForm(): OnboardingForm {
     bodyweightUnit: 'kg',
     currentBodyweightValue: '',
     currentLevelTests: {
-      archHoldSeconds: '',
-      deadHangSeconds: '',
       dipMaxReps: '',
-      dipProgression: '',
-      dipSupportHoldSeconds: '',
       hollowHoldSeconds: '',
-      lSitHoldSeconds: '',
-      pullUpAssistance: '',
-      pullUpFormQuality: '',
       pullUpMaxReps: '',
-      pullUpProgression: '',
-      pushUpFormQuality: '',
       pushUpMaxReps: '',
-      pushUpProgression: '',
-      rowMaxReps: '',
-      rowProgression: '',
-      squatMaxReps: '',
-      squatProgression: '',
-      supportHoldSeconds: '',
-      wallHandstandSeconds: '',
+      squatBarbellLoadValue: '',
+      squatBarbellReps: '',
     },
     experienceLevel: 'new',
     heightUnit: 'cm',
@@ -280,12 +255,16 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
 
   if (step === 'level') {
     addNumberError(errors, 'currentLevelTests.pushUpMaxReps', form.currentLevelTests.pushUpMaxReps, 0, 200)
-    addNumberError(errors, 'currentLevelTests.pushUpFormQuality', form.currentLevelTests.pushUpFormQuality, 1, 5)
     addNumberError(errors, 'currentLevelTests.pullUpMaxReps', form.currentLevelTests.pullUpMaxReps, 0, 100)
-    addNumberError(errors, 'currentLevelTests.pullUpFormQuality', form.currentLevelTests.pullUpFormQuality, 1, 5)
-    addNumberError(errors, 'currentLevelTests.rowMaxReps', form.currentLevelTests.rowMaxReps, 0, 200)
     addNumberError(errors, 'currentLevelTests.dipMaxReps', form.currentLevelTests.dipMaxReps, 0, 100)
-    addNumberError(errors, 'currentLevelTests.squatMaxReps', form.currentLevelTests.squatMaxReps, 0, 300)
+    addNumberError(
+      errors,
+      'currentLevelTests.squatBarbellLoadValue',
+      form.currentLevelTests.squatBarbellLoadValue,
+      0,
+      1000,
+    )
+    addNumberError(errors, 'currentLevelTests.squatBarbellReps', form.currentLevelTests.squatBarbellReps, 0, 30)
     addNumberError(errors, 'currentLevelTests.hollowHoldSeconds', form.currentLevelTests.hollowHoldSeconds, 0, 600)
   }
 
@@ -340,68 +319,30 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     currentBodyweightValue:
       onboarding.current_bodyweight_value === null ? '' : String(onboarding.current_bodyweight_value),
     currentLevelTests: {
-      archHoldSeconds:
-        onboarding.current_level_tests.arch_hold_seconds === null
-          ? ''
-          : String(onboarding.current_level_tests.arch_hold_seconds),
-      deadHangSeconds:
-        onboarding.current_level_tests.dead_hang_seconds === null
-          ? ''
-          : String(onboarding.current_level_tests.dead_hang_seconds),
       dipMaxReps:
         onboarding.current_level_tests.dips.max_strict_reps === null
           ? ''
           : String(onboarding.current_level_tests.dips.max_strict_reps),
-      dipProgression: onboarding.current_level_tests.dips.progression ?? '',
-      dipSupportHoldSeconds:
-        onboarding.current_level_tests.dips.support_hold_seconds === null
-          ? ''
-          : String(onboarding.current_level_tests.dips.support_hold_seconds),
       hollowHoldSeconds:
         onboarding.current_level_tests.hollow_hold_seconds === null
           ? ''
           : String(onboarding.current_level_tests.hollow_hold_seconds),
-      lSitHoldSeconds:
-        onboarding.current_level_tests.l_sit_hold_seconds === null
-          ? ''
-          : String(onboarding.current_level_tests.l_sit_hold_seconds),
-      pullUpAssistance: onboarding.current_level_tests.pull_ups.assistance ?? '',
-      pullUpFormQuality:
-        onboarding.current_level_tests.pull_ups.form_quality === null
-          ? ''
-          : String(onboarding.current_level_tests.pull_ups.form_quality),
       pullUpMaxReps:
         onboarding.current_level_tests.pull_ups.max_strict_reps === null
           ? ''
           : String(onboarding.current_level_tests.pull_ups.max_strict_reps),
-      pullUpProgression: onboarding.current_level_tests.pull_ups.progression ?? '',
-      pushUpFormQuality:
-        onboarding.current_level_tests.push_ups.form_quality === null
-          ? ''
-          : String(onboarding.current_level_tests.push_ups.form_quality),
       pushUpMaxReps:
         onboarding.current_level_tests.push_ups.max_strict_reps === null
           ? ''
           : String(onboarding.current_level_tests.push_ups.max_strict_reps),
-      pushUpProgression: onboarding.current_level_tests.push_ups.progression ?? '',
-      rowMaxReps:
-        onboarding.current_level_tests.rows.max_strict_reps === null
+      squatBarbellLoadValue:
+        onboarding.current_level_tests.squat.barbell_load_value === null
           ? ''
-          : String(onboarding.current_level_tests.rows.max_strict_reps),
-      rowProgression: onboarding.current_level_tests.rows.progression ?? '',
-      squatMaxReps:
-        onboarding.current_level_tests.squat.max_reps === null
+          : String(onboarding.current_level_tests.squat.barbell_load_value),
+      squatBarbellReps:
+        onboarding.current_level_tests.squat.barbell_reps === null
           ? ''
-          : String(onboarding.current_level_tests.squat.max_reps),
-      squatProgression: onboarding.current_level_tests.squat.progression ?? '',
-      supportHoldSeconds:
-        onboarding.current_level_tests.support_hold_seconds === null
-          ? ''
-          : String(onboarding.current_level_tests.support_hold_seconds),
-      wallHandstandSeconds:
-        onboarding.current_level_tests.wall_handstand_seconds === null
-          ? ''
-          : String(onboarding.current_level_tests.wall_handstand_seconds),
+          : String(onboarding.current_level_tests.squat.barbell_reps),
     },
     experienceLevel: onboarding.experience_level,
     heightUnit: onboarding.height_unit,
@@ -479,36 +420,20 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     bodyweight_unit: form.bodyweightUnit,
     current_bodyweight_value: nullableNumber(form.currentBodyweightValue),
     current_level_tests: {
-      arch_hold_seconds: nullableInteger(form.currentLevelTests.archHoldSeconds),
-      dead_hang_seconds: nullableInteger(form.currentLevelTests.deadHangSeconds),
       dips: {
         max_strict_reps: nullableInteger(form.currentLevelTests.dipMaxReps),
-        progression: form.currentLevelTests.dipProgression || null,
-        support_hold_seconds: nullableInteger(form.currentLevelTests.dipSupportHoldSeconds),
       },
       hollow_hold_seconds: nullableInteger(form.currentLevelTests.hollowHoldSeconds),
-      l_sit_hold_seconds: nullableInteger(form.currentLevelTests.lSitHoldSeconds),
       pull_ups: {
-        assistance: form.currentLevelTests.pullUpAssistance.trim() || null,
-        form_quality: nullableInteger(form.currentLevelTests.pullUpFormQuality),
         max_strict_reps: nullableInteger(form.currentLevelTests.pullUpMaxReps),
-        progression: form.currentLevelTests.pullUpProgression || null,
       },
       push_ups: {
-        form_quality: nullableInteger(form.currentLevelTests.pushUpFormQuality),
         max_strict_reps: nullableInteger(form.currentLevelTests.pushUpMaxReps),
-        progression: form.currentLevelTests.pushUpProgression || null,
-      },
-      rows: {
-        max_strict_reps: nullableInteger(form.currentLevelTests.rowMaxReps),
-        progression: form.currentLevelTests.rowProgression || null,
       },
       squat: {
-        max_reps: nullableInteger(form.currentLevelTests.squatMaxReps),
-        progression: form.currentLevelTests.squatProgression || null,
+        barbell_load_value: nullableNumber(form.currentLevelTests.squatBarbellLoadValue),
+        barbell_reps: nullableInteger(form.currentLevelTests.squatBarbellReps),
       },
-      support_hold_seconds: nullableInteger(form.currentLevelTests.supportHoldSeconds),
-      wall_handstand_seconds: nullableInteger(form.currentLevelTests.wallHandstandSeconds),
     },
     experience_level: form.experienceLevel,
     height_unit: form.heightUnit,
@@ -533,8 +458,12 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
         .map(([key, value]) => [
           key,
           {
-            best_hold_seconds: nullableInteger(value.bestHoldSeconds),
-            max_strict_reps: nullableInteger(value.maxStrictReps),
+            best_hold_seconds: skillStatusMeasurements[key as (typeof skillStatusKeys)[number]].hold
+              ? nullableInteger(value.bestHoldSeconds)
+              : null,
+            max_strict_reps: skillStatusMeasurements[key as (typeof skillStatusKeys)[number]].reps
+              ? nullableInteger(value.maxStrictReps)
+              : null,
             notes: value.notes.trim() || null,
             status: normalizeSkillStatus(key, value.status),
           },
@@ -679,15 +608,10 @@ function serverKeyToField(key: string): string {
   return key
     .replace('current_level_tests.', 'currentLevelTests.')
     .replace('push_ups.max_strict_reps', 'pushUpMaxReps')
-    .replace('push_ups.form_quality', 'pushUpFormQuality')
-    .replace('rows.max_strict_reps', 'rowMaxReps')
     .replace('dips.max_strict_reps', 'dipMaxReps')
-    .replace('dips.support_hold_seconds', 'dipSupportHoldSeconds')
     .replace('pull_ups.max_strict_reps', 'pullUpMaxReps')
-    .replace('pull_ups.progression', 'pullUpProgression')
-    .replace('pull_ups.form_quality', 'pullUpFormQuality')
-    .replace('squat.max_reps', 'squatMaxReps')
-    .replace('squat.progression', 'squatProgression')
+    .replace('squat.barbell_load_value', 'squatBarbellLoadValue')
+    .replace('squat.barbell_reps', 'squatBarbellReps')
     .replace('hollow_hold_seconds', 'hollowHoldSeconds')
 }
 

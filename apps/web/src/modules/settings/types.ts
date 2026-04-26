@@ -17,26 +17,12 @@ export interface MovementLimitationForm {
 }
 
 export interface ProfileBaselineTestsForm {
-  archHoldSeconds: string
-  deadHangSeconds: string
   dipMaxReps: string
-  dipProgression: string
-  dipSupportHoldSeconds: string
   hollowHoldSeconds: string
-  lSitHoldSeconds: string
-  pullUpAssistance: string
-  pullUpFormQuality: string
   pullUpMaxReps: string
-  pullUpProgression: string
-  pushUpFormQuality: string
   pushUpMaxReps: string
-  pushUpProgression: string
-  rowMaxReps: string
-  rowProgression: string
-  squatMaxReps: string
-  squatProgression: string
-  supportHoldSeconds: string
-  wallHandstandSeconds: string
+  squatBarbellLoadValue: string
+  squatBarbellReps: string
 }
 
 export interface ProfileSettingsForm {

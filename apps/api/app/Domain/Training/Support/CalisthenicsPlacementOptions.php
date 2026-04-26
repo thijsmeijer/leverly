@@ -45,69 +45,6 @@ final class CalisthenicsPlacementOptions
         'conditioning_base',
     ];
 
-    public const array PUSH_UP_PROGRESSIONS = [
-        'wall_push_up',
-        'incline_push_up',
-        'knee_push_up',
-        'strict_push_up',
-        'diamond_push_up',
-        'decline_push_up',
-        'pseudo_planche_push_up',
-        'ring_push_up',
-        'archer_push_up',
-        'one_arm_assisted_push_up',
-        'one_arm_push_up',
-    ];
-
-    public const array ROW_PROGRESSIONS = [
-        'vertical_row',
-        'inverted_row',
-        'horizontal_row',
-        'feet_elevated_row',
-        'ring_row',
-        'tuck_front_lever_row',
-    ];
-
-    public const array PULL_UP_PROGRESSIONS = [
-        'dead_hang',
-        'scapular_pull',
-        'flexed_arm_hang',
-        'inverted_row',
-        'band_assisted_pull_up',
-        'foot_assisted_pull_up',
-        'eccentric_pull_up',
-        'strict_pull_up',
-        'chest_to_bar_pull_up',
-        'weighted_pull_up',
-        'archer_pull_up',
-    ];
-
-    public const array DIP_PROGRESSIONS = [
-        'support_hold',
-        'box_dip',
-        'bench_dip',
-        'assisted_bar_dip',
-        'bar_dip',
-        'deep_bar_dip',
-        'straight_bar_dip',
-        'ring_support_hold',
-        'assisted_ring_dip',
-        'ring_dip',
-        'weighted_dip',
-    ];
-
-    public const array SQUAT_PROGRESSIONS = [
-        'box_squat',
-        'air_squat',
-        'reverse_lunge',
-        'split_squat',
-        'deep_step_up',
-        'assisted_pistol',
-        'shrimp_squat',
-        'pistol_squat',
-        'weighted_pistol',
-    ];
-
     public const array SKILL_STATUS_KEYS = [
         'dip',
         'ring_dip',
@@ -127,15 +64,6 @@ final class CalisthenicsPlacementOptions
 
     public const array SKILL_STATUSES = [
         'not_tested',
-        'not_started',
-        'building_base',
-        'assisted',
-        'partial_range',
-        'single_rep',
-        'multiple_reps',
-        'short_hold',
-        'solid_hold',
-        'advanced_variation',
         'archer_pull_up',
         'assisted_one_arm_pull_up',
         'advanced_tuck_back_lever',
@@ -152,13 +80,18 @@ final class CalisthenicsPlacementOptions
         'freestanding_handstand',
         'freestanding_kick_up',
         'freestanding_press_to_handstand',
+        'freestanding_handstand_push_up',
         'frog_stand',
         'full_back_lever',
         'full_front_lever',
+        'full_planche',
         'full_human_flag',
         'full_l_sit',
         'full_pistol_squat',
         'full_wall_hspu',
+        'deep_handstand_push_up',
+        'half_lay_front_lever',
+        'high_pull_up',
         'negative_muscle_up',
         'one_arm_pull_up_negative',
         'one_leg_front_lever',
@@ -232,35 +165,48 @@ final class CalisthenicsPlacementOptions
     {
         return [
             'push_ups' => [
-                'progression' => null,
-                'max_strict_reps' => null,
-                'form_quality' => null,
-            ],
-            'rows' => [
-                'progression' => null,
                 'max_strict_reps' => null,
             ],
             'pull_ups' => [
                 'max_strict_reps' => null,
-                'progression' => null,
-                'assistance' => null,
-                'form_quality' => null,
             ],
             'dips' => [
-                'progression' => null,
                 'max_strict_reps' => null,
-                'support_hold_seconds' => null,
             ],
             'squat' => [
-                'max_reps' => null,
-                'progression' => null,
+                'barbell_load_value' => null,
+                'barbell_reps' => null,
             ],
             'hollow_hold_seconds' => null,
-            'arch_hold_seconds' => null,
-            'dead_hang_seconds' => null,
-            'support_hold_seconds' => null,
-            'wall_handstand_seconds' => null,
-            'l_sit_hold_seconds' => null,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $tests
+     * @return array<string, mixed>
+     */
+    public static function normalizeLevelTests(array $tests): array
+    {
+        $pushUps = is_array($tests['push_ups'] ?? null) ? $tests['push_ups'] : [];
+        $pullUps = is_array($tests['pull_ups'] ?? null) ? $tests['pull_ups'] : [];
+        $dips = is_array($tests['dips'] ?? null) ? $tests['dips'] : [];
+        $squat = is_array($tests['squat'] ?? null) ? $tests['squat'] : [];
+
+        return [
+            'push_ups' => [
+                'max_strict_reps' => $pushUps['max_strict_reps'] ?? null,
+            ],
+            'pull_ups' => [
+                'max_strict_reps' => $pullUps['max_strict_reps'] ?? null,
+            ],
+            'dips' => [
+                'max_strict_reps' => $dips['max_strict_reps'] ?? null,
+            ],
+            'squat' => [
+                'barbell_load_value' => $squat['barbell_load_value'] ?? null,
+                'barbell_reps' => $squat['barbell_reps'] ?? null,
+            ],
+            'hollow_hold_seconds' => $tests['hollow_hold_seconds'] ?? null,
         ];
     }
 

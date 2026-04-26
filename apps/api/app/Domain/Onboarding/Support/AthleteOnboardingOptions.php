@@ -16,16 +16,6 @@ final class AthleteOnboardingOptions
 
     public const array BASE_FOCUS_AREAS = CalisthenicsPlacementOptions::BASE_FOCUS_AREAS;
 
-    public const array PUSH_UP_PROGRESSIONS = CalisthenicsPlacementOptions::PUSH_UP_PROGRESSIONS;
-
-    public const array ROW_PROGRESSIONS = CalisthenicsPlacementOptions::ROW_PROGRESSIONS;
-
-    public const array PULL_UP_PROGRESSIONS = CalisthenicsPlacementOptions::PULL_UP_PROGRESSIONS;
-
-    public const array DIP_PROGRESSIONS = CalisthenicsPlacementOptions::DIP_PROGRESSIONS;
-
-    public const array SQUAT_PROGRESSIONS = CalisthenicsPlacementOptions::SQUAT_PROGRESSIONS;
-
     public const array SKILL_STATUS_KEYS = CalisthenicsPlacementOptions::SKILL_STATUS_KEYS;
 
     public const array SKILL_STATUSES = CalisthenicsPlacementOptions::SKILL_STATUSES;
@@ -157,6 +147,10 @@ final class AthleteOnboardingOptions
             }
         }
 
+        if (is_array($merged['current_level_tests'] ?? null)) {
+            $merged['current_level_tests'] = CalisthenicsPlacementOptions::normalizeLevelTests($merged['current_level_tests']);
+        }
+
         $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest($merged);
 
         return $merged;
@@ -224,17 +218,12 @@ final class AthleteOnboardingOptions
 
         $levelTests = is_array($candidate['current_level_tests'] ?? null) ? $candidate['current_level_tests'] : [];
         $pushUps = is_array($levelTests['push_ups'] ?? null) ? $levelTests['push_ups'] : [];
-        $rows = is_array($levelTests['rows'] ?? null) ? $levelTests['rows'] : [];
         $pullUps = is_array($levelTests['pull_ups'] ?? null) ? $levelTests['pull_ups'] : [];
         $dips = is_array($levelTests['dips'] ?? null) ? $levelTests['dips'] : [];
         $squat = is_array($levelTests['squat'] ?? null) ? $levelTests['squat'] : [];
 
         if (! is_int($pushUps['max_strict_reps'] ?? null)) {
             $missing[] = 'push_up_test';
-        }
-
-        if (! is_int($rows['max_strict_reps'] ?? null)) {
-            $missing[] = 'row_test';
         }
 
         if (! is_int($pullUps['max_strict_reps'] ?? null)) {
@@ -245,8 +234,8 @@ final class AthleteOnboardingOptions
             $missing[] = 'dip_test';
         }
 
-        if (! is_int($squat['max_reps'] ?? null)) {
-            $missing[] = 'squat_test';
+        if (! is_numeric($squat['barbell_load_value'] ?? null) || ! is_int($squat['barbell_reps'] ?? null)) {
+            $missing[] = 'barbell_squat_test';
         }
 
         if (! is_int($levelTests['hollow_hold_seconds'] ?? null)) {

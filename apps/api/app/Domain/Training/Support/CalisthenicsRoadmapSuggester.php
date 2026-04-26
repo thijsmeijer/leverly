@@ -62,9 +62,9 @@ final class CalisthenicsRoadmapSuggester
             $bridge,
             self::track(
                 'strict_pull_up',
-                $signals['has_strict_pull_up'] ? 'Strict pull-ups are already in range for direct progression.' : 'Your rows, hangs, or assisted pulling can bridge toward the first strict pull-up.',
+                $signals['has_strict_pull_up'] ? 'Strict pull-ups are already in range for direct progression.' : 'Your current pulling number needs a bridge toward the first strict pull-up.',
                 ['pull_capacity', 'row_volume', 'core_bodyline'],
-                $signals['has_strict_pull_up'] ? 'Build toward 3 clean sets of 6 to 8.' : 'Accumulate quality rows, hangs, scap pulls, and assisted reps.',
+                $signals['has_strict_pull_up'] ? 'Build toward 3 clean sets of 6 to 8.' : 'Accumulate quality pulling volume, scapular control, and controlled negatives.',
                 ['l_sit', 'front_lever'],
             ),
         );
@@ -75,9 +75,9 @@ final class CalisthenicsRoadmapSuggester
             $bridge,
             self::track(
                 'strict_dip',
-                $signals['has_strict_dip'] ? 'Dip reps or support strength are ready for focused dip progression.' : 'Support holds and assisted dips are the right bridge before strict dips.',
+                $signals['has_strict_dip'] ? 'Dip reps are ready for focused dip progression.' : 'Build pressing strength before strict dips become a main target.',
                 ['dip_support', 'push_capacity', 'straight_arm_tolerance'],
-                $signals['has_strict_dip'] ? 'Build controlled depth for 3 sets of 6 to 8.' : 'Own stable support and pain-free assisted dip depth.',
+                $signals['has_strict_dip'] ? 'Build controlled depth for 3 sets of 6 to 8.' : 'Own clean push-ups and pain-free assisted dip depth.',
                 ['l_sit', 'ring_dip'],
             ),
         );
@@ -85,17 +85,17 @@ final class CalisthenicsRoadmapSuggester
         if ($signals['handstand_ready']) {
             $unlocked[] = self::track(
                 'handstand',
-                'Your wall handstand, shoulder line, and wrist signal are ready for regular handstand practice.',
+                'Your pressing, bodyline, shoulder, and wrist signals are ready for regular handstand practice.',
                 ['handstand_line', 'core_bodyline', 'mobility_positions'],
-                'Build a clean wall line and controlled balance entries.',
+                'Build a clean line and controlled balance entries.',
                 ['l_sit', 'strict_push_up'],
             );
         } else {
             $bridge[] = self::track(
                 'handstand',
-                'Start with wrist, shoulder, hollow, and wall-line preparation before chasing freestanding balance.',
+                'Start with wrist, shoulder, hollow, and inversion preparation before chasing freestanding balance.',
                 ['handstand_line', 'core_bodyline', 'mobility_positions'],
-                'Reach a comfortable wall handstand and pain-free wrist loading.',
+                'Reach pain-free wrist loading, overhead line, and controlled inverted exposure.',
                 ['strict_push_up', 'l_sit'],
             );
         }
@@ -103,7 +103,7 @@ final class CalisthenicsRoadmapSuggester
         if ($signals['l_sit_ready']) {
             $unlocked[] = self::track(
                 'l_sit',
-                'Your support and midline tests can support compression work now.',
+                'Your dip and midline tests can support compression work now.',
                 ['compression', 'core_bodyline', 'dip_support'],
                 'Build a repeatable tuck or full L-sit hold.',
                 ['handstand', 'strict_dip'],
@@ -111,9 +111,9 @@ final class CalisthenicsRoadmapSuggester
         } else {
             $bridge[] = self::track(
                 'l_sit',
-                'Compression and support strength should come before harder seated hold targets.',
+                'Compression, dip strength, and hollow body control should come before harder seated hold targets.',
                 ['compression', 'core_bodyline', 'dip_support'],
-                'Own hollow holds, hanging knee raises, and stable support.',
+                'Own hollow body holds, hanging knee raises, and clean dip strength.',
                 ['strict_dip', 'handstand'],
             );
         }
@@ -344,32 +344,39 @@ final class CalisthenicsRoadmapSuggester
     {
         $tests = is_array($data['current_level_tests'] ?? null) ? $data['current_level_tests'] : [];
         $pushUps = is_array($tests['push_ups'] ?? null) ? $tests['push_ups'] : [];
-        $rows = is_array($tests['rows'] ?? null) ? $tests['rows'] : [];
         $pullUps = is_array($tests['pull_ups'] ?? null) ? $tests['pull_ups'] : [];
         $dips = is_array($tests['dips'] ?? null) ? $tests['dips'] : [];
         $squat = is_array($tests['squat'] ?? null) ? $tests['squat'] : [];
+        $skillStatuses = is_array($data['skill_statuses'] ?? null) ? $data['skill_statuses'] : [];
         $mobility = is_array($data['mobility_checks'] ?? null) ? $data['mobility_checks'] : [];
 
         $pushReps = self::intValue($pushUps['max_strict_reps'] ?? null);
-        $rowReps = self::intValue($rows['max_strict_reps'] ?? null);
         $pullReps = self::intValue($pullUps['max_strict_reps'] ?? null);
         $dipReps = self::intValue($dips['max_strict_reps'] ?? null);
-        $supportHold = max(
-            self::intValue($dips['support_hold_seconds'] ?? null),
-            self::intValue($tests['support_hold_seconds'] ?? null),
-        );
-        $squatReps = self::intValue($squat['max_reps'] ?? null);
+        $barbellSquatReps = self::intValue($squat['barbell_reps'] ?? null);
+        $barbellSquatRatio = self::barbellSquatRatio($data);
         $hollowHold = self::intValue($tests['hollow_hold_seconds'] ?? null);
-        $wallHandstand = self::intValue($tests['wall_handstand_seconds'] ?? null);
-        $lSitHold = self::intValue($tests['l_sit_hold_seconds'] ?? null);
-        $deadHang = self::intValue($tests['dead_hang_seconds'] ?? null);
+        $handstandStatus = is_array($skillStatuses['handstand'] ?? null) ? $skillStatuses['handstand'] : [];
+        $lSitStatus = is_array($skillStatuses['l_sit'] ?? null) ? $skillStatuses['l_sit'] : [];
+        $handstandReadyByStatus = self::statusIn($handstandStatus, [
+            'chest_to_wall_handstand',
+            'wall_handstand_shoulder_taps',
+            'freestanding_kick_up',
+            'freestanding_handstand',
+        ]) || self::intValue($handstandStatus['best_hold_seconds'] ?? null) >= 10;
+        $lSitReadyByStatus = self::statusIn($lSitStatus, [
+            'one_leg_l_sit',
+            'tuck_l_sit',
+            'full_l_sit',
+            'v_sit_prep',
+        ]) || self::intValue($lSitStatus['best_hold_seconds'] ?? null) >= 5;
+        $hasBarbellSquatBase = $barbellSquatReps >= 3 && $barbellSquatRatio >= 0.75;
 
-        $hasPushBase = $pushReps >= 1 || self::progressionAtLeast($pushUps['progression'] ?? null, CalisthenicsPlacementOptions::PUSH_UP_PROGRESSIONS, 'strict_push_up');
-        $hasRowBase = $rowReps >= 8 || self::progressionAtLeast($rows['progression'] ?? null, CalisthenicsPlacementOptions::ROW_PROGRESSIONS, 'inverted_row');
-        $hasStrictPullUp = $pullReps >= 1 || self::progressionAtLeast($pullUps['progression'] ?? null, CalisthenicsPlacementOptions::PULL_UP_PROGRESSIONS, 'strict_pull_up');
-        $hasPullBase = $hasStrictPullUp || $hasRowBase || $deadHang >= 20 || self::progressionAtLeast($pullUps['progression'] ?? null, CalisthenicsPlacementOptions::PULL_UP_PROGRESSIONS, 'scapular_pull');
-        $hasStrictDip = $dipReps >= 1 || self::progressionAtLeast($dips['progression'] ?? null, CalisthenicsPlacementOptions::DIP_PROGRESSIONS, 'bar_dip');
-        $hasDipBase = $hasStrictDip || $supportHold >= 15 || self::progressionAtLeast($dips['progression'] ?? null, CalisthenicsPlacementOptions::DIP_PROGRESSIONS, 'support_hold');
+        $hasPushBase = $pushReps >= 1;
+        $hasStrictPullUp = $pullReps >= 1;
+        $hasPullBase = $hasStrictPullUp;
+        $hasStrictDip = $dipReps >= 1;
+        $hasDipBase = $hasStrictDip || $pushReps >= 10;
         $wristBlocked = in_array($mobility['wrist_extension'] ?? 'not_tested', ['blocked', 'painful'], true);
         $shoulderBlocked = in_array($mobility['shoulder_flexion'] ?? 'not_tested', ['blocked', 'painful'], true);
         $ankleBlocked = in_array($mobility['ankle_dorsiflexion'] ?? 'not_tested', ['blocked', 'painful'], true);
@@ -381,17 +388,16 @@ final class CalisthenicsRoadmapSuggester
             'dip_reps' => $dipReps,
             'hollow_hold' => $hollowHold,
             'has_push_base' => $hasPushBase,
-            'has_row_base' => $hasRowBase,
             'has_pull_base' => $hasPullBase,
             'has_strict_pull_up' => $hasStrictPullUp,
             'has_dip_base' => $hasDipBase,
             'has_strict_dip' => $hasStrictDip,
-            'handstand_ready' => $hasPushBase && $hollowHold >= 20 && $wallHandstand >= 10 && ! $wristBlocked && ! $shoulderBlocked,
-            'l_sit_ready' => ($supportHold >= 10 || $hasDipBase) && ($hollowHold >= 20 || $lSitHold >= 5),
-            'pistol_ready' => ($squatReps >= 10 || self::progressionAtLeast($squat['progression'] ?? null, CalisthenicsPlacementOptions::SQUAT_PROGRESSIONS, 'split_squat')) && ! $ankleBlocked,
+            'handstand_ready' => $hasPushBase && $hollowHold >= 20 && $handstandReadyByStatus && ! $wristBlocked && ! $shoulderBlocked,
+            'l_sit_ready' => $hasDipBase && ($hollowHold >= 20 || $lSitReadyByStatus),
+            'pistol_ready' => $hasBarbellSquatBase && ! $ankleBlocked,
             'front_lever_bridge' => $hasPullBase && $pullReps >= 3 && $hollowHold >= 20,
             'muscle_up_bridge' => $pullReps >= 3 && $dipReps >= 3,
-            'ring_dip_bridge' => $hasStrictDip && $supportHold >= 20,
+            'ring_dip_bridge' => $hasStrictDip && $dipReps >= 3,
             'planche_bridge' => $pushReps >= 15 && $hollowHold >= 25 && ! $wristBlocked,
             'weighted_pull_ready' => $pullReps >= 8,
             'one_arm_pull_ready' => $weightedPullRatio >= 0.45,
@@ -494,6 +500,20 @@ final class CalisthenicsRoadmapSuggester
         return 0.0;
     }
 
+    private static function barbellSquatRatio(array $data): float
+    {
+        $bodyweight = self::numberValue($data['current_bodyweight_value'] ?? null);
+        $tests = is_array($data['current_level_tests'] ?? null) ? $data['current_level_tests'] : [];
+        $squat = is_array($tests['squat'] ?? null) ? $tests['squat'] : [];
+        $load = self::numberValue($squat['barbell_load_value'] ?? null);
+
+        if ($bodyweight <= 0.0 || $load <= 0.0) {
+            return 0.0;
+        }
+
+        return $load / $bodyweight;
+    }
+
     private static function bmi(float $bodyweight, string $bodyweightUnit, float $height, string $heightUnit): ?float
     {
         if ($bodyweight <= 0.0 || $height <= 0.0) {
@@ -586,18 +606,14 @@ final class CalisthenicsRoadmapSuggester
     }
 
     /**
-     * @param  list<string>  $ordered
+     * @param  array<string, mixed>  $skillStatus
+     * @param  list<string>  $statuses
      */
-    private static function progressionAtLeast(mixed $value, array $ordered, string $minimum): bool
+    private static function statusIn(array $skillStatus, array $statuses): bool
     {
-        if (! is_string($value)) {
-            return false;
-        }
+        $status = $skillStatus['status'] ?? null;
 
-        $valueIndex = array_search($value, $ordered, true);
-        $minimumIndex = array_search($minimum, $ordered, true);
-
-        return is_int($valueIndex) && is_int($minimumIndex) && $valueIndex >= $minimumIndex;
+        return is_string($status) && in_array($status, $statuses, true);
     }
 
     private static function intValue(mixed $value): int

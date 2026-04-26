@@ -79,26 +79,12 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     ageYears: '',
     baseFocusAreas: [],
     baselineTests: {
-      archHoldSeconds: '',
-      deadHangSeconds: '',
       dipMaxReps: '',
-      dipProgression: '',
-      dipSupportHoldSeconds: '',
       hollowHoldSeconds: '',
-      lSitHoldSeconds: '',
-      pullUpAssistance: '',
-      pullUpFormQuality: '',
       pullUpMaxReps: '',
-      pullUpProgression: '',
-      pushUpFormQuality: '',
       pushUpMaxReps: '',
-      pushUpProgression: '',
-      rowMaxReps: '',
-      rowProgression: '',
-      squatMaxReps: '',
-      squatProgression: '',
-      supportHoldSeconds: '',
-      wallHandstandSeconds: '',
+      squatBarbellLoadValue: '',
+      squatBarbellReps: '',
     },
     bodyweightUnit: 'kg',
     currentBodyweightValue: '',
@@ -300,51 +286,34 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     ageYears: profile.age_years === null || profile.age_years === undefined ? '' : String(profile.age_years),
     baseFocusAreas: [...profile.base_focus_areas],
     baselineTests: {
-      archHoldSeconds:
-        profile.baseline_tests.arch_hold_seconds === null ? '' : String(profile.baseline_tests.arch_hold_seconds),
-      deadHangSeconds:
-        profile.baseline_tests.dead_hang_seconds === null ? '' : String(profile.baseline_tests.dead_hang_seconds),
       dipMaxReps:
-        profile.baseline_tests.dips.max_strict_reps === null ? '' : String(profile.baseline_tests.dips.max_strict_reps),
-      dipProgression: profile.baseline_tests.dips.progression ?? '',
-      dipSupportHoldSeconds:
-        profile.baseline_tests.dips.support_hold_seconds === null
+        profile.baseline_tests.dips?.max_strict_reps === null ||
+        profile.baseline_tests.dips?.max_strict_reps === undefined
           ? ''
-          : String(profile.baseline_tests.dips.support_hold_seconds),
+          : String(profile.baseline_tests.dips.max_strict_reps),
       hollowHoldSeconds:
-        profile.baseline_tests.hollow_hold_seconds === null ? '' : String(profile.baseline_tests.hollow_hold_seconds),
-      lSitHoldSeconds:
-        profile.baseline_tests.l_sit_hold_seconds === null ? '' : String(profile.baseline_tests.l_sit_hold_seconds),
-      pullUpAssistance: profile.baseline_tests.pull_ups.assistance ?? '',
-      pullUpFormQuality:
-        profile.baseline_tests.pull_ups.form_quality === null
+        profile.baseline_tests.hollow_hold_seconds === null || profile.baseline_tests.hollow_hold_seconds === undefined
           ? ''
-          : String(profile.baseline_tests.pull_ups.form_quality),
+          : String(profile.baseline_tests.hollow_hold_seconds),
       pullUpMaxReps:
-        profile.baseline_tests.pull_ups.max_strict_reps === null
+        profile.baseline_tests.pull_ups?.max_strict_reps === null ||
+        profile.baseline_tests.pull_ups?.max_strict_reps === undefined
           ? ''
           : String(profile.baseline_tests.pull_ups.max_strict_reps),
-      pullUpProgression: profile.baseline_tests.pull_ups.progression ?? '',
-      pushUpFormQuality:
-        profile.baseline_tests.push_ups.form_quality === null
-          ? ''
-          : String(profile.baseline_tests.push_ups.form_quality),
       pushUpMaxReps:
-        profile.baseline_tests.push_ups.max_strict_reps === null
+        profile.baseline_tests.push_ups?.max_strict_reps === null ||
+        profile.baseline_tests.push_ups?.max_strict_reps === undefined
           ? ''
           : String(profile.baseline_tests.push_ups.max_strict_reps),
-      pushUpProgression: profile.baseline_tests.push_ups.progression ?? '',
-      rowMaxReps:
-        profile.baseline_tests.rows.max_strict_reps === null ? '' : String(profile.baseline_tests.rows.max_strict_reps),
-      rowProgression: profile.baseline_tests.rows.progression ?? '',
-      squatMaxReps: profile.baseline_tests.squat.max_reps === null ? '' : String(profile.baseline_tests.squat.max_reps),
-      squatProgression: profile.baseline_tests.squat.progression ?? '',
-      supportHoldSeconds:
-        profile.baseline_tests.support_hold_seconds === null ? '' : String(profile.baseline_tests.support_hold_seconds),
-      wallHandstandSeconds:
-        profile.baseline_tests.wall_handstand_seconds === null
+      squatBarbellLoadValue:
+        profile.baseline_tests.squat?.barbell_load_value === null ||
+        profile.baseline_tests.squat?.barbell_load_value === undefined
           ? ''
-          : String(profile.baseline_tests.wall_handstand_seconds),
+          : String(profile.baseline_tests.squat.barbell_load_value),
+      squatBarbellReps:
+        profile.baseline_tests.squat?.barbell_reps === null || profile.baseline_tests.squat?.barbell_reps === undefined
+          ? ''
+          : String(profile.baseline_tests.squat.barbell_reps),
     },
     bodyweightUnit: profile.bodyweight_unit === 'lb' ? 'lb' : 'kg',
     currentBodyweightValue: profile.current_bodyweight_value === null ? '' : String(profile.current_bodyweight_value),
@@ -434,36 +403,20 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     available_equipment: form.availableEquipment.filter(isSupportedEquipment),
     base_focus_areas: [...form.baseFocusAreas],
     baseline_tests: {
-      arch_hold_seconds: nullableNumber(form.baselineTests.archHoldSeconds),
-      dead_hang_seconds: nullableNumber(form.baselineTests.deadHangSeconds),
       dips: {
         max_strict_reps: nullableNumber(form.baselineTests.dipMaxReps),
-        progression: form.baselineTests.dipProgression || null,
-        support_hold_seconds: nullableNumber(form.baselineTests.dipSupportHoldSeconds),
       },
       hollow_hold_seconds: nullableNumber(form.baselineTests.hollowHoldSeconds),
-      l_sit_hold_seconds: nullableNumber(form.baselineTests.lSitHoldSeconds),
       pull_ups: {
-        assistance: form.baselineTests.pullUpAssistance.trim() || null,
-        form_quality: nullableNumber(form.baselineTests.pullUpFormQuality),
         max_strict_reps: nullableNumber(form.baselineTests.pullUpMaxReps),
-        progression: form.baselineTests.pullUpProgression || null,
       },
       push_ups: {
-        form_quality: nullableNumber(form.baselineTests.pushUpFormQuality),
         max_strict_reps: nullableNumber(form.baselineTests.pushUpMaxReps),
-        progression: form.baselineTests.pushUpProgression || null,
-      },
-      rows: {
-        max_strict_reps: nullableNumber(form.baselineTests.rowMaxReps),
-        progression: form.baselineTests.rowProgression || null,
       },
       squat: {
-        max_reps: nullableNumber(form.baselineTests.squatMaxReps),
-        progression: form.baselineTests.squatProgression || null,
+        barbell_load_value: nullableNumber(form.baselineTests.squatBarbellLoadValue),
+        barbell_reps: nullableNumber(form.baselineTests.squatBarbellReps),
       },
-      support_hold_seconds: nullableNumber(form.baselineTests.supportHoldSeconds),
-      wall_handstand_seconds: nullableNumber(form.baselineTests.wallHandstandSeconds),
     },
     bodyweight_unit: form.bodyweightUnit,
     current_bodyweight_value: nullableNumber(form.currentBodyweightValue),

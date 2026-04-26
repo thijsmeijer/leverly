@@ -15,7 +15,6 @@ import {
   bodyweightUnitOptions,
   compatibleSecondaryGoals,
   deloadPreferenceOptions,
-  dipProgressionOptions,
   effortTrackingOptions,
   experienceLevelOptions,
   goalOptions,
@@ -28,11 +27,7 @@ import {
   mobilityStatusOptions,
   progressionPaceOptions,
   priorSportOptions,
-  pullUpProgressionOptions,
-  pushUpProgressionOptions,
-  rowProgressionOptions,
   sessionStructureOptions,
-  squatProgressionOptions,
   targetSkillOptions,
   trainingDayOptions,
   trainingLocationOptions,
@@ -498,180 +493,80 @@ function removeWeightedMovement(index: number): void {
 
           <div class="border-line-subtle border-t pt-5">
             <div class="mb-4">
-              <h3 class="text-ink-primary text-base font-semibold">Current progression checks</h3>
+              <h3 class="text-ink-primary text-base font-semibold">Current baseline tests</h3>
               <p class="text-ink-secondary mt-1 text-sm leading-6">
-                These inputs help the recommendation engine choose regressions, working reps, holds, and skill prep
-                without guessing from broad experience labels.
+                These repeatable numbers keep recommendations tied to your actual strength instead of broad experience
+                labels.
               </p>
             </div>
-            <div class="space-y-6">
-              <ProfileChoiceGrid
-                v-model="form.baselineTests.pushUpProgression"
-                label="Current push-up progression"
-                name="profile-push-up-progression"
-                :options="pushUpProgressionOptions"
-              />
-              <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 xl:grid-cols-2">
+              <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
+                <h4 class="text-ink-primary text-sm font-semibold">Push-up strength</h4>
+                <p class="text-ink-muted mt-1 text-sm leading-5">Strict floor reps with a rigid bodyline.</p>
                 <ProfileTextField
                   id="profile-push-up-reps"
                   v-model="form.baselineTests.pushUpMaxReps"
+                  class="mt-4"
                   input-mode="numeric"
                   label="Max strict push-ups"
                   placeholder="18"
                   type="number"
                 />
+              </div>
+              <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
+                <h4 class="text-ink-primary text-sm font-semibold">Pull-up strength</h4>
+                <p class="text-ink-muted mt-1 text-sm leading-5">Strict reps from a dead hang or 0 if not there yet.</p>
                 <ProfileTextField
-                  id="profile-push-up-form"
-                  v-model="form.baselineTests.pushUpFormQuality"
+                  id="profile-pull-up-reps"
+                  v-model="form.baselineTests.pullUpMaxReps"
+                  class="mt-4"
                   input-mode="numeric"
-                  label="Push-up form quality"
+                  label="Max strict pull-ups"
                   placeholder="4"
                   type="number"
                 />
+              </div>
+              <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
+                <h4 class="text-ink-primary text-sm font-semibold">Dip strength</h4>
+                <p class="text-ink-muted mt-1 text-sm leading-5">Clean parallel-bar reps with controlled depth.</p>
                 <ProfileTextField
-                  id="profile-hollow-hold"
-                  v-model="form.baselineTests.hollowHoldSeconds"
+                  id="profile-dip-reps"
+                  v-model="form.baselineTests.dipMaxReps"
+                  class="mt-4"
                   input-mode="numeric"
-                  label="Best hollow hold"
-                  placeholder="35"
+                  label="Max strict dips"
+                  placeholder="6"
                   type="number"
                 />
               </div>
-
-              <div class="grid gap-6 xl:grid-cols-2">
-                <div class="space-y-4">
-                  <ProfileChoiceGrid
-                    v-model="form.baselineTests.pullUpProgression"
-                    label="Current pull-up progression"
-                    name="profile-pull-up-progression"
-                    :options="pullUpProgressionOptions"
-                  />
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <ProfileTextField
-                      id="profile-pull-up-reps"
-                      v-model="form.baselineTests.pullUpMaxReps"
-                      input-mode="numeric"
-                      label="Strict pull-ups"
-                      placeholder="4"
-                      type="number"
-                    />
-                    <ProfileTextField
-                      id="profile-pull-up-form"
-                      v-model="form.baselineTests.pullUpFormQuality"
-                      input-mode="numeric"
-                      label="Pull-up form quality"
-                      placeholder="4"
-                      type="number"
-                    />
-                    <ProfileTextField
-                      id="profile-pull-up-assistance"
-                      v-model="form.baselineTests.pullUpAssistance"
-                      label="Assistance used"
-                      placeholder="Light band or foot support"
-                    />
-                    <ProfileTextField
-                      id="profile-dead-hang"
-                      v-model="form.baselineTests.deadHangSeconds"
-                      input-mode="numeric"
-                      label="Best dead hang"
-                      placeholder="30"
-                      type="number"
-                    />
-                  </div>
-                </div>
-
-                <div class="space-y-4">
-                  <ProfileChoiceGrid
-                    v-model="form.baselineTests.rowProgression"
-                    label="Current row progression"
-                    name="profile-row-progression"
-                    :options="rowProgressionOptions"
-                  />
-                  <ProfileChoiceGrid
-                    v-model="form.baselineTests.squatProgression"
-                    label="Current squat or pistol progression"
-                    name="profile-squat-progression"
-                    :options="squatProgressionOptions"
-                  />
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <ProfileTextField
-                      id="profile-row-reps"
-                      v-model="form.baselineTests.rowMaxReps"
-                      input-mode="numeric"
-                      label="Best row reps"
-                      placeholder="12"
-                      type="number"
-                    />
-                    <ProfileTextField
-                      id="profile-squat-reps"
-                      v-model="form.baselineTests.squatMaxReps"
-                      input-mode="numeric"
-                      label="Best squat reps"
-                      placeholder="20"
-                      type="number"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="grid gap-6 xl:grid-cols-2">
-                <div class="space-y-4">
-                  <ProfileChoiceGrid
-                    v-model="form.baselineTests.dipProgression"
-                    label="Current dip/support progression"
-                    name="profile-dip-progression"
-                    :options="dipProgressionOptions"
-                  />
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <ProfileTextField
-                      id="profile-dip-reps"
-                      v-model="form.baselineTests.dipMaxReps"
-                      input-mode="numeric"
-                      label="Clean dip reps"
-                      placeholder="6"
-                      type="number"
-                    />
-                    <ProfileTextField
-                      id="profile-dip-support"
-                      v-model="form.baselineTests.dipSupportHoldSeconds"
-                      input-mode="numeric"
-                      label="Support hold"
-                      placeholder="25"
-                      type="number"
-                    />
-                  </div>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
+              <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
+                <h4 class="text-ink-primary text-sm font-semibold">Legs and bodyline</h4>
+                <p class="text-ink-muted mt-1 text-sm leading-5">
+                  Barbell squat capacity and hollow body control for placement.
+                </p>
+                <div class="mt-4 grid gap-4 sm:grid-cols-3">
                   <ProfileTextField
-                    id="profile-arch-hold"
-                    v-model="form.baselineTests.archHoldSeconds"
+                    id="profile-squat-load"
+                    v-model="form.baselineTests.squatBarbellLoadValue"
                     input-mode="numeric"
-                    label="Best arch hold"
-                    placeholder="25"
+                    :label="`Barbell squat load (${form.bodyweightUnit})`"
+                    placeholder="100"
                     type="number"
                   />
                   <ProfileTextField
-                    id="profile-wall-handstand"
-                    v-model="form.baselineTests.wallHandstandSeconds"
+                    id="profile-squat-load-reps"
+                    v-model="form.baselineTests.squatBarbellReps"
                     input-mode="numeric"
-                    label="Wall handstand"
-                    placeholder="20"
+                    label="Reps at that load"
+                    placeholder="5"
                     type="number"
                   />
                   <ProfileTextField
-                    id="profile-l-sit-hold"
-                    v-model="form.baselineTests.lSitHoldSeconds"
+                    id="profile-hollow-hold"
+                    v-model="form.baselineTests.hollowHoldSeconds"
                     input-mode="numeric"
-                    label="L-sit or tuck-sit"
-                    placeholder="8"
-                    type="number"
-                  />
-                  <ProfileTextField
-                    id="profile-support-hold"
-                    v-model="form.baselineTests.supportHoldSeconds"
-                    input-mode="numeric"
-                    label="General support hold"
-                    placeholder="25"
+                    label="Hollow body hold"
+                    placeholder="35"
                     type="number"
                   />
                 </div>

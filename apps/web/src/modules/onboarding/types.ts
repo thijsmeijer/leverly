@@ -11,26 +11,12 @@ export type OnboardingStepId =
 export type OnboardingFieldErrors = Partial<Record<keyof OnboardingForm | string, string>>
 
 export interface OnboardingLevelTestsForm {
-  archHoldSeconds: string
-  deadHangSeconds: string
   dipMaxReps: string
-  dipProgression: string
-  dipSupportHoldSeconds: string
   hollowHoldSeconds: string
-  lSitHoldSeconds: string
   pullUpMaxReps: string
-  pullUpProgression: string
-  pullUpAssistance: string
-  pullUpFormQuality: string
-  pushUpFormQuality: string
   pushUpMaxReps: string
-  pushUpProgression: string
-  rowMaxReps: string
-  rowProgression: string
-  squatMaxReps: string
-  squatProgression: string
-  supportHoldSeconds: string
-  wallHandstandSeconds: string
+  squatBarbellLoadValue: string
+  squatBarbellReps: string
 }
 
 export interface OnboardingSkillStatusForm {

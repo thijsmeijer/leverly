@@ -26,6 +26,7 @@ import {
   sorenessOptions,
   skillStatusKeys,
   skillStatusLabels,
+  skillStatusMeasurements,
   skillStatusOptions,
   starterPlanOptions,
   targetSkillOptions,
@@ -525,7 +526,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                   <h4 class="text-ink-primary text-base font-semibold">Push-up strength</h4>
                   <p class="text-ink-muted mt-1 text-sm leading-5">Strict floor reps with a rigid bodyline.</p>
                 </div>
-                <div class="grid gap-3 sm:grid-cols-2">
+                <div class="max-w-sm">
                   <OnboardingNumberField
                     id="onboarding-push-ups"
                     v-model="onboarding.form.currentLevelTests.pushUpMaxReps"
@@ -535,16 +536,6 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                     :min="0"
                     placeholder="18"
                     suffix="reps"
-                  />
-                  <OnboardingNumberField
-                    id="onboarding-push-up-form"
-                    v-model="onboarding.form.currentLevelTests.pushUpFormQuality"
-                    :error="errorFor('currentLevelTests.pushUpFormQuality')"
-                    label="Form quality"
-                    :max="5"
-                    :min="1"
-                    placeholder="4"
-                    suffix="/5"
                   />
                 </div>
               </div>
@@ -556,7 +547,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                     Strict reps from a dead hang or 0 if not there yet.
                   </p>
                 </div>
-                <div class="grid gap-3 sm:grid-cols-2">
+                <div class="max-w-sm">
                   <OnboardingNumberField
                     id="onboarding-pull-ups"
                     v-model="onboarding.form.currentLevelTests.pullUpMaxReps"
@@ -567,45 +558,15 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                     placeholder="4"
                     suffix="reps"
                   />
-                  <OnboardingNumberField
-                    id="onboarding-pull-up-form"
-                    v-model="onboarding.form.currentLevelTests.pullUpFormQuality"
-                    :error="errorFor('currentLevelTests.pullUpFormQuality')"
-                    label="Form quality"
-                    :max="5"
-                    :min="1"
-                    placeholder="4"
-                    suffix="/5"
-                  />
                 </div>
-                <label class="mt-3 block space-y-2">
-                  <span class="text-ink-primary text-sm font-semibold">Assistance used if any</span>
-                  <input
-                    v-model="onboarding.form.currentLevelTests.pullUpAssistance"
-                    class="border-line-subtle bg-surface-primary text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
-                    placeholder="Example: light band, foot support"
-                  />
-                </label>
               </div>
 
               <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
                 <div class="mb-4">
-                  <h4 class="text-ink-primary text-base font-semibold">Rows and dips</h4>
-                  <p class="text-ink-muted mt-1 text-sm leading-5">
-                    Horizontal pulling plus support pressing capacity.
-                  </p>
+                  <h4 class="text-ink-primary text-base font-semibold">Dip strength</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">Clean parallel-bar reps with controlled depth.</p>
                 </div>
-                <div class="grid gap-3 sm:grid-cols-3">
-                  <OnboardingNumberField
-                    id="onboarding-row-reps"
-                    v-model="onboarding.form.currentLevelTests.rowMaxReps"
-                    :error="errorFor('currentLevelTests.rowMaxReps')"
-                    label="Row reps"
-                    :max="200"
-                    :min="0"
-                    placeholder="12"
-                    suffix="reps"
-                  />
+                <div class="max-w-sm">
                   <OnboardingNumberField
                     id="onboarding-dip-reps"
                     v-model="onboarding.form.currentLevelTests.dipMaxReps"
@@ -616,39 +577,42 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                     placeholder="6"
                     suffix="reps"
                   />
-                  <OnboardingNumberField
-                    id="onboarding-dip-support"
-                    v-model="onboarding.form.currentLevelTests.dipSupportHoldSeconds"
-                    label="Support hold"
-                    :max="600"
-                    :min="0"
-                    placeholder="25"
-                    suffix="sec"
-                  />
                 </div>
               </div>
 
               <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
                 <div class="mb-4">
                   <h4 class="text-ink-primary text-base font-semibold">Legs and bodyline</h4>
-                  <p class="text-ink-muted mt-1 text-sm leading-5">Simple strength and trunk control signals.</p>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">
+                    Barbell squat capacity and trunk control for leg and bodyline placement.
+                  </p>
                 </div>
-                <div class="grid gap-3 sm:grid-cols-2">
+                <div class="grid gap-3 sm:grid-cols-3">
                   <OnboardingNumberField
-                    id="onboarding-squat-reps"
-                    v-model="onboarding.form.currentLevelTests.squatMaxReps"
-                    :error="errorFor('currentLevelTests.squatMaxReps')"
-                    label="Bodyweight squat reps"
-                    :max="300"
+                    id="onboarding-squat-load"
+                    v-model="onboarding.form.currentLevelTests.squatBarbellLoadValue"
+                    :error="errorFor('currentLevelTests.squatBarbellLoadValue')"
+                    label="Barbell squat load"
+                    :max="1000"
                     :min="0"
-                    placeholder="20"
+                    placeholder="100"
+                    :suffix="onboarding.form.bodyweightUnit"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-squat-load-reps"
+                    v-model="onboarding.form.currentLevelTests.squatBarbellReps"
+                    :error="errorFor('currentLevelTests.squatBarbellReps')"
+                    label="Reps at that load"
+                    :max="30"
+                    :min="0"
+                    placeholder="5"
                     suffix="reps"
                   />
                   <OnboardingNumberField
                     id="onboarding-hollow-hold"
                     v-model="onboarding.form.currentLevelTests.hollowHoldSeconds"
                     :error="errorFor('currentLevelTests.hollowHoldSeconds')"
-                    label="Hollow hold"
+                    label="Hollow body hold"
                     :max="600"
                     :min="0"
                     placeholder="35"
@@ -656,53 +620,6 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                   />
                 </div>
               </div>
-            </div>
-          </section>
-
-          <section class="mt-7 space-y-4">
-            <div>
-              <h3 class="text-ink-primary text-lg font-semibold">Extra useful signals</h3>
-              <p class="text-ink-secondary mt-1 text-sm leading-6">
-                These are optional, but they help place hanging, handstand, compression, and posterior-chain work.
-              </p>
-            </div>
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <OnboardingNumberField
-                id="onboarding-dead-hang"
-                v-model="onboarding.form.currentLevelTests.deadHangSeconds"
-                label="Dead hang"
-                :max="600"
-                :min="0"
-                placeholder="30"
-                suffix="sec"
-              />
-              <OnboardingNumberField
-                id="onboarding-arch-hold"
-                v-model="onboarding.form.currentLevelTests.archHoldSeconds"
-                label="Arch hold"
-                :max="600"
-                :min="0"
-                placeholder="25"
-                suffix="sec"
-              />
-              <OnboardingNumberField
-                id="onboarding-wall-handstand"
-                v-model="onboarding.form.currentLevelTests.wallHandstandSeconds"
-                label="Wall handstand"
-                :max="600"
-                :min="0"
-                placeholder="20"
-                suffix="sec"
-              />
-              <OnboardingNumberField
-                id="onboarding-l-sit-hold"
-                v-model="onboarding.form.currentLevelTests.lSitHoldSeconds"
-                label="L-sit or tuck-sit"
-                :max="600"
-                :min="0"
-                placeholder="8"
-                suffix="sec"
-              />
             </div>
           </section>
 
@@ -733,17 +650,19 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 </label>
                 <div class="mt-3 grid gap-3 sm:grid-cols-2">
                   <OnboardingNumberField
+                    v-if="skillStatusMeasurements[skill].reps"
                     :id="`onboarding-${skill}-reps`"
                     v-model="onboarding.form.skillStatuses[skill].maxStrictReps"
-                    label="Best reps"
+                    :label="skillStatusMeasurements[skill].reps"
                     :max="100"
                     :min="0"
                     placeholder="0"
                   />
                   <OnboardingNumberField
+                    v-if="skillStatusMeasurements[skill].hold"
                     :id="`onboarding-${skill}-hold`"
                     v-model="onboarding.form.skillStatuses[skill].bestHoldSeconds"
-                    label="Best hold"
+                    :label="skillStatusMeasurements[skill].hold"
                     :max="600"
                     :min="0"
                     placeholder="0"
@@ -1116,7 +1035,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         </OnboardingStepPanel>
 
         <div
-          class="border-line-subtle bg-surface-elevated shadow-card rounded-card sticky bottom-4 z-20 flex flex-col gap-3 border p-4 sm:flex-row sm:items-center sm:justify-between"
+          class="border-line-subtle bg-surface-elevated shadow-card rounded-card flex flex-col gap-3 border p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <p class="text-ink-secondary text-sm leading-6">
             {{

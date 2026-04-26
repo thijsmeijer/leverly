@@ -111,36 +111,20 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       completed_at: null,
       current_bodyweight_value: 72.5,
       current_level_tests: {
-        arch_hold_seconds: 25,
-        dead_hang_seconds: 30,
         dips: {
           max_strict_reps: 6,
-          progression: 'bar_dip',
-          support_hold_seconds: 25,
         },
         hollow_hold_seconds: 35,
-        l_sit_hold_seconds: 8,
         pull_ups: {
-          assistance: null,
-          form_quality: 4,
           max_strict_reps: 4,
-          progression: 'strict_pull_up',
         },
         push_ups: {
-          form_quality: 4,
           max_strict_reps: 18,
-          progression: 'strict_push_up',
-        },
-        rows: {
-          max_strict_reps: 12,
-          progression: 'inverted_row',
         },
         squat: {
-          max_reps: 20,
-          progression: 'split_squat',
+          barbell_load_value: 100,
+          barbell_reps: 5,
         },
-        support_hold_seconds: 25,
-        wall_handstand_seconds: 20,
       },
       experience_level: 'intermediate',
       height_unit: 'cm',
@@ -172,7 +156,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       skill_statuses: {
         handstand: {
           best_hold_seconds: 20,
-          status: 'assisted',
+          status: 'freestanding_kick_up',
         },
       },
       sleep_quality: 4,
@@ -228,7 +212,7 @@ function roadmapSuggestions() {
         compatible_secondary_skills: ['l_sit'],
         label: 'Handstand',
         next_gate: 'Build a clean wall line and controlled balance entries.',
-        reason: 'Your wall handstand is ready for regular handstand practice.',
+        reason: 'Your pressing, bodyline, shoulder, and wrist signals are ready for regular handstand practice.',
         skill: 'handstand',
       },
     ],

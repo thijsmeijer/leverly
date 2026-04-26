@@ -28,35 +28,19 @@ export interface MovementLimitation {
 
 export interface PlacementLevelTests {
   readonly push_ups: {
-    readonly progression: string | null
-    readonly max_strict_reps: number | null
-    readonly form_quality: number | null
-  }
-  readonly rows: {
-    readonly progression: string | null
     readonly max_strict_reps: number | null
   }
   readonly pull_ups: {
     readonly max_strict_reps: number | null
-    readonly progression: string | null
-    readonly assistance: string | null
-    readonly form_quality: number | null
   }
   readonly dips: {
-    readonly progression: string | null
     readonly max_strict_reps: number | null
-    readonly support_hold_seconds: number | null
   }
   readonly squat: {
-    readonly max_reps: number | null
-    readonly progression: string | null
+    readonly barbell_load_value: number | null
+    readonly barbell_reps: number | null
   }
   readonly hollow_hold_seconds: number | null
-  readonly arch_hold_seconds: number | null
-  readonly dead_hang_seconds: number | null
-  readonly support_hold_seconds: number | null
-  readonly wall_handstand_seconds: number | null
-  readonly l_sit_hold_seconds: number | null
 }
 
 export interface SkillStatus {
@@ -147,17 +131,20 @@ export interface AthleteProfileResponse {
 }
 
 export interface OnboardingLevelTests {
-  readonly push_ups: PlacementLevelTests['push_ups']
-  readonly rows: PlacementLevelTests['rows']
-  readonly pull_ups: PlacementLevelTests['pull_ups']
-  readonly dips: PlacementLevelTests['dips']
-  readonly squat: PlacementLevelTests['squat']
+  readonly push_ups: {
+    readonly max_strict_reps: number | null
+  }
+  readonly pull_ups: {
+    readonly max_strict_reps: number | null
+  }
+  readonly dips: {
+    readonly max_strict_reps: number | null
+  }
+  readonly squat: {
+    readonly barbell_load_value: number | null
+    readonly barbell_reps: number | null
+  }
   readonly hollow_hold_seconds: number | null
-  readonly arch_hold_seconds: number | null
-  readonly dead_hang_seconds: number | null
-  readonly support_hold_seconds: number | null
-  readonly wall_handstand_seconds: number | null
-  readonly l_sit_hold_seconds: number | null
 }
 
 export interface OnboardingSkillStatus {

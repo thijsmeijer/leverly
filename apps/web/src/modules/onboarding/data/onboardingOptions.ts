@@ -65,7 +65,7 @@ export const targetSkillOptions: ChoiceOption[] = [
   {
     label: 'Strict pull-up',
     value: 'strict_pull_up',
-    description: 'Move from rows or assisted reps toward full pulls.',
+    description: 'Build the pulling base toward clean full reps.',
   },
   {
     label: 'Weighted pull-up',
@@ -130,77 +130,6 @@ export const baseFocusOptions: ChoiceOption[] = [
   },
 ]
 
-export const pushUpProgressionOptions: ChoiceOption[] = [
-  { label: 'Wall push-up', value: 'wall_push_up', description: 'Highest hand position.' },
-  { label: 'Incline push-up', value: 'incline_push_up', description: 'Hands elevated, full bodyline.' },
-  { label: 'Knee push-up', value: 'knee_push_up', description: 'Shorter lever pressing.' },
-  { label: 'Strict push-up', value: 'strict_push_up', description: 'Full bodyweight reps.' },
-  { label: 'Diamond push-up', value: 'diamond_push_up', description: 'Narrower press emphasis.' },
-  { label: 'Decline push-up', value: 'decline_push_up', description: 'Feet elevated.' },
-  {
-    label: 'Pseudo planche push-up',
-    value: 'pseudo_planche_push_up',
-    description: 'Forward lean and scapular protraction.',
-  },
-  { label: 'Ring push-up', value: 'ring_push_up', description: 'Instability and deeper control.' },
-  { label: 'Archer push-up', value: 'archer_push_up', description: 'Unilateral prep.' },
-  { label: 'One-arm assisted', value: 'one_arm_assisted_push_up', description: 'One-arm path with support.' },
-  { label: 'One-arm push-up', value: 'one_arm_push_up', description: 'Strict unilateral pressing.' },
-]
-
-export const rowProgressionOptions: ChoiceOption[] = [
-  { label: 'Vertical row', value: 'vertical_row', description: 'Very upright assisted pull.' },
-  { label: 'Inverted row', value: 'inverted_row', description: 'Body row with scalable angle.' },
-  { label: 'Horizontal row', value: 'horizontal_row', description: 'Harder straight-body row.' },
-  { label: 'Feet-elevated row', value: 'feet_elevated_row', description: 'More horizontal body line.' },
-  { label: 'Ring row', value: 'ring_row', description: 'Adjustable ring pulling.' },
-  { label: 'Tuck front lever row', value: 'tuck_front_lever_row', description: 'Lever-specific pulling prep.' },
-]
-
-export const pullUpProgressionOptions: ChoiceOption[] = [
-  { label: 'Dead hang', value: 'dead_hang', description: 'Grip and shoulder tolerance.' },
-  { label: 'Scapular pull', value: 'scapular_pull', description: 'Active shoulder depression.' },
-  { label: 'Flexed-arm hang', value: 'flexed_arm_hang', description: 'Top-position pulling strength.' },
-  { label: 'Inverted row', value: 'inverted_row', description: 'Horizontal pulling base.' },
-  { label: 'Band-assisted pull-up', value: 'band_assisted_pull_up', description: 'Full path with assistance.' },
-  {
-    label: 'Foot-assisted pull-up',
-    value: 'foot_assisted_pull_up',
-    description: 'Full path with controlled leg help.',
-  },
-  { label: 'Eccentric pull-up', value: 'eccentric_pull_up', description: 'Controlled lowering.' },
-  { label: 'Strict pull-up', value: 'strict_pull_up', description: 'Clean unassisted reps.' },
-  { label: 'Chest-to-bar pull-up', value: 'chest_to_bar_pull_up', description: 'Higher pull strength.' },
-  { label: 'Weighted pull-up', value: 'weighted_pull_up', description: 'Added-load pulling.' },
-  { label: 'Archer pull-up', value: 'archer_pull_up', description: 'Unilateral prep.' },
-]
-
-export const dipProgressionOptions: ChoiceOption[] = [
-  { label: 'Support hold', value: 'support_hold', description: 'Locked-out support strength.' },
-  { label: 'Box dip', value: 'box_dip', description: 'Supported dip path.' },
-  { label: 'Bench dip', value: 'bench_dip', description: 'Entry-level dip pattern.' },
-  { label: 'Assisted bar dip', value: 'assisted_bar_dip', description: 'Bar dip with help.' },
-  { label: 'Bar dip', value: 'bar_dip', description: 'Clean fixed-surface reps.' },
-  { label: 'Deep bar dip', value: 'deep_bar_dip', description: 'Strict depth with control.' },
-  { label: 'Straight-bar dip', value: 'straight_bar_dip', description: 'Muscle-up specific pressing.' },
-  { label: 'Ring support hold', value: 'ring_support_hold', description: 'Stable rings before ring dips.' },
-  { label: 'Assisted ring dip', value: 'assisted_ring_dip', description: 'Ring dip path with help.' },
-  { label: 'Ring dip', value: 'ring_dip', description: 'Strict unstable dip.' },
-  { label: 'Weighted dip', value: 'weighted_dip', description: 'External-load dip strength.' },
-]
-
-export const squatProgressionOptions: ChoiceOption[] = [
-  { label: 'Box squat', value: 'box_squat', description: 'Controlled depth target.' },
-  { label: 'Air squat', value: 'air_squat', description: 'Bodyweight squat base.' },
-  { label: 'Reverse lunge', value: 'reverse_lunge', description: 'Single-leg entry point.' },
-  { label: 'Split squat', value: 'split_squat', description: 'Stable single-leg strength.' },
-  { label: 'Deep step-up', value: 'deep_step_up', description: 'Single-leg strength with a clear height target.' },
-  { label: 'Assisted pistol', value: 'assisted_pistol', description: 'Pistol pattern with support.' },
-  { label: 'Shrimp squat', value: 'shrimp_squat', description: 'Knee-dominant single-leg work.' },
-  { label: 'Pistol squat', value: 'pistol_squat', description: 'Full single-leg squat.' },
-  { label: 'Weighted pistol', value: 'weighted_pistol', description: 'Loaded single-leg strength.' },
-]
-
 export const skillStatusKeys = [
   'muscle_up',
   'l_sit',
@@ -243,6 +172,7 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'Tuck front lever', value: 'tuck_front_lever' },
     { label: 'Advanced tuck', value: 'advanced_tuck_front_lever' },
     { label: 'One-leg front lever', value: 'one_leg_front_lever' },
+    { label: 'Half-lay front lever', value: 'half_lay_front_lever' },
     { label: 'Straddle front lever', value: 'straddle_front_lever' },
     { label: 'Full front lever', value: 'full_front_lever' },
   ],
@@ -261,6 +191,8 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'Wall negative', value: 'wall_hspu_negative' },
     { label: 'Partial wall HSPU', value: 'partial_wall_hspu' },
     { label: 'Full wall HSPU', value: 'full_wall_hspu' },
+    { label: 'Deep HSPU', value: 'deep_handstand_push_up' },
+    { label: 'Freestanding HSPU', value: 'freestanding_handstand_push_up' },
   ],
   human_flag: [
     { label: 'Not tested', value: 'not_tested' },
@@ -282,6 +214,7 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'Not tested', value: 'not_tested' },
     { label: 'Explosive pull-up', value: 'explosive_pull_up' },
     { label: 'Chest-to-bar pull-up', value: 'chest_to_bar_pull_up' },
+    { label: 'High pull-up', value: 'high_pull_up' },
     { label: 'Band-assisted muscle-up', value: 'band_assisted_muscle_up' },
     { label: 'Negative muscle-up', value: 'negative_muscle_up' },
     { label: 'Strict muscle-up', value: 'strict_muscle_up' },
@@ -309,6 +242,7 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'Tuck planche', value: 'tuck_planche' },
     { label: 'Advanced tuck planche', value: 'advanced_tuck_planche' },
     { label: 'Straddle planche', value: 'straddle_planche' },
+    { label: 'Full planche', value: 'full_planche' },
   ],
   press_to_handstand: [
     { label: 'Not tested', value: 'not_tested' },
@@ -318,6 +252,23 @@ export const skillStatusOptions: Record<(typeof skillStatusKeys)[number], Choice
     { label: 'Straddle press negative', value: 'straddle_press_negative' },
     { label: 'Freestanding press', value: 'freestanding_press_to_handstand' },
   ],
+}
+
+export const skillStatusMeasurements: Record<
+  (typeof skillStatusKeys)[number],
+  { readonly hold?: string; readonly reps?: string }
+> = {
+  back_lever: { hold: 'Best hold' },
+  front_lever: { hold: 'Best hold' },
+  handstand: { hold: 'Best hold' },
+  handstand_push_up: { reps: 'Best reps' },
+  human_flag: { hold: 'Best hold' },
+  l_sit: { hold: 'Best hold' },
+  muscle_up: { reps: 'Best reps' },
+  one_arm_pull_up: { reps: 'Best reps' },
+  pistol_squat: { reps: 'Best reps' },
+  planche: { hold: 'Best hold' },
+  press_to_handstand: { reps: 'Best reps' },
 }
 
 export const starterPlanOptions: ChoiceOption[] = [
