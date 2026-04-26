@@ -4,6 +4,7 @@ import {
   defaultProfileSettingsForm,
   fetchProfileSettings,
   ProfileSettingsValidationError,
+  saveAvailableEquipmentSettings,
   saveProfileSettings,
   validateProfileSettingsForm,
 } from '../services/settingsService'
@@ -29,6 +30,7 @@ export function useSettings() {
     loadProfile,
     profileId,
     saveError,
+    saveEquipment,
     saveProfile,
     saveSuccess,
   }
@@ -77,6 +79,34 @@ export function useSettings() {
         saveError.value = 'Check the highlighted fields before saving.'
       } else {
         saveError.value = 'Profile settings could not be saved. Your current form is still here.'
+      }
+
+      return false
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  async function saveEquipment(): Promise<boolean> {
+    saveSuccess.value = false
+    saveError.value = ''
+    fieldErrors.value = {}
+    isSaving.value = true
+
+    try {
+      const state = await saveAvailableEquipmentSettings(form.availableEquipment)
+
+      Object.assign(form, state.form)
+      profileId.value = state.profileId
+      saveSuccess.value = true
+
+      return true
+    } catch (error) {
+      if (error instanceof ProfileSettingsValidationError) {
+        fieldErrors.value = error.errors
+        saveError.value = 'Check the highlighted fields before saving.'
+      } else {
+        saveError.value = 'Equipment settings could not be saved. Your current selections are still here.'
       }
 
       return false

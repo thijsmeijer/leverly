@@ -36,16 +36,21 @@ final class AthleteProfileOptions
 
     public const array EQUIPMENT = [
         'pull_up_bar',
+        'low_bar',
         'dip_bars',
         'parallel_bars',
+        'stall_bars',
         'parallettes',
         'rings',
         'resistance_band',
         'box_bench',
         'weight_vest',
         'dip_belt',
+        'weighted_backpack',
         'suspension_trainer',
         'ab_wheel',
+        'jump_rope',
+        'training_mat',
     ];
 
     public const array TRAINING_LOCATIONS = ['home', 'gym', 'park', 'travel', 'other'];

@@ -33,7 +33,7 @@ class AthleteProfileFactory extends Factory
             'primary_goal' => fake()->randomElement(AthleteProfileOptions::GOALS),
             'secondary_goals' => ['strength', 'skill'],
             'target_skills' => ['freestanding handstand', 'strict pull-up'],
-            'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
+            'available_equipment' => ['pull_up_bar', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home'],
             'movement_limitations' => [],
             'injury_notes' => null,

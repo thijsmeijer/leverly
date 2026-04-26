@@ -222,16 +222,21 @@ paths:
                     type: string
                     enum:
                       - pull_up_bar
+                      - low_bar
                       - dip_bars
                       - parallel_bars
+                      - stall_bars
                       - parallettes
                       - rings
                       - resistance_band
                       - box_bench
                       - weight_vest
                       - dip_belt
+                      - weighted_backpack
                       - suspension_trainer
                       - ab_wheel
+                      - jump_rope
+                      - training_mat
                 training_locations:
                   type: array
                   description: ''

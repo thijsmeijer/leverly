@@ -121,17 +121,6 @@ const appPlaceholderRoutes: RouteRecordRaw[] = [
     },
   },
   {
-    path: 'settings/equipment',
-    name: 'settings-equipment',
-    component: RoutePlaceholderPage,
-    meta: {
-      requiresAuth: true,
-      section: 'Settings',
-      title: 'Equipment settings',
-      placeholder: routePlaceholders.settingsEquipment,
-    },
-  },
-  {
     path: 'settings/export',
     name: 'settings-export',
     component: RoutePlaceholderPage,

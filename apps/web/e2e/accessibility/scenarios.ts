@@ -15,28 +15,35 @@ export const accessibilityScenarios: AccessibilityScenario[] = [
   {
     name: 'profile settings',
     path: '/app/settings/profile',
-    setup: async (page) => {
-      await page.route('**/api/v1/me/profile', async (route) => {
-        await route.fulfill({
-          contentType: 'application/json',
-          json: profileResponse(),
-        })
-      })
-      await page.route('**/api/v1/me', async (route) => {
-        await route.fulfill({
-          contentType: 'application/json',
-          json: {
-            data: {
-              email: 'ada@example.com',
-              id: '01kaw4k7q6v7m9r6rddm4xyf2p',
-              name: 'Ada Athlete',
-            },
-          },
-        })
-      })
-    },
+    setup: setupAuthenticatedProfile,
+  },
+  {
+    name: 'equipment settings',
+    path: '/app/settings/equipment',
+    setup: setupAuthenticatedProfile,
   },
 ]
+
+async function setupAuthenticatedProfile(page: Page): Promise<void> {
+  await page.route('**/api/v1/me/profile', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: profileResponse(),
+    })
+  })
+  await page.route('**/api/v1/me', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: {
+        data: {
+          email: 'ada@example.com',
+          id: '01kaw4k7q6v7m9r6rddm4xyf2p',
+          name: 'Ada Athlete',
+        },
+      },
+    })
+  })
+}
 
 function profileResponse() {
   return {

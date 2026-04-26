@@ -6,6 +6,7 @@ import {
   defaultProfileSettingsForm,
   fetchProfileSettings,
   ProfileSettingsValidationError,
+  saveAvailableEquipmentSettings,
   saveProfileSettings,
   validateProfileSettingsForm,
 } from './settingsService'
@@ -86,6 +87,43 @@ describe('settingsService', () => {
       expect.objectContaining({
         body: expect.stringContaining('"target_skills":["freestanding handstand","strict muscle-up"]'),
         credentials: 'include',
+        method: 'PATCH',
+      }),
+    )
+  })
+
+  it('can save equipment without requiring the whole editable profile form', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          profileResponse({
+            available_equipment: ['pull_up_bar', 'low_bar', 'rings'],
+          }),
+        ),
+      )
+
+    configureLeverlyApiClient({
+      fetcher,
+      getCsrfToken: () => 'csrf-token',
+    })
+
+    await expect(
+      saveAvailableEquipmentSettings(['pull_up_bar', 'low_bar', 'unsupported_equipment', 'rings']),
+    ).resolves.toMatchObject({
+      form: {
+        availableEquipment: ['pull_up_bar', 'low_bar', 'rings'],
+      },
+    })
+
+    expect(fetcher).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/me/profile',
+      expect.objectContaining({
+        body: JSON.stringify({
+          available_equipment: ['pull_up_bar', 'low_bar', 'rings'],
+        }),
         method: 'PATCH',
       }),
     )

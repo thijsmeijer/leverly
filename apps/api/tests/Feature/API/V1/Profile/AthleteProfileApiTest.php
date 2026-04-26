@@ -40,7 +40,7 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.current_bodyweight_value', 72.5)
             ->assertJsonPath('data.primary_goal', 'skill')
             ->assertJsonPath('data.secondary_goals.0', 'strength')
-            ->assertJsonPath('data.available_equipment.2', 'rings')
+            ->assertJsonPath('data.available_equipment.3', 'rings')
             ->assertJsonPath('data.movement_limitations.0.area', 'wrist')
             ->assertJsonPath('data.preferred_training_days.2', 'friday')
             ->assertJsonPath('data.progression_pace', 'balanced')
@@ -206,7 +206,7 @@ class AthleteProfileApiTest extends TestCase
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
             'target_skills' => ['freestanding handstand', 'strict muscle-up'],
-            'available_equipment' => ['pull_up_bar', 'dip_bars', 'rings', 'parallettes', 'resistance_band'],
+            'available_equipment' => ['pull_up_bar', 'low_bar', 'dip_bars', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home', 'park'],
             'movement_limitations' => [
                 [

@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
 
+import EquipmentSettingsPage from './pages/EquipmentSettingsPage.vue'
 import SettingsPage from './pages/SettingsPage.vue'
 
 export const settingsRoutes: RouteRecordRaw[] = [
@@ -15,6 +16,16 @@ export const settingsRoutes: RouteRecordRaw[] = [
       requiresAuth: true,
       section: 'Settings',
       title: 'Profile settings',
+    },
+  },
+  {
+    path: 'settings/equipment',
+    name: 'settings-equipment',
+    component: EquipmentSettingsPage,
+    meta: {
+      requiresAuth: true,
+      section: 'Settings',
+      title: 'Equipment settings',
     },
   },
 ]

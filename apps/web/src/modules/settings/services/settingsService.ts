@@ -123,6 +123,30 @@ export async function saveProfileSettings(form: ProfileSettingsForm): Promise<Pr
   }
 }
 
+export async function saveAvailableEquipmentSettings(availableEquipment: string[]): Promise<ProfileSettingsState> {
+  try {
+    const response = await leverlyApiRequest('/me/profile', 'patch', {
+      body: {
+        available_equipment: availableEquipment.filter(isSupportedEquipment),
+      },
+      errorMode: 'throw',
+      notFoundMode: 'throw',
+    })
+
+    if (!response) {
+      throw new Error('Profile settings response was empty.')
+    }
+
+    return mapProfileResponse(response)
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 422) {
+      throw new ProfileSettingsValidationError(mapServerValidationErrors(error.body))
+    }
+
+    throw error
+  }
+}
+
 export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileFieldErrors {
   const errors: ProfileFieldErrors = {}
 

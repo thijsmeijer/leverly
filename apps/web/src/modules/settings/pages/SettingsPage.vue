@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { UiButton } from '@/shared/ui'
 import ProfileChoiceGrid from '../components/ProfileChoiceGrid.vue'
 import ProfileFormSection from '../components/ProfileFormSection.vue'
@@ -304,14 +305,30 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
         description="Match recommendations to the tools, places, and session shape you can reliably use."
       >
         <div class="space-y-5">
-          <ProfileChoiceGrid
-            v-model="form.availableEquipment"
-            :error="fieldErrors.availableEquipment"
-            label="Available equipment"
-            multiple
-            name="available-equipment"
-            :options="equipmentOptions"
-          />
+          <div class="space-y-3">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h3 class="text-ink-primary text-sm font-semibold">Available equipment</h3>
+                <p class="text-ink-secondary mt-1 text-sm leading-6">
+                  Use this quick checklist here, or open the full equipment page for presets and coverage details.
+                </p>
+              </div>
+              <RouterLink
+                :to="{ name: 'settings-equipment' }"
+                class="border-line-subtle bg-surface-primary text-ink-secondary hover:border-line-strong hover:text-ink-primary rounded-control inline-flex min-h-10 items-center justify-center border px-3 text-sm font-semibold transition"
+              >
+                Manage equipment
+              </RouterLink>
+            </div>
+            <ProfileChoiceGrid
+              v-model="form.availableEquipment"
+              :error="fieldErrors.availableEquipment"
+              label="Equipment"
+              multiple
+              name="available-equipment"
+              :options="equipmentOptions"
+            />
+          </div>
           <ProfileChoiceGrid
             v-model="form.trainingLocations"
             columns="compact"
