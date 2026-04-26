@@ -73,6 +73,14 @@ paths:
                         type: string
                       preferred_session_minutes:
                         type: integer
+                      primary_target_skill:
+                        type: string
+                      baseline_tests:
+                        type: object
+                      mobility_checks:
+                        type: object
+                      weighted_baselines:
+                        type: object
     patch:
       operationId: updateAthleteProfile
       responses:
@@ -94,6 +102,14 @@ paths:
                         type: string
                       preferred_session_minutes:
                         type: integer
+                      primary_target_skill:
+                        type: string
+                      baseline_tests:
+                        type: object
+                      mobility_checks:
+                        type: object
+                      weighted_baselines:
+                        type: object
   /me/onboarding:
     get:
       operationId: getOnboardingState
@@ -109,6 +125,12 @@ paths:
                     type: object
                     properties:
                       current_level_tests:
+                        type: object
+                      primary_target_skill:
+                        type: string
+                      mobility_checks:
+                        type: object
+                      weighted_baselines:
                         type: object
                       is_complete:
                         type: boolean
@@ -128,6 +150,12 @@ paths:
                     type: object
                     properties:
                       current_level_tests:
+                        type: object
+                      primary_target_skill:
+                        type: string
+                      mobility_checks:
+                        type: object
+                      weighted_baselines:
                         type: object
                       is_complete:
                         type: boolean

@@ -1,6 +1,6 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 
-import { skillStatusKeys } from '../data/onboardingOptions'
+import { mobilityCheckOptions, skillStatusKeys } from '../data/onboardingOptions'
 import type { OnboardingFieldErrors, OnboardingForm, OnboardingState } from '../types'
 
 type ServerValidationBody = {
@@ -13,21 +13,41 @@ type AthleteOnboarding = AthleteOnboardingResponse['data']
 
 type OnboardingUpdateBody = {
   readonly available_equipment: string[]
+  readonly base_focus_areas: string[]
   readonly complete?: boolean
   readonly current_level_tests: {
+    readonly arch_hold_seconds: number | null
+    readonly dead_hang_seconds: number | null
+    readonly dips: {
+      readonly max_strict_reps: number | null
+      readonly progression: string | null
+      readonly support_hold_seconds: number | null
+    }
     readonly hollow_hold_seconds: number | null
+    readonly l_sit_hold_seconds: number | null
     readonly pull_ups: {
+      readonly assistance: string | null
+      readonly form_quality: number | null
       readonly max_strict_reps: number | null
       readonly progression: string | null
     }
     readonly push_ups: {
+      readonly form_quality: number | null
       readonly max_strict_reps: number | null
+      readonly progression: string | null
+    }
+    readonly rows: {
+      readonly max_strict_reps: number | null
+      readonly progression: string | null
     }
     readonly squat: {
       readonly max_reps: number | null
       readonly progression: string | null
     }
+    readonly support_hold_seconds: number | null
+    readonly wall_handstand_seconds: number | null
   }
+  readonly mobility_checks: Record<string, string>
   readonly pain_areas: string[]
   readonly pain_level: number | null
   readonly pain_notes: string | null
@@ -35,8 +55,10 @@ type OnboardingUpdateBody = {
   readonly preferred_training_days: string[]
   readonly preferred_training_time: string
   readonly primary_goal: string | null
+  readonly primary_target_skill: string | null
   readonly readiness_rating: number | null
   readonly secondary_goals: string[]
+  readonly secondary_target_skills: string[]
   readonly skill_statuses: Record<
     string,
     {
@@ -51,6 +73,16 @@ type OnboardingUpdateBody = {
   readonly starter_plan_key: string | null
   readonly target_skills: string[]
   readonly training_locations: string[]
+  readonly weighted_baselines: {
+    readonly experience: string
+    readonly movements: Array<{
+      readonly external_load_value: number | null
+      readonly movement: string
+      readonly reps: number | null
+      readonly rir: number | null
+    }>
+    readonly unit: string
+  }
   readonly weekly_session_goal: number | null
 }
 
@@ -67,23 +99,41 @@ export class OnboardingValidationError extends Error {
 export function defaultOnboardingForm(): OnboardingForm {
   return {
     availableEquipment: [],
+    baseFocusAreas: [],
     currentLevelTests: {
+      archHoldSeconds: '',
+      deadHangSeconds: '',
+      dipMaxReps: '',
+      dipProgression: '',
+      dipSupportHoldSeconds: '',
       hollowHoldSeconds: '',
+      lSitHoldSeconds: '',
+      pullUpAssistance: '',
+      pullUpFormQuality: '',
       pullUpMaxReps: '',
       pullUpProgression: '',
+      pushUpFormQuality: '',
       pushUpMaxReps: '',
+      pushUpProgression: '',
+      rowMaxReps: '',
+      rowProgression: '',
       squatMaxReps: '',
       squatProgression: '',
+      supportHoldSeconds: '',
+      wallHandstandSeconds: '',
     },
+    mobilityChecks: Object.fromEntries(mobilityCheckOptions.map((option) => [option.value, 'not_tested'])),
     painAreas: [],
     painLevel: '0',
     painNotes: '',
     preferredSessionMinutes: '45',
     preferredTrainingDays: [],
     preferredTrainingTime: 'flexible',
+    primaryTargetSkill: '',
     primaryGoal: 'skill',
     readinessRating: '3',
     secondaryGoals: [],
+    secondaryTargetSkills: [],
     skillStatuses: Object.fromEntries(
       skillStatusKeys.map((key) => [
         key,
@@ -100,6 +150,11 @@ export function defaultOnboardingForm(): OnboardingForm {
     starterPlanKey: 'full_body_3_day',
     targetSkills: [],
     trainingLocations: [],
+    weightedBaselines: {
+      experience: 'none',
+      movements: [],
+      unit: 'kg',
+    },
     weeklySessionGoal: '3',
   }
 }
@@ -153,6 +208,22 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     if (form.targetSkills.length === 0) {
       errors.targetSkills = 'Choose at least one skill or strength target.'
     }
+
+    if (!form.primaryTargetSkill || !form.targetSkills.includes(form.primaryTargetSkill)) {
+      errors.primaryTargetSkill = 'Choose the one target Leverly should prioritize first.'
+    }
+
+    if (
+      form.secondaryTargetSkills.some(
+        (skill) => skill === form.primaryTargetSkill || !form.targetSkills.includes(skill),
+      )
+    ) {
+      errors.secondaryTargetSkills = 'Secondary targets must be selected targets and cannot match the primary roadmap.'
+    }
+
+    if (form.baseFocusAreas.length === 0) {
+      errors.baseFocusAreas = 'Choose at least one base area that should support the roadmap.'
+    }
   }
 
   if (step === 'equipment' && form.trainingLocations.length === 0) {
@@ -161,7 +232,16 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
 
   if (step === 'level') {
     addNumberError(errors, 'currentLevelTests.pushUpMaxReps', form.currentLevelTests.pushUpMaxReps, 0, 200)
+    addNumberError(errors, 'currentLevelTests.rowMaxReps', form.currentLevelTests.rowMaxReps, 0, 200)
     addNumberError(errors, 'currentLevelTests.hollowHoldSeconds', form.currentLevelTests.hollowHoldSeconds, 0, 600)
+
+    if (!form.currentLevelTests.pushUpProgression && !form.currentLevelTests.pushUpMaxReps) {
+      errors['currentLevelTests.pushUpProgression'] = 'Choose your current push-up level or add strict reps.'
+    }
+
+    if (!form.currentLevelTests.rowProgression && !form.currentLevelTests.rowMaxReps) {
+      errors['currentLevelTests.rowProgression'] = 'Choose your current row level or add row reps.'
+    }
 
     if (!form.currentLevelTests.pullUpProgression && !form.currentLevelTests.pullUpMaxReps) {
       errors['currentLevelTests.pullUpProgression'] = 'Choose your current pulling level or add strict reps.'
@@ -169,6 +249,14 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
 
     if (!form.currentLevelTests.squatProgression && !form.currentLevelTests.squatMaxReps) {
       errors['currentLevelTests.squatProgression'] = 'Choose your current squat level or add reps.'
+    }
+  }
+
+  if (step === 'mobility') {
+    const testedMobility = Object.values(form.mobilityChecks).some((value) => value !== 'not_tested')
+
+    if (!testedMobility) {
+      errors.mobilityChecks = 'Mark at least one position so the first plan can avoid obvious blockers.'
     }
   }
 
@@ -209,26 +297,72 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
   return {
     ...defaults,
     availableEquipment: [...onboarding.available_equipment],
+    baseFocusAreas: [...onboarding.base_focus_areas],
     currentLevelTests: {
+      archHoldSeconds:
+        onboarding.current_level_tests.arch_hold_seconds === null
+          ? ''
+          : String(onboarding.current_level_tests.arch_hold_seconds),
+      deadHangSeconds:
+        onboarding.current_level_tests.dead_hang_seconds === null
+          ? ''
+          : String(onboarding.current_level_tests.dead_hang_seconds),
+      dipMaxReps:
+        onboarding.current_level_tests.dips.max_strict_reps === null
+          ? ''
+          : String(onboarding.current_level_tests.dips.max_strict_reps),
+      dipProgression: onboarding.current_level_tests.dips.progression ?? '',
+      dipSupportHoldSeconds:
+        onboarding.current_level_tests.dips.support_hold_seconds === null
+          ? ''
+          : String(onboarding.current_level_tests.dips.support_hold_seconds),
       hollowHoldSeconds:
         onboarding.current_level_tests.hollow_hold_seconds === null
           ? ''
           : String(onboarding.current_level_tests.hollow_hold_seconds),
+      lSitHoldSeconds:
+        onboarding.current_level_tests.l_sit_hold_seconds === null
+          ? ''
+          : String(onboarding.current_level_tests.l_sit_hold_seconds),
+      pullUpAssistance: onboarding.current_level_tests.pull_ups.assistance ?? '',
+      pullUpFormQuality:
+        onboarding.current_level_tests.pull_ups.form_quality === null
+          ? ''
+          : String(onboarding.current_level_tests.pull_ups.form_quality),
       pullUpMaxReps:
         onboarding.current_level_tests.pull_ups.max_strict_reps === null
           ? ''
           : String(onboarding.current_level_tests.pull_ups.max_strict_reps),
       pullUpProgression: onboarding.current_level_tests.pull_ups.progression ?? '',
+      pushUpFormQuality:
+        onboarding.current_level_tests.push_ups.form_quality === null
+          ? ''
+          : String(onboarding.current_level_tests.push_ups.form_quality),
       pushUpMaxReps:
         onboarding.current_level_tests.push_ups.max_strict_reps === null
           ? ''
           : String(onboarding.current_level_tests.push_ups.max_strict_reps),
+      pushUpProgression: onboarding.current_level_tests.push_ups.progression ?? '',
+      rowMaxReps:
+        onboarding.current_level_tests.rows.max_strict_reps === null
+          ? ''
+          : String(onboarding.current_level_tests.rows.max_strict_reps),
+      rowProgression: onboarding.current_level_tests.rows.progression ?? '',
       squatMaxReps:
         onboarding.current_level_tests.squat.max_reps === null
           ? ''
           : String(onboarding.current_level_tests.squat.max_reps),
       squatProgression: onboarding.current_level_tests.squat.progression ?? '',
+      supportHoldSeconds:
+        onboarding.current_level_tests.support_hold_seconds === null
+          ? ''
+          : String(onboarding.current_level_tests.support_hold_seconds),
+      wallHandstandSeconds:
+        onboarding.current_level_tests.wall_handstand_seconds === null
+          ? ''
+          : String(onboarding.current_level_tests.wall_handstand_seconds),
     },
+    mobilityChecks: { ...defaults.mobilityChecks, ...onboarding.mobility_checks },
     painAreas: [...onboarding.pain_areas],
     painLevel: onboarding.pain_level === null ? defaults.painLevel : String(onboarding.pain_level),
     painNotes: onboarding.pain_notes ?? '',
@@ -238,10 +372,12 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
         : String(onboarding.preferred_session_minutes),
     preferredTrainingDays: [...onboarding.preferred_training_days],
     preferredTrainingTime: onboarding.preferred_training_time,
+    primaryTargetSkill: onboarding.primary_target_skill ?? defaults.primaryTargetSkill,
     primaryGoal: onboarding.primary_goal ?? defaults.primaryGoal,
     readinessRating:
       onboarding.readiness_rating === null ? defaults.readinessRating : String(onboarding.readiness_rating),
     secondaryGoals: [...onboarding.secondary_goals],
+    secondaryTargetSkills: [...onboarding.secondary_target_skills],
     skillStatuses: {
       ...defaults.skillStatuses,
       ...Object.fromEntries(
@@ -267,6 +403,19 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     starterPlanKey: onboarding.starter_plan_key ?? defaults.starterPlanKey,
     targetSkills: [...onboarding.target_skills],
     trainingLocations: [...onboarding.training_locations],
+    weightedBaselines: {
+      experience: onboarding.weighted_baselines.experience,
+      movements: onboarding.weighted_baselines.movements.map((movement) => ({
+        externalLoadValue:
+          movement.external_load_value === null || movement.external_load_value === undefined
+            ? ''
+            : String(movement.external_load_value),
+        movement: movement.movement,
+        reps: movement.reps === null || movement.reps === undefined ? '' : String(movement.reps),
+        rir: movement.rir === null || movement.rir === undefined ? '' : String(movement.rir),
+      })),
+      unit: onboarding.weighted_baselines.unit,
+    },
     weeklySessionGoal:
       onboarding.weekly_session_goal === null ? defaults.weeklySessionGoal : String(onboarding.weekly_session_goal),
   }
@@ -275,20 +424,40 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
 function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean }): OnboardingUpdateBody {
   const body: OnboardingUpdateBody = {
     available_equipment: [...form.availableEquipment],
+    base_focus_areas: [...form.baseFocusAreas],
     current_level_tests: {
+      arch_hold_seconds: nullableInteger(form.currentLevelTests.archHoldSeconds),
+      dead_hang_seconds: nullableInteger(form.currentLevelTests.deadHangSeconds),
+      dips: {
+        max_strict_reps: nullableInteger(form.currentLevelTests.dipMaxReps),
+        progression: form.currentLevelTests.dipProgression || null,
+        support_hold_seconds: nullableInteger(form.currentLevelTests.dipSupportHoldSeconds),
+      },
       hollow_hold_seconds: nullableInteger(form.currentLevelTests.hollowHoldSeconds),
+      l_sit_hold_seconds: nullableInteger(form.currentLevelTests.lSitHoldSeconds),
       pull_ups: {
+        assistance: form.currentLevelTests.pullUpAssistance.trim() || null,
+        form_quality: nullableInteger(form.currentLevelTests.pullUpFormQuality),
         max_strict_reps: nullableInteger(form.currentLevelTests.pullUpMaxReps),
         progression: form.currentLevelTests.pullUpProgression || null,
       },
       push_ups: {
+        form_quality: nullableInteger(form.currentLevelTests.pushUpFormQuality),
         max_strict_reps: nullableInteger(form.currentLevelTests.pushUpMaxReps),
+        progression: form.currentLevelTests.pushUpProgression || null,
+      },
+      rows: {
+        max_strict_reps: nullableInteger(form.currentLevelTests.rowMaxReps),
+        progression: form.currentLevelTests.rowProgression || null,
       },
       squat: {
         max_reps: nullableInteger(form.currentLevelTests.squatMaxReps),
         progression: form.currentLevelTests.squatProgression || null,
       },
+      support_hold_seconds: nullableInteger(form.currentLevelTests.supportHoldSeconds),
+      wall_handstand_seconds: nullableInteger(form.currentLevelTests.wallHandstandSeconds),
     },
+    mobility_checks: { ...form.mobilityChecks },
     pain_areas: [...form.painAreas],
     pain_level: nullableInteger(form.painLevel),
     pain_notes: form.painNotes.trim() || null,
@@ -296,8 +465,10 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     preferred_training_days: [...form.preferredTrainingDays],
     preferred_training_time: form.preferredTrainingTime,
     primary_goal: form.primaryGoal || null,
+    primary_target_skill: form.primaryTargetSkill || null,
     readiness_rating: nullableInteger(form.readinessRating),
     secondary_goals: [...form.secondaryGoals],
+    secondary_target_skills: [...form.secondaryTargetSkills],
     skill_statuses: Object.fromEntries(
       Object.entries(form.skillStatuses).map(([key, value]) => [
         key,
@@ -314,6 +485,18 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     starter_plan_key: form.starterPlanKey || null,
     target_skills: [...form.targetSkills],
     training_locations: [...form.trainingLocations],
+    weighted_baselines: {
+      experience: form.weightedBaselines.experience,
+      movements: form.weightedBaselines.movements
+        .filter((movement) => movement.movement)
+        .map((movement) => ({
+          external_load_value: nullableNumber(movement.externalLoadValue),
+          movement: movement.movement,
+          reps: nullableInteger(movement.reps),
+          rir: nullableInteger(movement.rir),
+        })),
+      unit: form.weightedBaselines.unit,
+    },
     weekly_session_goal: nullableInteger(form.weeklySessionGoal),
   }
 
@@ -332,6 +515,16 @@ function nullableInteger(value: string): number | null {
   const parsed = Number(value)
 
   return Number.isFinite(parsed) ? Math.trunc(parsed) : null
+}
+
+function nullableNumber(value: string): number | null {
+  if (!value.trim()) {
+    return null
+  }
+
+  const parsed = Number(value)
+
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 function addNumberError(errors: OnboardingFieldErrors, key: string, value: string, min: number, max: number): void {
@@ -361,6 +554,8 @@ function mapServerValidationErrors(body: unknown): OnboardingFieldErrors {
 function serverKeyToField(key: string): string {
   const directMap: Record<string, string> = {
     available_equipment: 'availableEquipment',
+    base_focus_areas: 'baseFocusAreas',
+    mobility_checks: 'mobilityChecks',
     pain_areas: 'painAreas',
     pain_level: 'painLevel',
     pain_notes: 'painNotes',
@@ -368,13 +563,16 @@ function serverKeyToField(key: string): string {
     preferred_training_days: 'preferredTrainingDays',
     preferred_training_time: 'preferredTrainingTime',
     primary_goal: 'primaryGoal',
+    primary_target_skill: 'primaryTargetSkill',
     readiness_rating: 'readinessRating',
     secondary_goals: 'secondaryGoals',
+    secondary_target_skills: 'secondaryTargetSkills',
     sleep_quality: 'sleepQuality',
     soreness_level: 'sorenessLevel',
     starter_plan_key: 'starterPlanKey',
     target_skills: 'targetSkills',
     training_locations: 'trainingLocations',
+    weighted_baselines: 'weightedBaselines',
     weekly_session_goal: 'weeklySessionGoal',
   }
 

@@ -55,11 +55,18 @@ export function findContractProblems(openApiSource) {
     ['athlete profile display name property', 'display_name:'],
     ['athlete profile timezone property', 'timezone:'],
     ['athlete profile unit system property', 'unit_system:'],
+    ['athlete profile primary target skill property', 'primary_target_skill:'],
+    ['athlete profile baseline tests property', 'baseline_tests:'],
+    ['athlete profile mobility checks property', 'mobility_checks:'],
+    ['athlete profile weighted baselines property', 'weighted_baselines:'],
     ['athlete profile preferred session property', 'preferred_session_minutes:'],
     ['athlete onboarding path', '  /me/onboarding:'],
     ['athlete onboarding get operation ID', 'operationId: getOnboardingState'],
     ['athlete onboarding update operation ID', 'operationId: updateOnboardingState'],
     ['athlete onboarding level tests property', 'current_level_tests:'],
+    ['athlete onboarding primary target skill property', 'primary_target_skill:'],
+    ['athlete onboarding mobility checks property', 'mobility_checks:'],
+    ['athlete onboarding weighted baselines property', 'weighted_baselines:'],
     ['athlete onboarding completion property', 'is_complete:'],
     ['athlete onboarding missing sections property', 'missing_sections:'],
   ]
@@ -110,6 +117,59 @@ export interface MovementLimitation {
   readonly notes: string | null
 }
 
+export interface PlacementLevelTests {
+  readonly push_ups: {
+    readonly progression: string | null
+    readonly max_strict_reps: number | null
+    readonly form_quality: number | null
+  }
+  readonly rows: {
+    readonly progression: string | null
+    readonly max_strict_reps: number | null
+  }
+  readonly pull_ups: {
+    readonly max_strict_reps: number | null
+    readonly progression: string | null
+    readonly assistance: string | null
+    readonly form_quality: number | null
+  }
+  readonly dips: {
+    readonly progression: string | null
+    readonly max_strict_reps: number | null
+    readonly support_hold_seconds: number | null
+  }
+  readonly squat: {
+    readonly max_reps: number | null
+    readonly progression: string | null
+  }
+  readonly hollow_hold_seconds: number | null
+  readonly arch_hold_seconds: number | null
+  readonly dead_hang_seconds: number | null
+  readonly support_hold_seconds: number | null
+  readonly wall_handstand_seconds: number | null
+  readonly l_sit_hold_seconds: number | null
+}
+
+export interface SkillStatus {
+  readonly status: string
+  readonly max_strict_reps?: number | null
+  readonly best_hold_seconds?: number | null
+  readonly notes?: string | null
+}
+
+export interface WeightedBaselineMovement {
+  readonly movement: string
+  readonly external_load_value?: number | null
+  readonly reps?: number | null
+  readonly rir?: number | null
+}
+
+export interface WeightedBaselines {
+  readonly experience: string
+  readonly unit: string
+  readonly movements: readonly WeightedBaselineMovement[]
+}
+
 export interface AthleteProfile {
   readonly id: string
   readonly user_id: string
@@ -123,9 +183,16 @@ export interface AthleteProfile {
   readonly primary_goal: string | null
   readonly secondary_goals: readonly string[]
   readonly target_skills: readonly string[]
+  readonly primary_target_skill: string | null
+  readonly secondary_target_skills: readonly string[]
+  readonly base_focus_areas: readonly string[]
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
   readonly movement_limitations: readonly MovementLimitation[]
+  readonly baseline_tests: PlacementLevelTests
+  readonly skill_statuses: Readonly<Record<string, SkillStatus>>
+  readonly mobility_checks: Readonly<Record<string, string>>
+  readonly weighted_baselines: WeightedBaselines
   readonly injury_notes: string | null
   readonly preferred_training_days: readonly string[]
   readonly preferred_session_minutes: number | null
@@ -143,18 +210,17 @@ export interface AthleteProfileResponse {
 }
 
 export interface OnboardingLevelTests {
-  readonly push_ups: {
-    readonly max_strict_reps: number | null
-  }
-  readonly pull_ups: {
-    readonly max_strict_reps: number | null
-    readonly progression: string | null
-  }
-  readonly squat: {
-    readonly max_reps: number | null
-    readonly progression: string | null
-  }
+  readonly push_ups: PlacementLevelTests['push_ups']
+  readonly rows: PlacementLevelTests['rows']
+  readonly pull_ups: PlacementLevelTests['pull_ups']
+  readonly dips: PlacementLevelTests['dips']
+  readonly squat: PlacementLevelTests['squat']
   readonly hollow_hold_seconds: number | null
+  readonly arch_hold_seconds: number | null
+  readonly dead_hang_seconds: number | null
+  readonly support_hold_seconds: number | null
+  readonly wall_handstand_seconds: number | null
+  readonly l_sit_hold_seconds: number | null
 }
 
 export interface OnboardingSkillStatus {
@@ -170,6 +236,9 @@ export interface AthleteOnboarding {
   readonly primary_goal: string | null
   readonly secondary_goals: readonly string[]
   readonly target_skills: readonly string[]
+  readonly primary_target_skill: string | null
+  readonly secondary_target_skills: readonly string[]
+  readonly base_focus_areas: readonly string[]
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
   readonly preferred_training_days: readonly string[]
@@ -178,6 +247,8 @@ export interface AthleteOnboarding {
   readonly preferred_training_time: string
   readonly current_level_tests: OnboardingLevelTests
   readonly skill_statuses: Readonly<Record<string, OnboardingSkillStatus>>
+  readonly mobility_checks: Readonly<Record<string, string>>
+  readonly weighted_baselines: WeightedBaselines
   readonly readiness_rating: number | null
   readonly sleep_quality: number | null
   readonly soreness_level: number | null

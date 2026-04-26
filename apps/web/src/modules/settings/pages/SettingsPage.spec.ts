@@ -78,14 +78,14 @@ describe('SettingsPage', () => {
 
     await wrapper.find('#profile-tab-training').trigger('click')
 
-    expect(wrapper.text()).toContain('Training tools')
-    expect(wrapper.text()).toContain('2 available for exercise recommendations.')
+    expect(wrapper.text()).toContain('Placement snapshot')
+    expect(wrapper.text()).toContain('2 tools selected')
     expect(wrapper.find('a[href="/app/settings/equipment"]').text()).toContain('Review equipment')
 
     await wrapper.find('#profile-tab-setup').trigger('click')
 
     expect(wrapper.text()).toContain('Schedule and session shape')
-    expect(wrapper.text()).not.toContain('Training tools')
+    expect(wrapper.text()).not.toContain('Placement snapshot')
     expect(wrapper.find('input[name="available-equipment"]').exists()).toBe(false)
 
     await wrapper.find('input[name="preferred-training-days"][value="friday"]').setValue(true)
@@ -110,6 +110,20 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     data: {
       available_equipment: ['pull_up_bar', 'rings'],
+      base_focus_areas: ['pull_capacity', 'core_bodyline'],
+      baseline_tests: {
+        arch_hold_seconds: 25,
+        dead_hang_seconds: 30,
+        dips: { max_strict_reps: 6, progression: 'bar_dip', support_hold_seconds: 25 },
+        hollow_hold_seconds: 35,
+        l_sit_hold_seconds: 8,
+        pull_ups: { assistance: null, form_quality: 4, max_strict_reps: 4, progression: 'strict_pull_up' },
+        push_ups: { form_quality: 4, max_strict_reps: 18, progression: 'strict_push_up' },
+        rows: { max_strict_reps: 12, progression: 'inverted_row' },
+        squat: { max_reps: 20, progression: 'split_squat' },
+        support_hold_seconds: 25,
+        wall_handstand_seconds: 20,
+      },
       bodyweight_unit: 'kg',
       current_bodyweight_value: 72.5,
       deload_preference: 'auto',
@@ -127,19 +141,39 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
           status: 'recurring',
         },
       ],
+      mobility_checks: {
+        ankle_dorsiflexion: 'limited',
+        pancake_compression: 'not_tested',
+        shoulder_extension: 'clear',
+        shoulder_flexion: 'clear',
+        wrist_extension: 'limited',
+      },
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday'],
       preferred_training_time: 'evening',
       primary_goal: 'skill',
+      primary_target_skill: 'handstand',
       progression_pace: 'balanced',
       secondary_goals: ['strength'],
+      secondary_target_skills: ['strict_pull_up'],
       session_structure_preferences: ['skill_first'],
-      target_skills: ['freestanding handstand', 'strict muscle-up'],
+      skill_statuses: {
+        handstand: {
+          best_hold_seconds: 20,
+          status: 'assisted',
+        },
+      },
+      target_skills: ['handstand', 'strict_pull_up'],
       timezone: 'Europe/Amsterdam',
       training_age_months: 18,
       training_locations: ['home'],
       unit_system: 'metric',
       user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',
+      weighted_baselines: {
+        experience: 'repetition_work',
+        movements: [{ external_load_value: 10, movement: 'weighted_pull_up', reps: 5, rir: 2 }],
+        unit: 'kg',
+      },
       weekly_session_goal: 3,
       ...overrides,
     },

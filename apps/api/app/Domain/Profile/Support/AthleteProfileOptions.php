@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Profile\Support;
 
+use App\Domain\Training\Support\CalisthenicsPlacementOptions;
 use App\Models\User;
 
 final class AthleteProfileOptions
@@ -104,6 +105,18 @@ final class AthleteProfileOptions
         'explosive_work',
     ];
 
+    public const array TARGET_SKILLS = CalisthenicsPlacementOptions::TARGET_SKILLS;
+
+    public const array BASE_FOCUS_AREAS = CalisthenicsPlacementOptions::BASE_FOCUS_AREAS;
+
+    public const array MOBILITY_CHECK_KEYS = CalisthenicsPlacementOptions::MOBILITY_CHECK_KEYS;
+
+    public const array MOBILITY_STATUSES = CalisthenicsPlacementOptions::MOBILITY_STATUSES;
+
+    public const array WEIGHTED_EXPERIENCE_LEVELS = CalisthenicsPlacementOptions::WEIGHTED_EXPERIENCE_LEVELS;
+
+    public const array WEIGHTED_MOVEMENTS = CalisthenicsPlacementOptions::WEIGHTED_MOVEMENTS;
+
     /**
      * @return array<string, mixed>
      */
@@ -117,9 +130,16 @@ final class AthleteProfileOptions
             'experience_level' => 'new',
             'secondary_goals' => [],
             'target_skills' => [],
+            'primary_target_skill' => null,
+            'secondary_target_skills' => [],
+            'base_focus_areas' => [],
             'available_equipment' => [],
             'training_locations' => [],
             'movement_limitations' => [],
+            'baseline_tests' => CalisthenicsPlacementOptions::emptyLevelTests(),
+            'skill_statuses' => [],
+            'mobility_checks' => CalisthenicsPlacementOptions::emptyMobilityChecks(),
+            'weighted_baselines' => CalisthenicsPlacementOptions::emptyWeightedBaselines(),
             'preferred_training_days' => [],
             'preferred_training_time' => 'flexible',
             'progression_pace' => 'balanced',
@@ -139,6 +159,8 @@ final class AthleteProfileOptions
         foreach ([
             'secondary_goals',
             'target_skills',
+            'secondary_target_skills',
+            'base_focus_areas',
             'available_equipment',
             'training_locations',
             'preferred_training_days',
@@ -151,6 +173,12 @@ final class AthleteProfileOptions
 
         if (array_key_exists('movement_limitations', $data) && is_array($data['movement_limitations'])) {
             $data['movement_limitations'] = array_values($data['movement_limitations']);
+        }
+
+        foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
+            if (array_key_exists($key, $data) && ! is_array($data[$key])) {
+                unset($data[$key]);
+            }
         }
 
         return $data;

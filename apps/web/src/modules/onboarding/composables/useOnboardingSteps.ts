@@ -6,6 +6,7 @@ export const onboardingSteps: Array<{ id: OnboardingStepId; label: string; short
   { id: 'goals', label: 'Goals', short: 'Targets' },
   { id: 'equipment', label: 'Equipment', short: 'Tools' },
   { id: 'level', label: 'Level tests', short: 'Tests' },
+  { id: 'mobility', label: 'Positions', short: 'Mobility' },
   { id: 'availability', label: 'Availability', short: 'Schedule' },
   { id: 'readiness', label: 'Readiness', short: 'Safety' },
   { id: 'starter', label: 'Starter plan', short: 'Plan' },

@@ -40,8 +40,14 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.current_bodyweight_value', 72.5)
             ->assertJsonPath('data.primary_goal', 'skill')
             ->assertJsonPath('data.secondary_goals.0', 'strength')
+            ->assertJsonPath('data.target_skills.0', 'handstand')
+            ->assertJsonPath('data.primary_target_skill', 'handstand')
+            ->assertJsonPath('data.base_focus_areas.0', 'pull_capacity')
             ->assertJsonPath('data.available_equipment.3', 'rings')
             ->assertJsonPath('data.movement_limitations.0.area', 'wrist')
+            ->assertJsonPath('data.baseline_tests.rows.progression', 'inverted_row')
+            ->assertJsonPath('data.mobility_checks.wrist_extension', 'limited')
+            ->assertJsonPath('data.weighted_baselines.experience', 'repetition_work')
             ->assertJsonPath('data.preferred_training_days.2', 'friday')
             ->assertJsonPath('data.progression_pace', 'balanced')
             ->assertJsonPath('data.effort_tracking_preference', 'rir');
@@ -60,7 +66,7 @@ class AthleteProfileApiTest extends TestCase
         $this->getJson('/api/v1/me/profile')
             ->assertOk()
             ->assertJsonPath('data.id', $profileId)
-            ->assertJsonPath('data.target_skills.1', 'strict muscle-up');
+            ->assertJsonPath('data.target_skills.1', 'strict_pull_up');
 
         $this->patchJson('/api/v1/me/profile', [
             'display_name' => 'Ada Bars',
@@ -119,6 +125,8 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.bodyweight_unit', 'kg')
             ->assertJsonPath('data.experience_level', 'new')
             ->assertJsonPath('data.available_equipment', [])
+            ->assertJsonPath('data.base_focus_areas', [])
+            ->assertJsonPath('data.mobility_checks.wrist_extension', 'not_tested')
             ->assertJsonPath('data.preferred_training_time', 'flexible')
             ->assertJsonPath('data.progression_pace', 'balanced')
             ->assertJsonPath('data.intensity_preference', 'auto');
@@ -139,6 +147,9 @@ class AthleteProfileApiTest extends TestCase
             'primary_goal' => 'unsupported_goal',
             'secondary_goals' => ['strength', 'unsupported_goal', 'mobility'],
             'target_skills' => ['a'],
+            'primary_target_skill' => 'handstand',
+            'secondary_target_skills' => ['strict_pull_up'],
+            'base_focus_areas' => ['random'],
             'available_equipment' => ['trampoline'],
             'training_locations' => ['moon'],
             'movement_limitations' => [
@@ -147,6 +158,14 @@ class AthleteProfileApiTest extends TestCase
                     'severity' => 'catastrophic',
                     'status' => 'forever',
                     'notes' => str_repeat('x', 501),
+                ],
+            ],
+            'mobility_checks' => ['wrist_extension' => 'random'],
+            'weighted_baselines' => [
+                'experience' => 'reckless',
+                'unit' => 'stone',
+                'movements' => [
+                    ['movement' => 'back_squat', 'external_load_value' => -1, 'reps' => 100, 'rir' => 99],
                 ],
             ],
             'preferred_training_days' => ['funday'],
@@ -172,12 +191,22 @@ class AthleteProfileApiTest extends TestCase
                 'secondary_goals.1',
                 'secondary_goals',
                 'target_skills.0',
+                'primary_target_skill',
+                'secondary_target_skills.0',
+                'base_focus_areas.0',
                 'available_equipment.0',
                 'training_locations.0',
                 'movement_limitations.0.area',
                 'movement_limitations.0.severity',
                 'movement_limitations.0.status',
                 'movement_limitations.0.notes',
+                'mobility_checks.wrist_extension',
+                'weighted_baselines.experience',
+                'weighted_baselines.unit',
+                'weighted_baselines.movements.0.movement',
+                'weighted_baselines.movements.0.external_load_value',
+                'weighted_baselines.movements.0.reps',
+                'weighted_baselines.movements.0.rir',
                 'preferred_training_days.0',
                 'preferred_session_minutes',
                 'weekly_session_goal',
@@ -205,7 +234,10 @@ class AthleteProfileApiTest extends TestCase
             'bodyweight_unit' => 'kg',
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
-            'target_skills' => ['freestanding handstand', 'strict muscle-up'],
+            'target_skills' => ['handstand', 'strict_pull_up'],
+            'primary_target_skill' => 'handstand',
+            'secondary_target_skills' => ['strict_pull_up'],
+            'base_focus_areas' => ['pull_capacity', 'core_bodyline', 'handstand_line'],
             'available_equipment' => ['pull_up_bar', 'low_bar', 'dip_bars', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home', 'park'],
             'movement_limitations' => [
@@ -214,6 +246,36 @@ class AthleteProfileApiTest extends TestCase
                     'severity' => 'mild',
                     'status' => 'recurring',
                     'notes' => 'Needs longer warm-up.',
+                ],
+            ],
+            'baseline_tests' => [
+                'push_ups' => ['progression' => 'strict_push_up', 'max_strict_reps' => 18, 'form_quality' => 4],
+                'rows' => ['progression' => 'inverted_row', 'max_strict_reps' => 12],
+                'pull_ups' => ['max_strict_reps' => 4, 'progression' => 'strict_pull_up', 'assistance' => null, 'form_quality' => 4],
+                'dips' => ['progression' => 'bar_dip', 'max_strict_reps' => 6, 'support_hold_seconds' => 25],
+                'squat' => ['max_reps' => 20, 'progression' => 'split_squat'],
+                'hollow_hold_seconds' => 35,
+                'arch_hold_seconds' => 25,
+                'dead_hang_seconds' => 30,
+                'support_hold_seconds' => 25,
+                'wall_handstand_seconds' => 25,
+                'l_sit_hold_seconds' => 8,
+            ],
+            'skill_statuses' => [
+                'handstand' => ['status' => 'assisted', 'best_hold_seconds' => 20],
+            ],
+            'mobility_checks' => [
+                'wrist_extension' => 'limited',
+                'shoulder_flexion' => 'clear',
+                'shoulder_extension' => 'clear',
+                'ankle_dorsiflexion' => 'limited',
+                'pancake_compression' => 'not_tested',
+            ],
+            'weighted_baselines' => [
+                'experience' => 'repetition_work',
+                'unit' => 'kg',
+                'movements' => [
+                    ['movement' => 'weighted_pull_up', 'external_load_value' => 10, 'reps' => 5, 'rir' => 2],
                 ],
             ],
             'injury_notes' => 'Left wrist can get irritated under high volume.',

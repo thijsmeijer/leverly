@@ -71,14 +71,19 @@ paths:
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
+                      primary_target_skill: { type: string }
+                      secondary_target_skills: { type: array, items: { type: string } }
+                      base_focus_areas: { type: array, items: { type: string } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
                       preferred_training_time: { type: string }
-                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, progression: { type: string } } }, squat: { type: object, properties: { max_reps: { type: integer }, progression: { type: string } } }, hollow_hold_seconds: { type: integer } }, description: 'Baseline push-up, pull-up, squat, and hollow hold tests.' }
+                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, rows: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, progression: { type: string } } }, dips: { type: object, properties: { progression: { type: string }, support_hold_seconds: { type: integer } } }, squat: { type: object, properties: { max_reps: { type: integer }, progression: { type: string } } }, hollow_hold_seconds: { type: integer }, wall_handstand_seconds: { type: integer } }, description: 'Baseline push-up, pull-up, squat, and hollow hold tests.' }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
+                      mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
+                      weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
                       readiness_rating: { type: integer }
                       sleep_quality: { type: integer }
                       soreness_level: { type: integer }
@@ -118,14 +123,19 @@ paths:
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
+                      primary_target_skill: { type: string }
+                      secondary_target_skills: { type: array, items: { type: string } }
+                      base_focus_areas: { type: array, items: { type: string } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
                       preferred_training_time: { type: string }
-                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, progression: { type: string } } }, squat: { type: object, properties: { max_reps: { type: integer }, progression: { type: string } } }, hollow_hold_seconds: { type: integer } } }
+                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, rows: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, progression: { type: string } } }, dips: { type: object, properties: { progression: { type: string }, support_hold_seconds: { type: integer } } }, squat: { type: object, properties: { max_reps: { type: integer }, progression: { type: string } } }, hollow_hold_seconds: { type: integer }, wall_handstand_seconds: { type: integer } } }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
+                      mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
+                      weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
                       readiness_rating: { type: integer }
                       sleep_quality: { type: integer }
                       soreness_level: { type: integer }
@@ -181,12 +191,19 @@ paths:
                     type: string
                     enum:
                       - strict_push_up
+                      - one_arm_push_up
                       - strict_pull_up
+                      - weighted_pull_up
                       - strict_dip
+                      - ring_dip
+                      - weighted_dip
                       - muscle_up
+                      - weighted_muscle_up
                       - l_sit
+                      - v_sit
                       - handstand
                       - handstand_push_up
+                      - press_to_handstand
                       - front_lever
                       - back_lever
                       - planche
@@ -194,6 +211,78 @@ paths:
                       - nordic_curl
                       - one_arm_pull_up
                       - human_flag
+                primary_target_skill:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'The one roadmap the first plan should prioritize.'
+                  enum:
+                    - strict_push_up
+                    - one_arm_push_up
+                    - strict_pull_up
+                    - weighted_pull_up
+                    - strict_dip
+                    - ring_dip
+                    - weighted_dip
+                    - muscle_up
+                    - weighted_muscle_up
+                    - l_sit
+                    - v_sit
+                    - handstand
+                    - handstand_push_up
+                    - press_to_handstand
+                    - front_lever
+                    - back_lever
+                    - planche
+                    - pistol_squat
+                    - nordic_curl
+                    - one_arm_pull_up
+                    - human_flag
+                secondary_target_skills:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strict_push_up
+                      - one_arm_push_up
+                      - strict_pull_up
+                      - weighted_pull_up
+                      - strict_dip
+                      - ring_dip
+                      - weighted_dip
+                      - muscle_up
+                      - weighted_muscle_up
+                      - l_sit
+                      - v_sit
+                      - handstand
+                      - handstand_push_up
+                      - press_to_handstand
+                      - front_lever
+                      - back_lever
+                      - planche
+                      - pistol_squat
+                      - nordic_curl
+                      - one_arm_pull_up
+                      - human_flag
+                base_focus_areas:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - push_capacity
+                      - pull_capacity
+                      - dip_support
+                      - row_volume
+                      - leg_strength
+                      - core_bodyline
+                      - compression
+                      - handstand_line
+                      - straight_arm_tolerance
+                      - mobility_positions
+                      - weighted_strength
+                      - conditioning_base
                 available_equipment:
                   type: array
                   description: ''
@@ -265,16 +354,39 @@ paths:
                     push_ups:
                       type: object
                       description: ''
-                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 200.' } }
+                      properties: { progression: { type: [string, 'null'], description: '', enum: [wall_push_up, incline_push_up, knee_push_up, strict_push_up, diamond_push_up, decline_push_up, pseudo_planche_push_up, ring_push_up, archer_push_up, one_arm_assisted_push_up, one_arm_push_up] }, max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 200.' }, form_quality: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 5.' } }
+                    rows:
+                      type: object
+                      description: ''
+                      properties: { progression: { type: [string, 'null'], description: '', enum: [vertical_row, inverted_row, horizontal_row, feet_elevated_row, ring_row, tuck_front_lever_row] }, max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 200.' } }
                     pull_ups:
                       type: object
                       description: ''
-                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, progression: { type: [string, 'null'], description: '', enum: [dead_hang, scapular_pull, inverted_row, band_assisted_pull_up, eccentric_pull_up, strict_pull_up, chest_to_bar_pull_up, weighted_pull_up] } }
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, progression: { type: [string, 'null'], description: '', enum: [dead_hang, scapular_pull, flexed_arm_hang, inverted_row, band_assisted_pull_up, foot_assisted_pull_up, eccentric_pull_up, strict_pull_up, chest_to_bar_pull_up, weighted_pull_up, archer_pull_up] }, assistance: { type: [string, 'null'], description: 'Must not be greater than 80 characters.' }, form_quality: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 5.' } }
+                    dips:
+                      type: object
+                      description: ''
+                      properties: { progression: { type: [string, 'null'], description: '', enum: [support_hold, box_dip, bench_dip, assisted_bar_dip, bar_dip, deep_bar_dip, straight_bar_dip, ring_support_hold, assisted_ring_dip, ring_dip, weighted_dip] }, max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, support_hold_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' } }
                     squat:
                       type: object
                       description: ''
-                      properties: { max_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 300.' }, progression: { type: [string, 'null'], description: '', enum: [box_squat, air_squat, reverse_lunge, split_squat, assisted_pistol, shrimp_squat, pistol_squat, weighted_pistol] } }
+                      properties: { max_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 300.' }, progression: { type: [string, 'null'], description: '', enum: [box_squat, air_squat, reverse_lunge, split_squat, deep_step_up, assisted_pistol, shrimp_squat, pistol_squat, weighted_pistol] } }
                     hollow_hold_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    arch_hold_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    dead_hang_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    support_hold_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    wall_handstand_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    l_sit_hold_seconds:
                       type: [integer, 'null']
                       description: 'Must be at least 0. Must not be greater than 600.'
                 skill_statuses:
@@ -289,6 +401,33 @@ paths:
                       notes: { type: [string, 'null'], description: 'Must not be greater than 300 characters.' }
                     required:
                       - status
+                mobility_checks:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - not_tested
+                      - clear
+                      - limited
+                      - blocked
+                      - painful
+                weighted_baselines:
+                  type: object
+                  description: 'Optional weighted calisthenics experience and recent tested sets.'
+                  properties:
+                    experience:
+                      type: string
+                      description: ''
+                      enum: [none, curious, repetition_work, strength_cycles, competition_style]
+                    unit:
+                      type: string
+                      description: ''
+                      enum: [kg, lb]
+                    movements:
+                      type: array
+                      description: ''
+                      items: { type: object, properties: { movement: { type: string, description: '', enum: [weighted_pull_up, weighted_dip, weighted_muscle_up, weighted_pistol] }, external_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 400.' }, reps: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 30.' }, rir: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 10.' } }, required: [movement] }
                 readiness_rating:
                   type:
                     - integer
@@ -370,9 +509,16 @@ paths:
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
+                      primary_target_skill: { type: string }
+                      secondary_target_skills: { type: array, items: { type: string } }
+                      base_focus_areas: { type: array, items: { type: string } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
+                      baseline_tests: { type: object, properties: { push_ups: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer }, form_quality: { type: integer } } }, rows: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer } } }, dips: { type: object, properties: { progression: { type: string }, support_hold_seconds: { type: integer } } }, hollow_hold_seconds: { type: integer }, wall_handstand_seconds: { type: integer } } }
+                      skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
+                      mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
+                      weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
                       injury_notes: { type: string }
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
@@ -420,9 +566,16 @@ paths:
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
+                      primary_target_skill: { type: string }
+                      secondary_target_skills: { type: array, items: { type: string } }
+                      base_focus_areas: { type: array, items: { type: string } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
+                      baseline_tests: { type: object, properties: { push_ups: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer }, form_quality: { type: integer } } }, rows: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { progression: { type: string }, max_strict_reps: { type: integer } } }, dips: { type: object, properties: { progression: { type: string }, support_hold_seconds: { type: integer } } }, hollow_hold_seconds: { type: integer }, wall_handstand_seconds: { type: integer } } }
+                      skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
+                      mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
+                      weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
                       injury_notes: { type: string }
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
@@ -507,9 +660,103 @@ paths:
                       - conditioning
                 target_skills:
                   type: array
-                  description: 'Must be at least 2 characters. Must not be greater than 80 characters.'
+                  description: ''
                   items:
                     type: string
+                    enum:
+                      - strict_push_up
+                      - one_arm_push_up
+                      - strict_pull_up
+                      - weighted_pull_up
+                      - strict_dip
+                      - ring_dip
+                      - weighted_dip
+                      - muscle_up
+                      - weighted_muscle_up
+                      - l_sit
+                      - v_sit
+                      - handstand
+                      - handstand_push_up
+                      - press_to_handstand
+                      - front_lever
+                      - back_lever
+                      - planche
+                      - pistol_squat
+                      - nordic_curl
+                      - one_arm_pull_up
+                      - human_flag
+                primary_target_skill:
+                  type:
+                    - string
+                    - 'null'
+                  description: 'The one roadmap the current plan should prioritize.'
+                  enum:
+                    - strict_push_up
+                    - one_arm_push_up
+                    - strict_pull_up
+                    - weighted_pull_up
+                    - strict_dip
+                    - ring_dip
+                    - weighted_dip
+                    - muscle_up
+                    - weighted_muscle_up
+                    - l_sit
+                    - v_sit
+                    - handstand
+                    - handstand_push_up
+                    - press_to_handstand
+                    - front_lever
+                    - back_lever
+                    - planche
+                    - pistol_squat
+                    - nordic_curl
+                    - one_arm_pull_up
+                    - human_flag
+                secondary_target_skills:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strict_push_up
+                      - one_arm_push_up
+                      - strict_pull_up
+                      - weighted_pull_up
+                      - strict_dip
+                      - ring_dip
+                      - weighted_dip
+                      - muscle_up
+                      - weighted_muscle_up
+                      - l_sit
+                      - v_sit
+                      - handstand
+                      - handstand_push_up
+                      - press_to_handstand
+                      - front_lever
+                      - back_lever
+                      - planche
+                      - pistol_squat
+                      - nordic_curl
+                      - one_arm_pull_up
+                      - human_flag
+                base_focus_areas:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - push_capacity
+                      - pull_capacity
+                      - dip_support
+                      - row_volume
+                      - leg_strength
+                      - core_bodyline
+                      - compression
+                      - handstand_line
+                      - straight_arm_tolerance
+                      - mobility_positions
+                      - weighted_strength
+                      - conditioning_base
                 available_equipment:
                   type: array
                   description: ''
@@ -557,6 +804,41 @@ paths:
                       - area
                       - severity
                       - status
+                baseline_tests:
+                  type: object
+                  description: 'Durable baseline tests for progression placement.'
+                  properties: []
+                skill_statuses:
+                  type: object
+                  description: 'Current status for selected skill families.'
+                  properties: []
+                mobility_checks:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - not_tested
+                      - clear
+                      - limited
+                      - blocked
+                      - painful
+                weighted_baselines:
+                  type: object
+                  description: 'Optional weighted calisthenics experience and recent tested sets.'
+                  properties:
+                    experience:
+                      type: string
+                      description: ''
+                      enum: [none, curious, repetition_work, strength_cycles, competition_style]
+                    unit:
+                      type: string
+                      description: ''
+                      enum: [kg, lb]
+                    movements:
+                      type: array
+                      description: ''
+                      items: { type: object, properties: { movement: { type: string, description: '', enum: [weighted_pull_up, weighted_dip, weighted_muscle_up, weighted_pistol] }, external_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 400.' }, reps: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 30.' }, rir: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 10.' } }, required: [movement] }
                 injury_notes:
                   type:
                     - string

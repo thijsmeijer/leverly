@@ -11,9 +11,11 @@ import ProfileTextAreaField from '../components/ProfileTextAreaField.vue'
 import ProfileTextField from '../components/ProfileTextField.vue'
 import { useSettings } from '../composables/useSettings'
 import {
+  baseFocusOptions,
   bodyweightUnitOptions,
   compatibleSecondaryGoals,
   deloadPreferenceOptions,
+  dipProgressionOptions,
   effortTrackingOptions,
   experienceLevelOptions,
   goalOptions,
@@ -21,12 +23,21 @@ import {
   limitationAreaOptions,
   limitationSeverityOptions,
   limitationStatusOptions,
+  mobilityCheckOptions,
+  mobilityStatusOptions,
   progressionPaceOptions,
+  pullUpProgressionOptions,
+  pushUpProgressionOptions,
+  rowProgressionOptions,
   sessionStructureOptions,
+  squatProgressionOptions,
+  targetSkillOptions,
   trainingDayOptions,
   trainingLocationOptions,
   trainingTimeOptions,
   unitSystemOptions,
+  weightedExperienceOptions,
+  weightedMovementOptions,
 } from '../data/profileOptions'
 import type { ProfileFieldErrors } from '../types'
 
@@ -53,6 +64,34 @@ const selectedDaysLabel = computed(() =>
 const primaryGoalLabel = computed(
   () => goalOptions.find((option) => option.value === form.primaryGoal)?.label ?? 'Strength',
 )
+const targetSkillValues = computed<string[]>({
+  get: () => splitSelectedTargetSkills(form.targetSkillsText),
+  set: (skills) => {
+    form.targetSkillsText = skills.join('\n')
+  },
+})
+const selectedTargetSkillOptions = computed(() =>
+  targetSkillOptions.filter((option) => targetSkillValues.value.includes(option.value)),
+)
+const secondaryTargetSkillOptions = computed(() =>
+  selectedTargetSkillOptions.value.filter((option) => option.value !== form.primaryTargetSkill),
+)
+const primaryTargetLabel = computed(
+  () => targetSkillOptions.find((option) => option.value === form.primaryTargetSkill)?.label ?? 'Choose a roadmap',
+)
+const baseFocusLabel = computed(() => {
+  if (!form.baseFocusAreas.length) {
+    return 'No base focus selected'
+  }
+
+  return form.baseFocusAreas
+    .map((value) => baseFocusOptions.find((option) => option.value === value)?.label ?? value)
+    .slice(0, 3)
+    .join(', ')
+})
+const weightedTargetSelected = computed(() =>
+  [form.primaryTargetSkill, ...targetSkillValues.value].some((skill) => skill.startsWith('weighted_')),
+)
 const activeSection = ref<ProfileSectionId>('basics')
 const profileSections: Array<{ id: ProfileSectionId; label: string; summary: string }> = [
   { id: 'basics', label: 'Basics', summary: 'Account and units' },
@@ -73,6 +112,27 @@ watch(
     const allowedGoals = compatibleSecondaryGoals[form.primaryGoal] ?? []
 
     form.secondaryGoals = form.secondaryGoals.filter((goal) => allowedGoals.includes(goal)).slice(0, 2)
+  },
+)
+
+watch(
+  targetSkillValues,
+  (skills) => {
+    if (!skills.includes(form.primaryTargetSkill)) {
+      form.primaryTargetSkill = skills[0] ?? ''
+    }
+
+    form.secondaryTargetSkills = form.secondaryTargetSkills
+      .filter((skill) => skill !== form.primaryTargetSkill && skills.includes(skill))
+      .slice(0, 2)
+  },
+  { deep: true },
+)
+
+watch(
+  () => form.primaryTargetSkill,
+  () => {
+    form.secondaryTargetSkills = form.secondaryTargetSkills.filter((skill) => skill !== form.primaryTargetSkill)
   },
 )
 
@@ -99,6 +159,11 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
     errors.experienceLevel ||
     errors.primaryGoal ||
     errors.secondaryGoals ||
+    errors.primaryTargetSkill ||
+    errors.secondaryTargetSkills ||
+    errors.baseFocusAreas ||
+    errors.baselineTests ||
+    errors.weightedBaselines ||
     errors.targetSkillsText
   ) {
     return 'training'
@@ -126,6 +191,26 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
   }
 
   return 'limitations'
+}
+
+function splitSelectedTargetSkills(value: string): string[] {
+  const supportedValues = new Set(targetSkillOptions.map((option) => option.value))
+
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter((item, index, items) => item !== '' && supportedValues.has(item) && items.indexOf(item) === index)
+}
+
+function addWeightedMovement(): void {
+  form.weightedBaselines.movements = [
+    ...form.weightedBaselines.movements,
+    { externalLoadValue: '', movement: 'weighted_pull_up', reps: '', rir: '' },
+  ].slice(0, 4)
+}
+
+function removeWeightedMovement(index: number): void {
+  form.weightedBaselines.movements = form.weightedBaselines.movements.filter((_, itemIndex) => itemIndex !== index)
 }
 </script>
 
@@ -282,30 +367,339 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
             name="secondary-goals"
             :options="compatibleSecondaryGoalOptions"
           />
-          <ProfileTextAreaField
-            id="target-skills"
-            v-model="form.targetSkillsText"
-            :error="fieldErrors.targetSkillsText"
-            help="Separate skills with commas or new lines."
-            label="Target skills"
-            placeholder="Freestanding handstand&#10;Strict muscle-up"
-            :rows="3"
-          />
-          <div
-            class="border-line-subtle bg-surface-primary rounded-card flex flex-col gap-3 border p-4 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <h3 class="text-ink-primary text-sm font-semibold">Training tools</h3>
+          <div class="border-line-subtle border-t pt-5">
+            <div class="mb-4">
+              <h3 class="text-ink-primary text-base font-semibold">Skill roadmap</h3>
               <p class="text-ink-secondary mt-1 text-sm leading-6">
-                {{ selectedEquipmentCount }} available for exercise recommendations.
+                Keep this specific. The primary roadmap receives the main progression decisions while secondary targets
+                get lighter exposure.
               </p>
             </div>
-            <RouterLink
-              :to="{ name: 'settings-equipment' }"
-              class="border-line-subtle bg-surface-elevated text-ink-secondary hover:border-line-strong hover:text-ink-primary rounded-control inline-flex min-h-10 items-center justify-center border px-3 text-sm font-semibold transition"
-            >
-              Review equipment
-            </RouterLink>
+            <div class="space-y-5">
+              <ProfileChoiceGrid
+                v-model="targetSkillValues"
+                :error="fieldErrors.targetSkillsText"
+                help="Choose one to eight skill or strength outcomes."
+                label="Skill and strength targets"
+                :max-selections="8"
+                multiple
+                name="profile-target-skills"
+                :options="targetSkillOptions"
+              />
+              <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
+                <div class="space-y-5">
+                  <ProfileChoiceGrid
+                    v-if="selectedTargetSkillOptions.length"
+                    v-model="form.primaryTargetSkill"
+                    :error="fieldErrors.primaryTargetSkill"
+                    help="Choose the one outcome the current block should prioritize."
+                    label="Primary roadmap"
+                    name="profile-primary-target"
+                    :options="selectedTargetSkillOptions"
+                  />
+                  <ProfileChoiceGrid
+                    v-if="selectedTargetSkillOptions.length > 1"
+                    v-model="form.secondaryTargetSkills"
+                    :error="fieldErrors.secondaryTargetSkills"
+                    help="Pick up to two support targets that should not compete with the primary roadmap."
+                    label="Secondary exposure"
+                    :max-selections="2"
+                    multiple
+                    name="profile-secondary-targets"
+                    :options="secondaryTargetSkillOptions"
+                  />
+                </div>
+                <div class="border-line-subtle bg-surface-primary rounded-card border p-4">
+                  <p class="text-ink-muted text-xs font-semibold tracking-[0.14em] uppercase">Placement snapshot</p>
+                  <dl class="mt-4 space-y-3">
+                    <div>
+                      <dt class="text-ink-muted text-xs font-semibold">Priority</dt>
+                      <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ primaryTargetLabel }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-ink-muted text-xs font-semibold">Base support</dt>
+                      <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ baseFocusLabel }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-ink-muted text-xs font-semibold">Equipment</dt>
+                      <dd class="text-ink-primary mt-1 text-sm font-semibold">
+                        {{ selectedEquipmentCount }} tools selected
+                      </dd>
+                    </div>
+                  </dl>
+                  <RouterLink
+                    :to="{ name: 'settings-equipment' }"
+                    class="border-line-subtle bg-surface-elevated text-ink-secondary hover:border-line-strong hover:text-ink-primary rounded-control mt-5 inline-flex min-h-10 w-full items-center justify-center border px-3 text-sm font-semibold transition"
+                  >
+                    Review equipment
+                  </RouterLink>
+                </div>
+              </div>
+              <ProfileChoiceGrid
+                v-model="form.baseFocusAreas"
+                :error="fieldErrors.baseFocusAreas"
+                help="Choose up to four base areas that should guide regressions and support work."
+                label="Base-development focus"
+                :max-selections="4"
+                multiple
+                name="profile-base-focus"
+                :options="baseFocusOptions"
+              />
+            </div>
+          </div>
+
+          <div class="border-line-subtle border-t pt-5">
+            <div class="mb-4">
+              <h3 class="text-ink-primary text-base font-semibold">Current progression checks</h3>
+              <p class="text-ink-secondary mt-1 text-sm leading-6">
+                These inputs help the recommendation engine choose regressions, working reps, holds, and skill prep
+                without guessing from broad experience labels.
+              </p>
+            </div>
+            <div class="space-y-6">
+              <ProfileChoiceGrid
+                v-model="form.baselineTests.pushUpProgression"
+                label="Current push-up progression"
+                name="profile-push-up-progression"
+                :options="pushUpProgressionOptions"
+              />
+              <div class="grid gap-4 md:grid-cols-3">
+                <ProfileTextField
+                  id="profile-push-up-reps"
+                  v-model="form.baselineTests.pushUpMaxReps"
+                  input-mode="numeric"
+                  label="Max strict push-ups"
+                  placeholder="18"
+                  type="number"
+                />
+                <ProfileTextField
+                  id="profile-push-up-form"
+                  v-model="form.baselineTests.pushUpFormQuality"
+                  input-mode="numeric"
+                  label="Push-up form quality"
+                  placeholder="4"
+                  type="number"
+                />
+                <ProfileTextField
+                  id="profile-hollow-hold"
+                  v-model="form.baselineTests.hollowHoldSeconds"
+                  input-mode="numeric"
+                  label="Best hollow hold"
+                  placeholder="35"
+                  type="number"
+                />
+              </div>
+
+              <div class="grid gap-6 xl:grid-cols-2">
+                <div class="space-y-4">
+                  <ProfileChoiceGrid
+                    v-model="form.baselineTests.pullUpProgression"
+                    label="Current pull-up progression"
+                    name="profile-pull-up-progression"
+                    :options="pullUpProgressionOptions"
+                  />
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <ProfileTextField
+                      id="profile-pull-up-reps"
+                      v-model="form.baselineTests.pullUpMaxReps"
+                      input-mode="numeric"
+                      label="Strict pull-ups"
+                      placeholder="4"
+                      type="number"
+                    />
+                    <ProfileTextField
+                      id="profile-pull-up-form"
+                      v-model="form.baselineTests.pullUpFormQuality"
+                      input-mode="numeric"
+                      label="Pull-up form quality"
+                      placeholder="4"
+                      type="number"
+                    />
+                    <ProfileTextField
+                      id="profile-pull-up-assistance"
+                      v-model="form.baselineTests.pullUpAssistance"
+                      label="Assistance used"
+                      placeholder="Light band or foot support"
+                    />
+                    <ProfileTextField
+                      id="profile-dead-hang"
+                      v-model="form.baselineTests.deadHangSeconds"
+                      input-mode="numeric"
+                      label="Best dead hang"
+                      placeholder="30"
+                      type="number"
+                    />
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <ProfileChoiceGrid
+                    v-model="form.baselineTests.rowProgression"
+                    label="Current row progression"
+                    name="profile-row-progression"
+                    :options="rowProgressionOptions"
+                  />
+                  <ProfileChoiceGrid
+                    v-model="form.baselineTests.squatProgression"
+                    label="Current squat or pistol progression"
+                    name="profile-squat-progression"
+                    :options="squatProgressionOptions"
+                  />
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <ProfileTextField
+                      id="profile-row-reps"
+                      v-model="form.baselineTests.rowMaxReps"
+                      input-mode="numeric"
+                      label="Best row reps"
+                      placeholder="12"
+                      type="number"
+                    />
+                    <ProfileTextField
+                      id="profile-squat-reps"
+                      v-model="form.baselineTests.squatMaxReps"
+                      input-mode="numeric"
+                      label="Best squat reps"
+                      placeholder="20"
+                      type="number"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid gap-6 xl:grid-cols-2">
+                <div class="space-y-4">
+                  <ProfileChoiceGrid
+                    v-model="form.baselineTests.dipProgression"
+                    label="Current dip/support progression"
+                    name="profile-dip-progression"
+                    :options="dipProgressionOptions"
+                  />
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <ProfileTextField
+                      id="profile-dip-reps"
+                      v-model="form.baselineTests.dipMaxReps"
+                      input-mode="numeric"
+                      label="Clean dip reps"
+                      placeholder="6"
+                      type="number"
+                    />
+                    <ProfileTextField
+                      id="profile-dip-support"
+                      v-model="form.baselineTests.dipSupportHoldSeconds"
+                      input-mode="numeric"
+                      label="Support hold"
+                      placeholder="25"
+                      type="number"
+                    />
+                  </div>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <ProfileTextField
+                    id="profile-arch-hold"
+                    v-model="form.baselineTests.archHoldSeconds"
+                    input-mode="numeric"
+                    label="Best arch hold"
+                    placeholder="25"
+                    type="number"
+                  />
+                  <ProfileTextField
+                    id="profile-wall-handstand"
+                    v-model="form.baselineTests.wallHandstandSeconds"
+                    input-mode="numeric"
+                    label="Wall handstand"
+                    placeholder="20"
+                    type="number"
+                  />
+                  <ProfileTextField
+                    id="profile-l-sit-hold"
+                    v-model="form.baselineTests.lSitHoldSeconds"
+                    input-mode="numeric"
+                    label="L-sit or tuck-sit"
+                    placeholder="8"
+                    type="number"
+                  />
+                  <ProfileTextField
+                    id="profile-support-hold"
+                    v-model="form.baselineTests.supportHoldSeconds"
+                    input-mode="numeric"
+                    label="General support hold"
+                    placeholder="25"
+                    type="number"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-line-subtle border-t pt-5">
+            <div class="mb-4">
+              <h3 class="text-ink-primary text-base font-semibold">Weighted strength baseline</h3>
+              <p class="text-ink-secondary mt-1 text-sm leading-6">
+                Fill this in when weighted calisthenics is part of the roadmap. It gives future plans a useful loading
+                anchor.
+              </p>
+            </div>
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_12rem]">
+              <ProfileChoiceGrid
+                v-model="form.weightedBaselines.experience"
+                columns="compact"
+                label="Weighted experience"
+                name="profile-weighted-experience"
+                :options="weightedExperienceOptions"
+              />
+              <ProfileChoiceGrid
+                v-model="form.weightedBaselines.unit"
+                columns="compact"
+                label="Load unit"
+                name="profile-weighted-unit"
+                :options="bodyweightUnitOptions"
+              />
+            </div>
+            <div v-if="weightedTargetSelected || form.weightedBaselines.experience !== 'none'" class="mt-5 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h4 class="text-ink-primary text-sm font-semibold">Recent weighted test sets</h4>
+                <UiButton variant="secondary" type="button" @click="addWeightedMovement">Add test set</UiButton>
+              </div>
+              <div
+                v-for="(movement, index) in form.weightedBaselines.movements"
+                :key="index"
+                class="border-line-subtle bg-surface-primary rounded-card grid gap-3 border p-4 md:grid-cols-[1.2fr_1fr_1fr_1fr_auto]"
+              >
+                <ProfileSelectField
+                  :id="`profile-weighted-movement-${index}`"
+                  v-model="movement.movement"
+                  label="Movement"
+                  :options="weightedMovementOptions"
+                />
+                <ProfileTextField
+                  :id="`profile-weighted-load-${index}`"
+                  v-model="movement.externalLoadValue"
+                  input-mode="decimal"
+                  label="Added load"
+                  placeholder="10"
+                  type="number"
+                />
+                <ProfileTextField
+                  :id="`profile-weighted-reps-${index}`"
+                  v-model="movement.reps"
+                  input-mode="numeric"
+                  label="Reps"
+                  placeholder="5"
+                  type="number"
+                />
+                <ProfileTextField
+                  :id="`profile-weighted-rir-${index}`"
+                  v-model="movement.rir"
+                  input-mode="numeric"
+                  label="RIR"
+                  placeholder="2"
+                  type="number"
+                />
+                <UiButton class="self-end" variant="secondary" type="button" @click="removeWeightedMovement(index)">
+                  Remove
+                </UiButton>
+              </div>
+            </div>
           </div>
         </div>
       </ProfileFormSection>
@@ -432,6 +826,30 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
         title="Pain flags and private notes"
         description="Use this for training constraints. Leverly can adjust exercise options, but it is not medical software and cannot diagnose or treat injuries."
       >
+        <div class="mb-6 space-y-4">
+          <div>
+            <h3 class="text-ink-primary text-base font-semibold">Position checks</h3>
+            <p class="text-ink-secondary mt-1 text-sm leading-6">
+              Mark the positions that change skill selection, warm-ups, and progression speed.
+            </p>
+          </div>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div
+              v-for="check in mobilityCheckOptions"
+              :key="check.value"
+              class="border-line-subtle bg-surface-primary rounded-card border p-4"
+            >
+              <ProfileSelectField
+                :id="`profile-mobility-${check.value}`"
+                v-model="form.mobilityChecks[check.value]"
+                :help="check.description"
+                :label="check.label"
+                :options="mobilityStatusOptions"
+              />
+            </div>
+          </div>
+        </div>
+
         <div class="grid gap-4 md:grid-cols-3">
           <ProfileSelectField
             id="limitation-area"

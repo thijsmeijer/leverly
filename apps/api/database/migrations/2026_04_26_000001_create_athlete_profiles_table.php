@@ -24,9 +24,16 @@ return new class extends Migration
             $table->string('primary_goal', 64)->nullable();
             $table->json('secondary_goals');
             $table->json('target_skills');
+            $table->string('primary_target_skill', 80)->nullable();
+            $table->json('secondary_target_skills');
+            $table->json('base_focus_areas');
             $table->json('available_equipment');
             $table->json('training_locations');
             $table->json('movement_limitations');
+            $table->json('baseline_tests');
+            $table->json('skill_statuses');
+            $table->json('mobility_checks');
+            $table->json('weighted_baselines');
             $table->text('injury_notes')->nullable();
             $table->json('preferred_training_days');
             $table->unsignedSmallInteger('preferred_session_minutes')->nullable();

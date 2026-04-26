@@ -26,6 +26,7 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).toContain('Handstand')
     expect(wrapper.text()).toContain('Goals')
     expect(wrapper.text()).toContain('Equipment')
+    expect(wrapper.text()).toContain('Positions')
     expect(wrapper.text()).toContain('Starter plan')
   })
 
@@ -103,24 +104,50 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     data: {
       available_equipment: ['pull_up_bar', 'rings'],
+      base_focus_areas: ['pull_capacity', 'core_bodyline'],
       completed_at: null,
       current_level_tests: {
+        arch_hold_seconds: 25,
+        dead_hang_seconds: 30,
+        dips: {
+          max_strict_reps: 6,
+          progression: 'bar_dip',
+          support_hold_seconds: 25,
+        },
         hollow_hold_seconds: 35,
+        l_sit_hold_seconds: 8,
         pull_ups: {
+          assistance: null,
+          form_quality: 4,
           max_strict_reps: 4,
           progression: 'strict_pull_up',
         },
         push_ups: {
+          form_quality: 4,
           max_strict_reps: 18,
+          progression: 'strict_push_up',
+        },
+        rows: {
+          max_strict_reps: 12,
+          progression: 'inverted_row',
         },
         squat: {
           max_reps: 20,
           progression: 'split_squat',
         },
+        support_hold_seconds: 25,
+        wall_handstand_seconds: 20,
       },
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       is_complete: false,
       missing_sections: [],
+      mobility_checks: {
+        ankle_dorsiflexion: 'limited',
+        pancake_compression: 'not_tested',
+        shoulder_extension: 'clear',
+        shoulder_flexion: 'clear',
+        wrist_extension: 'limited',
+      },
       pain_areas: ['wrist'],
       pain_level: 2,
       pain_notes: 'Wrists need warm-up.',
@@ -128,8 +155,10 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       preferred_training_days: ['monday', 'wednesday', 'friday'],
       preferred_training_time: 'evening',
       primary_goal: 'skill',
+      primary_target_skill: 'handstand',
       readiness_rating: 4,
       secondary_goals: ['strength'],
+      secondary_target_skills: ['strict_pull_up'],
       skill_statuses: {
         handstand: {
           best_hold_seconds: 20,
@@ -142,6 +171,11 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       target_skills: ['strict_pull_up', 'handstand'],
       training_locations: ['home'],
       user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',
+      weighted_baselines: {
+        experience: 'repetition_work',
+        movements: [{ external_load_value: 10, movement: 'weighted_pull_up', reps: 5, rir: 2 }],
+        unit: 'kg',
+      },
       weekly_session_goal: 3,
       ...overrides,
     },

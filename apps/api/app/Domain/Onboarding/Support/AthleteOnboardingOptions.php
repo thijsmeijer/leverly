@@ -5,69 +5,37 @@ declare(strict_types=1);
 namespace App\Domain\Onboarding\Support;
 
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Support\CalisthenicsPlacementOptions;
 use App\Models\AthleteOnboarding;
 use App\Models\User;
 
 final class AthleteOnboardingOptions
 {
-    public const array TARGET_SKILLS = [
-        'strict_push_up',
-        'strict_pull_up',
-        'strict_dip',
-        'muscle_up',
-        'l_sit',
-        'handstand',
-        'handstand_push_up',
-        'front_lever',
-        'back_lever',
-        'planche',
-        'pistol_squat',
-        'nordic_curl',
-        'one_arm_pull_up',
-        'human_flag',
-    ];
+    public const array TARGET_SKILLS = CalisthenicsPlacementOptions::TARGET_SKILLS;
 
-    public const array PULL_UP_PROGRESSIONS = [
-        'dead_hang',
-        'scapular_pull',
-        'inverted_row',
-        'band_assisted_pull_up',
-        'eccentric_pull_up',
-        'strict_pull_up',
-        'chest_to_bar_pull_up',
-        'weighted_pull_up',
-    ];
+    public const array BASE_FOCUS_AREAS = CalisthenicsPlacementOptions::BASE_FOCUS_AREAS;
 
-    public const array SQUAT_PROGRESSIONS = [
-        'box_squat',
-        'air_squat',
-        'reverse_lunge',
-        'split_squat',
-        'assisted_pistol',
-        'shrimp_squat',
-        'pistol_squat',
-        'weighted_pistol',
-    ];
+    public const array PUSH_UP_PROGRESSIONS = CalisthenicsPlacementOptions::PUSH_UP_PROGRESSIONS;
 
-    public const array SKILL_STATUS_KEYS = [
-        'dip',
-        'l_sit',
-        'handstand',
-        'front_lever',
-        'planche',
-    ];
+    public const array ROW_PROGRESSIONS = CalisthenicsPlacementOptions::ROW_PROGRESSIONS;
 
-    public const array SKILL_STATUSES = [
-        'not_started',
-        'building_base',
-        'assisted',
-        'partial_range',
-        'single_rep',
-        'multiple_reps',
-        'short_hold',
-        'solid_hold',
-        'advanced_variation',
-    ];
+    public const array PULL_UP_PROGRESSIONS = CalisthenicsPlacementOptions::PULL_UP_PROGRESSIONS;
+
+    public const array DIP_PROGRESSIONS = CalisthenicsPlacementOptions::DIP_PROGRESSIONS;
+
+    public const array SQUAT_PROGRESSIONS = CalisthenicsPlacementOptions::SQUAT_PROGRESSIONS;
+
+    public const array SKILL_STATUS_KEYS = CalisthenicsPlacementOptions::SKILL_STATUS_KEYS;
+
+    public const array SKILL_STATUSES = CalisthenicsPlacementOptions::SKILL_STATUSES;
+
+    public const array MOBILITY_CHECK_KEYS = CalisthenicsPlacementOptions::MOBILITY_CHECK_KEYS;
+
+    public const array MOBILITY_STATUSES = CalisthenicsPlacementOptions::MOBILITY_STATUSES;
+
+    public const array WEIGHTED_EXPERIENCE_LEVELS = CalisthenicsPlacementOptions::WEIGHTED_EXPERIENCE_LEVELS;
+
+    public const array WEIGHTED_MOVEMENTS = CalisthenicsPlacementOptions::WEIGHTED_MOVEMENTS;
 
     public const array STARTER_PLANS = [
         'full_body_3_day',
@@ -86,6 +54,9 @@ final class AthleteOnboardingOptions
             'primary_goal' => null,
             'secondary_goals' => [],
             'target_skills' => [],
+            'primary_target_skill' => null,
+            'secondary_target_skills' => [],
+            'base_focus_areas' => [],
             'available_equipment' => [],
             'training_locations' => [],
             'preferred_training_days' => [],
@@ -94,6 +65,8 @@ final class AthleteOnboardingOptions
             'preferred_training_time' => 'flexible',
             'current_level_tests' => self::emptyLevelTests(),
             'skill_statuses' => [],
+            'mobility_checks' => self::emptyMobilityChecks(),
+            'weighted_baselines' => self::emptyWeightedBaselines(),
             'readiness_rating' => null,
             'sleep_quality' => null,
             'soreness_level' => null,
@@ -109,20 +82,23 @@ final class AthleteOnboardingOptions
      */
     public static function emptyLevelTests(): array
     {
-        return [
-            'push_ups' => [
-                'max_strict_reps' => null,
-            ],
-            'pull_ups' => [
-                'max_strict_reps' => null,
-                'progression' => null,
-            ],
-            'squat' => [
-                'max_reps' => null,
-                'progression' => null,
-            ],
-            'hollow_hold_seconds' => null,
-        ];
+        return CalisthenicsPlacementOptions::emptyLevelTests();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function emptyMobilityChecks(): array
+    {
+        return CalisthenicsPlacementOptions::emptyMobilityChecks();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function emptyWeightedBaselines(): array
+    {
+        return CalisthenicsPlacementOptions::emptyWeightedBaselines();
     }
 
     /**
@@ -136,6 +112,8 @@ final class AthleteOnboardingOptions
         foreach ([
             'secondary_goals',
             'target_skills',
+            'secondary_target_skills',
+            'base_focus_areas',
             'available_equipment',
             'training_locations',
             'preferred_training_days',
@@ -158,7 +136,7 @@ final class AthleteOnboardingOptions
     {
         $merged = [...$base, ...$incoming];
 
-        foreach (['current_level_tests', 'skill_statuses'] as $key) {
+        foreach (['current_level_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
             if (is_array($base[$key] ?? null) && is_array($incoming[$key] ?? null)) {
                 $merged[$key] = array_replace_recursive($base[$key], $incoming[$key]);
             }
@@ -183,6 +161,14 @@ final class AthleteOnboardingOptions
             $missing[] = 'target_skills';
         }
 
+        if (! is_string($candidate['primary_target_skill'] ?? null) || $candidate['primary_target_skill'] === '') {
+            $missing[] = 'primary_target_skill';
+        }
+
+        if (empty($candidate['base_focus_areas']) || ! is_array($candidate['base_focus_areas'])) {
+            $missing[] = 'base_focus_areas';
+        }
+
         if (empty($candidate['training_locations']) || ! is_array($candidate['training_locations'])) {
             $missing[] = 'training_locations';
         }
@@ -201,11 +187,16 @@ final class AthleteOnboardingOptions
 
         $levelTests = is_array($candidate['current_level_tests'] ?? null) ? $candidate['current_level_tests'] : [];
         $pushUps = is_array($levelTests['push_ups'] ?? null) ? $levelTests['push_ups'] : [];
+        $rows = is_array($levelTests['rows'] ?? null) ? $levelTests['rows'] : [];
         $pullUps = is_array($levelTests['pull_ups'] ?? null) ? $levelTests['pull_ups'] : [];
         $squat = is_array($levelTests['squat'] ?? null) ? $levelTests['squat'] : [];
 
-        if (! is_int($pushUps['max_strict_reps'] ?? null)) {
+        if (! is_int($pushUps['max_strict_reps'] ?? null) && ! is_string($pushUps['progression'] ?? null)) {
             $missing[] = 'push_up_test';
+        }
+
+        if (! is_int($rows['max_strict_reps'] ?? null) && ! is_string($rows['progression'] ?? null)) {
+            $missing[] = 'row_test';
         }
 
         if (! is_int($pullUps['max_strict_reps'] ?? null) && ! is_string($pullUps['progression'] ?? null)) {
@@ -218,6 +209,15 @@ final class AthleteOnboardingOptions
 
         if (! is_int($levelTests['hollow_hold_seconds'] ?? null)) {
             $missing[] = 'hollow_hold_test';
+        }
+
+        $mobilityChecks = is_array($candidate['mobility_checks'] ?? null) ? $candidate['mobility_checks'] : [];
+        if (empty($mobilityChecks) || count(array_filter($mobilityChecks, fn (mixed $status): bool => $status !== 'not_tested')) === 0) {
+            $missing[] = 'mobility_checks';
+        }
+
+        if (self::needsWeightedBaseline($candidate) && ! self::hasWeightedBaseline($candidate)) {
+            $missing[] = 'weighted_baseline';
         }
 
         if (! is_int($candidate['readiness_rating'] ?? null)) {
@@ -265,6 +265,9 @@ final class AthleteOnboardingOptions
             'primary_goal' => $onboarding->primary_goal,
             'secondary_goals' => $onboarding->secondary_goals ?? [],
             'target_skills' => $onboarding->target_skills ?? [],
+            'primary_target_skill' => $onboarding->primary_target_skill,
+            'secondary_target_skills' => $onboarding->secondary_target_skills ?? [],
+            'base_focus_areas' => $onboarding->base_focus_areas ?? [],
             'available_equipment' => $onboarding->available_equipment ?? [],
             'training_locations' => $onboarding->training_locations ?? [],
             'preferred_training_days' => $onboarding->preferred_training_days ?? [],
@@ -273,6 +276,8 @@ final class AthleteOnboardingOptions
             'preferred_training_time' => $onboarding->preferred_training_time,
             'current_level_tests' => $onboarding->current_level_tests ?? self::emptyLevelTests(),
             'skill_statuses' => $onboarding->skill_statuses ?? [],
+            'mobility_checks' => $onboarding->mobility_checks ?? self::emptyMobilityChecks(),
+            'weighted_baselines' => $onboarding->weighted_baselines ?? self::emptyWeightedBaselines(),
             'readiness_rating' => $onboarding->readiness_rating,
             'sleep_quality' => $onboarding->sleep_quality,
             'soreness_level' => $onboarding->soreness_level,
@@ -295,6 +300,9 @@ final class AthleteOnboardingOptions
             'primary_goal',
             'secondary_goals',
             'target_skills',
+            'primary_target_skill',
+            'secondary_target_skills',
+            'base_focus_areas',
             'available_equipment',
             'training_locations',
             'preferred_training_days',
@@ -302,6 +310,16 @@ final class AthleteOnboardingOptions
             'weekly_session_goal',
             'preferred_training_time',
         ] as $key) {
+            if (array_key_exists($key, $data)) {
+                $profileData[$key] = $data[$key];
+            }
+        }
+
+        if (array_key_exists('current_level_tests', $data)) {
+            $profileData['baseline_tests'] = $data['current_level_tests'];
+        }
+
+        foreach (['skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
             if (array_key_exists($key, $data)) {
                 $profileData[$key] = $data[$key];
             }
@@ -316,6 +334,43 @@ final class AthleteOnboardingOptions
         }
 
         return $profileData;
+    }
+
+    /**
+     * @param  array<string, mixed>  $candidate
+     */
+    private static function needsWeightedBaseline(array $candidate): bool
+    {
+        $targets = array_filter([
+            $candidate['primary_target_skill'] ?? null,
+            ...array_values(is_array($candidate['target_skills'] ?? null) ? $candidate['target_skills'] : []),
+        ]);
+
+        return count(array_intersect($targets, self::WEIGHTED_MOVEMENTS)) > 0;
+    }
+
+    /**
+     * @param  array<string, mixed>  $candidate
+     */
+    private static function hasWeightedBaseline(array $candidate): bool
+    {
+        $weightedBaselines = is_array($candidate['weighted_baselines'] ?? null) ? $candidate['weighted_baselines'] : [];
+        $movements = is_array($weightedBaselines['movements'] ?? null) ? $weightedBaselines['movements'] : [];
+
+        foreach ($movements as $movement) {
+            if (! is_array($movement)) {
+                continue;
+            }
+
+            $externalLoad = $movement['external_load_value'] ?? null;
+            $reps = $movement['reps'] ?? null;
+
+            if (is_numeric($externalLoad) && is_int($reps) && $reps > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

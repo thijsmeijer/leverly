@@ -33,7 +33,12 @@ class UpsertAthleteProfileRequest extends FormRequest
             'secondary_goals' => ['sometimes', 'array', 'max:2'],
             'secondary_goals.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::GOALS)],
             'target_skills' => ['sometimes', 'array', 'max:20'],
-            'target_skills.*' => ['string', 'distinct', 'min:2', 'max:80'],
+            'target_skills.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
+            'primary_target_skill' => ['sometimes', 'nullable', 'string', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
+            'secondary_target_skills' => ['sometimes', 'array', 'max:2'],
+            'secondary_target_skills.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
+            'base_focus_areas' => ['sometimes', 'array', 'max:4'],
+            'base_focus_areas.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::BASE_FOCUS_AREAS)],
             'available_equipment' => ['sometimes', 'array', 'max:20'],
             'available_equipment.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::EQUIPMENT)],
             'training_locations' => ['sometimes', 'array', 'max:5'],
@@ -44,6 +49,19 @@ class UpsertAthleteProfileRequest extends FormRequest
             'movement_limitations.*.severity' => ['required', 'string', Rule::in(AthleteProfileOptions::LIMITATION_SEVERITIES)],
             'movement_limitations.*.status' => ['required', 'string', Rule::in(AthleteProfileOptions::LIMITATION_STATUSES)],
             'movement_limitations.*.notes' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'baseline_tests' => ['sometimes', 'array'],
+            'skill_statuses' => ['sometimes', 'array'],
+            'mobility_checks' => ['sometimes', 'array:wrist_extension,shoulder_flexion,shoulder_extension,ankle_dorsiflexion,pancake_compression'],
+            'mobility_checks.*' => ['string', Rule::in(AthleteProfileOptions::MOBILITY_STATUSES)],
+            'weighted_baselines' => ['sometimes', 'array:experience,unit,movements'],
+            'weighted_baselines.experience' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::WEIGHTED_EXPERIENCE_LEVELS)],
+            'weighted_baselines.unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::BODYWEIGHT_UNITS)],
+            'weighted_baselines.movements' => ['sometimes', 'array', 'max:4'],
+            'weighted_baselines.movements.*' => ['array:movement,external_load_value,reps,rir'],
+            'weighted_baselines.movements.*.movement' => ['required', 'string', Rule::in(AthleteProfileOptions::WEIGHTED_MOVEMENTS)],
+            'weighted_baselines.movements.*.external_load_value' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:400'],
+            'weighted_baselines.movements.*.reps' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:30'],
+            'weighted_baselines.movements.*.rir' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:10'],
             'injury_notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'preferred_training_days' => ['sometimes', 'array', 'max:7'],
             'preferred_training_days.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TRAINING_DAYS)],
@@ -82,7 +100,10 @@ class UpsertAthleteProfileRequest extends FormRequest
             'bodyweight_unit' => ['description' => 'Bodyweight unit.', 'example' => 'kg'],
             'primary_goal' => ['description' => 'Primary training goal.', 'example' => 'skill'],
             'secondary_goals' => ['description' => 'Additional training goals.', 'example' => ['strength', 'mobility']],
-            'target_skills' => ['description' => 'Skills the athlete wants to unlock.', 'example' => ['freestanding handstand', 'strict muscle-up']],
+            'target_skills' => ['description' => 'Controlled skill targets the athlete wants to unlock.', 'example' => ['handstand', 'strict_pull_up']],
+            'primary_target_skill' => ['description' => 'The one roadmap the current plan should prioritize.', 'example' => 'handstand'],
+            'secondary_target_skills' => ['description' => 'Optional target skills that can receive lighter exposure.', 'example' => ['strict_pull_up']],
+            'base_focus_areas' => ['description' => 'Base-development areas that support the selected roadmap.', 'example' => ['pull_capacity', 'core_bodyline']],
             'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['pull_up_bar', 'rings', 'parallettes']],
             'training_locations' => ['description' => 'Preferred training locations.', 'example' => ['home', 'park']],
             'movement_limitations' => [
@@ -97,6 +118,35 @@ class UpsertAthleteProfileRequest extends FormRequest
                 ],
             ],
             'injury_notes' => ['description' => 'Private injury notes.', 'example' => 'Left wrist can get irritated under high volume.'],
+            'baseline_tests' => [
+                'description' => 'Durable baseline tests for progression placement.',
+                'example' => [
+                    'push_ups' => ['progression' => 'strict_push_up', 'max_strict_reps' => 18, 'form_quality' => 4],
+                    'rows' => ['progression' => 'inverted_row', 'max_strict_reps' => 12],
+                    'pull_ups' => ['progression' => 'strict_pull_up', 'max_strict_reps' => 4],
+                    'dips' => ['progression' => 'bar_dip', 'support_hold_seconds' => 25],
+                    'hollow_hold_seconds' => 35,
+                    'wall_handstand_seconds' => 25,
+                ],
+            ],
+            'skill_statuses' => [
+                'description' => 'Current status for selected skill families.',
+                'example' => ['handstand' => ['status' => 'assisted', 'best_hold_seconds' => 20]],
+            ],
+            'mobility_checks' => [
+                'description' => 'Position self-checks that affect progression placement.',
+                'example' => ['wrist_extension' => 'limited', 'shoulder_flexion' => 'clear'],
+            ],
+            'weighted_baselines' => [
+                'description' => 'Optional weighted calisthenics experience and recent tested sets.',
+                'example' => [
+                    'experience' => 'repetition_work',
+                    'unit' => 'kg',
+                    'movements' => [
+                        ['movement' => 'weighted_pull_up', 'external_load_value' => 10, 'reps' => 5, 'rir' => 2],
+                    ],
+                ],
+            ],
             'preferred_training_days' => ['description' => 'Preferred training weekdays.', 'example' => ['monday', 'wednesday', 'friday']],
             'preferred_session_minutes' => ['description' => 'Maximum session length in minutes.', 'example' => 60],
             'weekly_session_goal' => ['description' => 'Target sessions per week.', 'example' => 4],
@@ -142,6 +192,45 @@ class UpsertAthleteProfileRequest extends FormRequest
                         "secondary_goals.{$index}",
                         'The selected secondary goal does not fit the primary goal.',
                     );
+                }
+
+                $targetSkills = $this->input('target_skills', []);
+                $primaryTargetSkill = $this->input('primary_target_skill');
+                $secondaryTargetSkills = $this->input('secondary_target_skills', []);
+
+                if (! is_array($targetSkills)) {
+                    return;
+                }
+
+                if (is_string($primaryTargetSkill) && ! in_array($primaryTargetSkill, $targetSkills, true)) {
+                    $validator->errors()->add(
+                        'primary_target_skill',
+                        'The primary target skill must be one of the selected target skills.',
+                    );
+                }
+
+                if (! is_array($secondaryTargetSkills)) {
+                    return;
+                }
+
+                foreach ($secondaryTargetSkills as $index => $secondaryTargetSkill) {
+                    if (! is_string($secondaryTargetSkill)) {
+                        continue;
+                    }
+
+                    if ($secondaryTargetSkill === $primaryTargetSkill) {
+                        $validator->errors()->add(
+                            "secondary_target_skills.{$index}",
+                            'A secondary target cannot match the primary target skill.',
+                        );
+                    }
+
+                    if (! in_array($secondaryTargetSkill, $targetSkills, true)) {
+                        $validator->errors()->add(
+                            "secondary_target_skills.{$index}",
+                            'Secondary targets must also be selected target skills.',
+                        );
+                    }
                 }
             },
         ];

@@ -36,11 +36,19 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.user_id', $user->id)
             ->assertJsonPath('data.primary_goal', 'skill')
             ->assertJsonPath('data.target_skills.0', 'strict_pull_up')
+            ->assertJsonPath('data.primary_target_skill', 'handstand')
+            ->assertJsonPath('data.secondary_target_skills.0', 'strict_pull_up')
+            ->assertJsonPath('data.base_focus_areas.0', 'pull_capacity')
             ->assertJsonPath('data.current_level_tests.push_ups.max_strict_reps', 18)
+            ->assertJsonPath('data.current_level_tests.rows.progression', 'inverted_row')
             ->assertJsonPath('data.current_level_tests.pull_ups.progression', 'strict_pull_up')
+            ->assertJsonPath('data.current_level_tests.dips.support_hold_seconds', 25)
             ->assertJsonPath('data.current_level_tests.squat.progression', 'split_squat')
             ->assertJsonPath('data.current_level_tests.hollow_hold_seconds', 35)
+            ->assertJsonPath('data.current_level_tests.wall_handstand_seconds', 25)
             ->assertJsonPath('data.skill_statuses.handstand.status', 'assisted')
+            ->assertJsonPath('data.mobility_checks.wrist_extension', 'limited')
+            ->assertJsonPath('data.weighted_baselines.experience', 'repetition_work')
             ->assertJsonPath('data.readiness_rating', 4)
             ->assertJsonPath('data.pain_level', 2)
             ->assertJsonPath('data.starter_plan_key', 'skill_strength_split')
@@ -65,7 +73,13 @@ class AthleteOnboardingApiTest extends TestCase
         $this->assertSame('skill', $profile->primary_goal);
         $this->assertSame(['strength'], $profile->secondary_goals);
         $this->assertSame(['strict_pull_up', 'handstand'], $profile->target_skills);
+        $this->assertSame('handstand', $profile->primary_target_skill);
+        $this->assertSame(['strict_pull_up'], $profile->secondary_target_skills);
+        $this->assertSame(['pull_capacity', 'core_bodyline', 'handstand_line'], $profile->base_focus_areas);
         $this->assertSame(['pull_up_bar', 'rings', 'parallettes'], $profile->available_equipment);
+        $this->assertSame('inverted_row', $profile->baseline_tests['rows']['progression']);
+        $this->assertSame('limited', $profile->mobility_checks['wrist_extension']);
+        $this->assertSame('repetition_work', $profile->weighted_baselines['experience']);
         $this->assertSame(['monday', 'wednesday', 'friday'], $profile->preferred_training_days);
         $this->assertSame(60, $profile->preferred_session_minutes);
         $this->assertSame(3, $profile->weekly_session_goal);
@@ -146,6 +160,9 @@ class AthleteOnboardingApiTest extends TestCase
             'primary_goal' => 'random',
             'secondary_goals' => ['conditioning', 'mobility', 'strength'],
             'target_skills' => ['generic fitness'],
+            'primary_target_skill' => 'generic fitness',
+            'secondary_target_skills' => ['handstand'],
+            'base_focus_areas' => ['random'],
             'available_equipment' => ['machine'],
             'training_locations' => ['moon'],
             'preferred_training_days' => ['funday'],
@@ -153,13 +170,24 @@ class AthleteOnboardingApiTest extends TestCase
             'weekly_session_goal' => 15,
             'preferred_training_time' => 'midnight',
             'current_level_tests' => [
-                'push_ups' => ['max_strict_reps' => -1],
+                'push_ups' => ['progression' => 'random', 'max_strict_reps' => -1, 'form_quality' => 9],
+                'rows' => ['progression' => 'random'],
                 'pull_ups' => ['progression' => 'kipping'],
+                'dips' => ['progression' => 'random'],
                 'squat' => ['progression' => 'random'],
                 'hollow_hold_seconds' => 700,
+                'wall_handstand_seconds' => 700,
             ],
             'skill_statuses' => [
                 'handstand' => ['status' => 'vibes'],
+            ],
+            'mobility_checks' => ['wrist_extension' => 'random'],
+            'weighted_baselines' => [
+                'experience' => 'reckless',
+                'unit' => 'stone',
+                'movements' => [
+                    ['movement' => 'back_squat', 'external_load_value' => -1, 'reps' => 100, 'rir' => 99],
+                ],
             ],
             'readiness_rating' => 0,
             'sleep_quality' => 6,
@@ -174,17 +202,32 @@ class AthleteOnboardingApiTest extends TestCase
                 'primary_goal',
                 'secondary_goals',
                 'target_skills.0',
+                'primary_target_skill',
+                'secondary_target_skills.0',
+                'base_focus_areas.0',
                 'available_equipment.0',
                 'training_locations.0',
                 'preferred_training_days.0',
                 'preferred_session_minutes',
                 'weekly_session_goal',
                 'preferred_training_time',
+                'current_level_tests.push_ups.progression',
                 'current_level_tests.push_ups.max_strict_reps',
+                'current_level_tests.push_ups.form_quality',
+                'current_level_tests.rows.progression',
                 'current_level_tests.pull_ups.progression',
+                'current_level_tests.dips.progression',
                 'current_level_tests.squat.progression',
                 'current_level_tests.hollow_hold_seconds',
+                'current_level_tests.wall_handstand_seconds',
                 'skill_statuses.handstand.status',
+                'mobility_checks.wrist_extension',
+                'weighted_baselines.experience',
+                'weighted_baselines.unit',
+                'weighted_baselines.movements.0.movement',
+                'weighted_baselines.movements.0.external_load_value',
+                'weighted_baselines.movements.0.reps',
+                'weighted_baselines.movements.0.rir',
                 'readiness_rating',
                 'sleep_quality',
                 'soreness_level',
@@ -225,6 +268,9 @@ class AthleteOnboardingApiTest extends TestCase
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
             'target_skills' => ['strict_pull_up', 'handstand'],
+            'primary_target_skill' => 'handstand',
+            'secondary_target_skills' => ['strict_pull_up'],
+            'base_focus_areas' => ['pull_capacity', 'core_bodyline', 'handstand_line'],
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home'],
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],
@@ -232,14 +278,35 @@ class AthleteOnboardingApiTest extends TestCase
             'weekly_session_goal' => 3,
             'preferred_training_time' => 'evening',
             'current_level_tests' => [
-                'push_ups' => ['max_strict_reps' => 18],
-                'pull_ups' => ['max_strict_reps' => 4, 'progression' => 'strict_pull_up'],
+                'push_ups' => ['progression' => 'strict_push_up', 'max_strict_reps' => 18, 'form_quality' => 4],
+                'rows' => ['progression' => 'inverted_row', 'max_strict_reps' => 12],
+                'pull_ups' => ['max_strict_reps' => 4, 'progression' => 'strict_pull_up', 'assistance' => null, 'form_quality' => 4],
+                'dips' => ['progression' => 'bar_dip', 'max_strict_reps' => 6, 'support_hold_seconds' => 25],
                 'squat' => ['max_reps' => 20, 'progression' => 'split_squat'],
                 'hollow_hold_seconds' => 35,
+                'arch_hold_seconds' => 25,
+                'dead_hang_seconds' => 30,
+                'support_hold_seconds' => 25,
+                'wall_handstand_seconds' => 25,
+                'l_sit_hold_seconds' => 8,
             ],
             'skill_statuses' => [
                 'handstand' => ['status' => 'assisted', 'best_hold_seconds' => 20],
                 'l_sit' => ['status' => 'short_hold', 'best_hold_seconds' => 8],
+            ],
+            'mobility_checks' => [
+                'wrist_extension' => 'limited',
+                'shoulder_flexion' => 'clear',
+                'shoulder_extension' => 'clear',
+                'ankle_dorsiflexion' => 'limited',
+                'pancake_compression' => 'not_tested',
+            ],
+            'weighted_baselines' => [
+                'experience' => 'repetition_work',
+                'unit' => 'kg',
+                'movements' => [
+                    ['movement' => 'weighted_pull_up', 'external_load_value' => 10, 'reps' => 5, 'rir' => 2],
+                ],
             ],
             'readiness_rating' => 4,
             'sleep_quality' => 4,

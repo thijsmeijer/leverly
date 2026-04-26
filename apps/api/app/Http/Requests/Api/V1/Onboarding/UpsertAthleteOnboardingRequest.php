@@ -30,6 +30,11 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'secondary_goals.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::GOALS)],
             'target_skills' => ['sometimes', 'array', 'max:8'],
             'target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
+            'primary_target_skill' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
+            'secondary_target_skills' => ['sometimes', 'array', 'max:2'],
+            'secondary_target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
+            'base_focus_areas' => ['sometimes', 'array', 'max:4'],
+            'base_focus_areas.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::BASE_FOCUS_AREAS)],
             'available_equipment' => ['sometimes', 'array', 'max:20'],
             'available_equipment.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::EQUIPMENT)],
             'training_locations' => ['sometimes', 'array', 'max:5'],
@@ -39,10 +44,15 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'preferred_session_minutes' => ['sometimes', 'nullable', 'integer', 'min:10', 'max:240'],
             'weekly_session_goal' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:14'],
             'preferred_training_time' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::TRAINING_TIMES)],
-            'current_level_tests' => ['sometimes', 'array:push_ups,pull_ups,squat,hollow_hold_seconds'],
-            'current_level_tests.push_ups' => ['sometimes', 'array:max_strict_reps'],
+            'current_level_tests' => ['sometimes', 'array:push_ups,rows,pull_ups,dips,squat,hollow_hold_seconds,arch_hold_seconds,dead_hang_seconds,support_hold_seconds,wall_handstand_seconds,l_sit_hold_seconds'],
+            'current_level_tests.push_ups' => ['sometimes', 'array:progression,max_strict_reps,form_quality'],
+            'current_level_tests.push_ups.progression' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::PUSH_UP_PROGRESSIONS)],
             'current_level_tests.push_ups.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:200'],
-            'current_level_tests.pull_ups' => ['sometimes', 'array:max_strict_reps,progression'],
+            'current_level_tests.push_ups.form_quality' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
+            'current_level_tests.rows' => ['sometimes', 'array:progression,max_strict_reps'],
+            'current_level_tests.rows.progression' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::ROW_PROGRESSIONS)],
+            'current_level_tests.rows.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:200'],
+            'current_level_tests.pull_ups' => ['sometimes', 'array:max_strict_reps,progression,assistance,form_quality'],
             'current_level_tests.pull_ups.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
             'current_level_tests.pull_ups.progression' => [
                 'sometimes',
@@ -50,6 +60,12 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                 'string',
                 Rule::in(AthleteOnboardingOptions::PULL_UP_PROGRESSIONS),
             ],
+            'current_level_tests.pull_ups.assistance' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'current_level_tests.pull_ups.form_quality' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
+            'current_level_tests.dips' => ['sometimes', 'array:progression,max_strict_reps,support_hold_seconds'],
+            'current_level_tests.dips.progression' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::DIP_PROGRESSIONS)],
+            'current_level_tests.dips.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
+            'current_level_tests.dips.support_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
             'current_level_tests.squat' => ['sometimes', 'array:max_reps,progression'],
             'current_level_tests.squat.max_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:300'],
             'current_level_tests.squat.progression' => [
@@ -59,12 +75,28 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                 Rule::in(AthleteOnboardingOptions::SQUAT_PROGRESSIONS),
             ],
             'current_level_tests.hollow_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
-            'skill_statuses' => ['sometimes', 'array:dip,l_sit,handstand,front_lever,planche'],
+            'current_level_tests.arch_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
+            'current_level_tests.dead_hang_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
+            'current_level_tests.support_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
+            'current_level_tests.wall_handstand_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
+            'current_level_tests.l_sit_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
+            'skill_statuses' => ['sometimes', 'array:dip,ring_dip,muscle_up,l_sit,handstand,handstand_push_up,front_lever,back_lever,planche,pistol_squat,nordic_curl,one_arm_pull_up,human_flag,press_to_handstand'],
             'skill_statuses.*' => ['array:status,max_strict_reps,best_hold_seconds,notes'],
             'skill_statuses.*.status' => ['required', 'string', Rule::in(AthleteOnboardingOptions::SKILL_STATUSES)],
             'skill_statuses.*.max_strict_reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
             'skill_statuses.*.best_hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
             'skill_statuses.*.notes' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'mobility_checks' => ['sometimes', 'array:wrist_extension,shoulder_flexion,shoulder_extension,ankle_dorsiflexion,pancake_compression'],
+            'mobility_checks.*' => ['string', Rule::in(AthleteOnboardingOptions::MOBILITY_STATUSES)],
+            'weighted_baselines' => ['sometimes', 'array:experience,unit,movements'],
+            'weighted_baselines.experience' => ['sometimes', 'string', Rule::in(AthleteOnboardingOptions::WEIGHTED_EXPERIENCE_LEVELS)],
+            'weighted_baselines.unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::BODYWEIGHT_UNITS)],
+            'weighted_baselines.movements' => ['sometimes', 'array', 'max:4'],
+            'weighted_baselines.movements.*' => ['array:movement,external_load_value,reps,rir'],
+            'weighted_baselines.movements.*.movement' => ['required', 'string', Rule::in(AthleteOnboardingOptions::WEIGHTED_MOVEMENTS)],
+            'weighted_baselines.movements.*.external_load_value' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:400'],
+            'weighted_baselines.movements.*.reps' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:30'],
+            'weighted_baselines.movements.*.rir' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:10'],
             'readiness_rating' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
             'sleep_quality' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
             'soreness_level' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
@@ -99,6 +131,9 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'primary_goal' => ['description' => 'Primary training goal.', 'example' => 'skill'],
             'secondary_goals' => ['description' => 'Compatible secondary goals.', 'example' => ['strength']],
             'target_skills' => ['description' => 'Controlled calisthenics skill target slugs.', 'example' => ['strict_pull_up', 'handstand']],
+            'primary_target_skill' => ['description' => 'The one roadmap the first plan should prioritize.', 'example' => 'handstand'],
+            'secondary_target_skills' => ['description' => 'Optional target skills that can receive lighter exposure.', 'example' => ['strict_pull_up']],
+            'base_focus_areas' => ['description' => 'Base-development areas that should support the primary roadmap.', 'example' => ['pull_capacity', 'core_bodyline']],
             'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['pull_up_bar', 'rings']],
             'training_locations' => ['description' => 'Where the athlete can train.', 'example' => ['home', 'park']],
             'preferred_training_days' => ['description' => 'Training days available for scheduling.', 'example' => ['monday', 'wednesday', 'friday']],
@@ -109,9 +144,12 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                 'description' => 'Baseline tests for starter recommendation placement.',
                 'example' => [
                     'push_ups' => ['max_strict_reps' => 18],
+                    'rows' => ['max_strict_reps' => 12, 'progression' => 'inverted_row'],
                     'pull_ups' => ['max_strict_reps' => 4, 'progression' => 'strict_pull_up'],
+                    'dips' => ['max_strict_reps' => 6, 'progression' => 'bar_dip'],
                     'squat' => ['max_reps' => 20, 'progression' => 'split_squat'],
                     'hollow_hold_seconds' => 35,
+                    'wall_handstand_seconds' => 25,
                 ],
             ],
             'skill_statuses' => [
@@ -119,6 +157,26 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                 'example' => [
                     'handstand' => ['status' => 'assisted', 'best_hold_seconds' => 20],
                     'l_sit' => ['status' => 'short_hold', 'best_hold_seconds' => 8],
+                ],
+            ],
+            'mobility_checks' => [
+                'description' => 'Self-checks for positions that affect progression placement.',
+                'example' => [
+                    'wrist_extension' => 'limited',
+                    'shoulder_flexion' => 'clear',
+                    'shoulder_extension' => 'clear',
+                    'ankle_dorsiflexion' => 'limited',
+                    'pancake_compression' => 'not_tested',
+                ],
+            ],
+            'weighted_baselines' => [
+                'description' => 'Optional weighted calisthenics experience and recent tested sets.',
+                'example' => [
+                    'experience' => 'repetition_work',
+                    'unit' => 'kg',
+                    'movements' => [
+                        ['movement' => 'weighted_pull_up', 'external_load_value' => 12.5, 'reps' => 5, 'rir' => 2],
+                    ],
                 ],
             ],
             'readiness_rating' => ['description' => 'Current readiness, 1-5.', 'example' => 4],
@@ -145,6 +203,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $this->validateSecondaryGoals($validator);
+                $this->validatePlacementTargets($validator);
                 $this->validateCompletion($validator);
             },
         ];
@@ -170,6 +229,48 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                 "secondary_goals.{$index}",
                 'The selected secondary goal does not fit the primary goal.',
             );
+        }
+    }
+
+    private function validatePlacementTargets(Validator $validator): void
+    {
+        $targetSkills = $this->input('target_skills', []);
+        $primaryTargetSkill = $this->input('primary_target_skill');
+        $secondaryTargetSkills = $this->input('secondary_target_skills', []);
+
+        if (! is_array($targetSkills)) {
+            return;
+        }
+
+        if (is_string($primaryTargetSkill) && ! in_array($primaryTargetSkill, $targetSkills, true)) {
+            $validator->errors()->add(
+                'primary_target_skill',
+                'The primary target skill must be one of the selected target skills.',
+            );
+        }
+
+        if (! is_array($secondaryTargetSkills)) {
+            return;
+        }
+
+        foreach ($secondaryTargetSkills as $index => $secondaryTargetSkill) {
+            if (! is_string($secondaryTargetSkill)) {
+                continue;
+            }
+
+            if ($secondaryTargetSkill === $primaryTargetSkill) {
+                $validator->errors()->add(
+                    "secondary_target_skills.{$index}",
+                    'A secondary target cannot match the primary target skill.',
+                );
+            }
+
+            if (! in_array($secondaryTargetSkill, $targetSkills, true)) {
+                $validator->errors()->add(
+                    "secondary_target_skills.{$index}",
+                    'Secondary targets must also be selected target skills.',
+                );
+            }
         }
     }
 
