@@ -9,15 +9,19 @@ import OnboardingStepPanel from '../components/OnboardingStepPanel.vue'
 import { useOnboardingSteps } from '../composables/useOnboardingSteps'
 import {
   baseFocusOptions,
+  bodyweightUnitOptions,
   compatibleSecondaryGoals,
   dipProgressionOptions,
   equipmentCategories,
+  experienceLevelOptions,
   goalOptions,
+  heightUnitOptions,
   mobilityCheckOptions,
   mobilityStatusOptions,
   onboardingTrainingTimeOptions,
   painAreaOptions,
   painOptions,
+  priorSportOptions,
   pullUpProgressionOptions,
   pushUpProgressionOptions,
   readinessOptions,
@@ -42,7 +46,7 @@ const route = useRoute()
 const router = useRouter()
 const onboarding = useOnboardingStore()
 
-const activeStep = ref<OnboardingStepId>('goals')
+const activeStep = ref<OnboardingStepId>('context')
 const clientErrors = ref<OnboardingFieldErrors>({})
 const { activeIndex, canContinue, canGoBack, progressPercent, steps } = useOnboardingSteps(activeStep)
 const currentErrors = computed(() => ({ ...clientErrors.value, ...onboarding.fieldErrors }))
@@ -53,11 +57,58 @@ const compatibleSecondaryGoalOptions = computed(() => {
 })
 const chosenSkills = computed(() =>
   targetSkillOptions
-    .filter((option) => onboarding.form.targetSkills.includes(option.value))
+    .filter(
+      (option) =>
+        onboarding.form.targetSkills.includes(option.value) ||
+        onboarding.form.longTermTargetSkills.includes(option.value),
+    )
     .map((option) => option.label),
 )
+const activeRoadmapTracks = computed(() => [
+  ...onboarding.form.roadmapSuggestions.unlocked_tracks,
+  ...onboarding.form.roadmapSuggestions.bridge_tracks,
+])
+const activeRoadmapSkillValues = computed(() => activeRoadmapTracks.value.map((track) => track.skill))
+const activeRoadmapOptions = computed(() =>
+  activeRoadmapTracks.value.map((track) => ({
+    description: `${track.reason} Next gate: ${track.next_gate}`,
+    label: track.label,
+    meta: onboarding.form.roadmapSuggestions.unlocked_tracks.some((unlocked) => unlocked.skill === track.skill)
+      ? 'Ready now'
+      : 'Bridge',
+    value: track.skill,
+  })),
+)
+const longTermRoadmapOptions = computed(() =>
+  targetSkillOptions
+    .filter((option) => !onboarding.form.targetSkills.includes(option.value))
+    .map((option) => {
+      const suggested = [
+        ...onboarding.form.roadmapSuggestions.long_term_tracks,
+        ...onboarding.form.roadmapSuggestions.deferred_tracks,
+      ].find((track) => track.skill === option.value)
+
+      return suggested
+        ? {
+            description: `${suggested.reason} ${suggested.next_gate}`,
+            label: suggested.label,
+            meta: 'Later',
+            value: suggested.skill,
+          }
+        : option
+    }),
+)
+const suggestedBaseFocusOptions = computed(() => {
+  const suggested = onboarding.form.roadmapSuggestions.base_focus_areas
+
+  if (!suggested.length) {
+    return baseFocusOptions
+  }
+
+  return baseFocusOptions.filter((option) => suggested.includes(option.value))
+})
 const selectedTargetSkillOptions = computed(() =>
-  targetSkillOptions.filter((option) => onboarding.form.targetSkills.includes(option.value)),
+  activeRoadmapOptions.value.filter((option) => onboarding.form.targetSkills.includes(option.value)),
 )
 const primaryTargetLabel = computed(
   () =>
@@ -65,6 +116,16 @@ const primaryTargetLabel = computed(
     'No primary roadmap yet',
 )
 const chosenEquipmentCount = computed(() => onboarding.form.availableEquipment.length)
+const contextSummary = computed(() => {
+  const bodyweight = onboarding.form.currentBodyweightValue
+    ? `${onboarding.form.currentBodyweightValue}${onboarding.form.bodyweightUnit}`
+    : 'Bodyweight open'
+  const height = onboarding.form.heightValue
+    ? `${onboarding.form.heightValue}${onboarding.form.heightUnit}`
+    : 'height open'
+
+  return `${bodyweight}, ${height}`
+})
 const weightedSkillSelected = computed(() =>
   [onboarding.form.primaryTargetSkill, ...onboarding.form.targetSkills].some((skill) => skill.startsWith('weighted_')),
 )
@@ -130,6 +191,24 @@ watch(
 )
 
 watch(
+  () => onboarding.form.roadmapSuggestions,
+  () => {
+    onboarding.form.targetSkills = onboarding.form.targetSkills.filter((skill) =>
+      activeRoadmapSkillValues.value.includes(skill),
+    )
+
+    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter((skill) =>
+      onboarding.form.targetSkills.includes(skill),
+    )
+
+    if (onboarding.form.baseFocusAreas.length === 0 && onboarding.form.roadmapSuggestions.base_focus_areas.length) {
+      onboarding.form.baseFocusAreas = [...onboarding.form.roadmapSuggestions.base_focus_areas].slice(0, 4)
+    }
+  },
+  { deep: true },
+)
+
+watch(
   () => onboarding.form.primaryTargetSkill,
   () => {
     onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter(
@@ -146,7 +225,21 @@ function errorFor(key: string): string | undefined {
   return currentErrors.value[key]
 }
 
+const lockedStepIds = computed(() =>
+  steps.filter((_, index) => firstInvalidStepBeforeIndex(index) !== null).map((step) => step.id),
+)
+
 function selectStep(step: OnboardingStepId): void {
+  const targetIndex = steps.findIndex((candidate) => candidate.id === step)
+  const blockedByStep = firstInvalidStepBeforeIndex(targetIndex)
+
+  if (blockedByStep) {
+    activeStep.value = blockedByStep.id
+    clientErrors.value = validateOnboardingStep(onboarding.form, blockedByStep.id)
+
+    return
+  }
+
   clientErrors.value = {}
   activeStep.value = step
 }
@@ -158,7 +251,7 @@ async function goBack(): Promise<void> {
 
   await onboarding.saveDraft()
   clientErrors.value = {}
-  activeStep.value = steps[activeIndex.value - 1]?.id ?? 'goals'
+  activeStep.value = steps[activeIndex.value - 1]?.id ?? 'context'
 }
 
 async function goNext(): Promise<void> {
@@ -210,6 +303,17 @@ function removeWeightedMovement(index: number): void {
     (_, itemIndex) => itemIndex !== index,
   )
 }
+
+function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | null {
+  if (index <= 0) {
+    return null
+  }
+
+  return (
+    steps.slice(0, index).find((step) => Object.keys(validateOnboardingStep(onboarding.form, step.id)).length > 0) ??
+    null
+  )
+}
 </script>
 
 <template>
@@ -225,11 +329,11 @@ function removeWeightedMovement(index: number): void {
               </span>
             </div>
             <h1 class="text-ink-primary mt-4 max-w-3xl text-3xl font-semibold tracking-normal sm:text-4xl">
-              Build the signal for your first calisthenics plan.
+              Find the strongest path for your next calisthenics block.
             </h1>
             <p class="text-ink-secondary mt-4 max-w-3xl text-base leading-7">
-              Choose the skills, equipment, baseline tests, and recovery context Leverly needs to place you on the right
-              progressions from day one.
+              Start with your body context, available setup, and baseline tests. Leverly turns that into a realistic
+              roadmap before you choose active skill targets.
             </p>
             <div class="mt-6 flex flex-wrap gap-3">
               <UiButton variant="secondary" @click="onboarding.saveDraft()">Save draft</UiButton>
@@ -240,9 +344,9 @@ function removeWeightedMovement(index: number): void {
             <p class="text-ink-muted text-xs font-semibold tracking-[0.18em] uppercase">Current map</p>
             <dl class="mt-4 grid gap-3">
               <div class="rounded-control bg-surface-primary border-line-subtle border p-3">
-                <dt class="text-ink-muted text-xs font-semibold">Targets</dt>
+                <dt class="text-ink-muted text-xs font-semibold">Context</dt>
                 <dd class="text-ink-primary mt-1 text-sm font-semibold">
-                  {{ chosenSkills.length ? chosenSkills.slice(0, 2).join(', ') : 'No targets yet' }}
+                  {{ contextSummary }}
                 </dd>
               </div>
               <div class="rounded-control bg-surface-primary border-line-subtle border p-3">
@@ -250,15 +354,22 @@ function removeWeightedMovement(index: number): void {
                 <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ chosenEquipmentCount }} tools selected</dd>
               </div>
               <div class="rounded-control bg-surface-primary border-line-subtle border p-3">
-                <dt class="text-ink-muted text-xs font-semibold">Schedule</dt>
-                <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ chosenSchedule }}</dd>
+                <dt class="text-ink-muted text-xs font-semibold">Roadmap</dt>
+                <dd class="text-ink-primary mt-1 text-sm font-semibold">
+                  {{ chosenSkills.length ? chosenSkills.slice(0, 2).join(', ') : chosenSchedule }}
+                </dd>
               </div>
             </dl>
           </aside>
         </div>
       </header>
 
-      <OnboardingProgress :active-step="activeStep" :steps="steps" @select="selectStep" />
+      <OnboardingProgress
+        :active-step="activeStep"
+        :locked-step-ids="lockedStepIds"
+        :steps="steps"
+        @select="selectStep"
+      />
 
       <div
         v-if="onboarding.loadError"
@@ -275,70 +386,86 @@ function removeWeightedMovement(index: number): void {
 
       <form class="space-y-5" novalidate @submit.prevent="completeOnboarding">
         <OnboardingStepPanel
-          v-if="activeStep === 'goals'"
+          v-if="activeStep === 'context'"
           eyebrow="Step 1"
-          title="Pick the outcome and exact skills."
-          description="Leverly works best when the target is specific. Choose the main goal, supporting goals, and the skill targets you actually want to move toward."
+          title="Start with the athlete behind the skills."
+          description="Age, training age, body size, and sport background change how aggressive a first block should be. This keeps the roadmap specific instead of generic."
         >
           <div class="space-y-6">
+            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              <OnboardingNumberField
+                id="onboarding-age"
+                v-model="onboarding.form.ageYears"
+                :error="errorFor('ageYears')"
+                label="Age"
+                :max="90"
+                :min="13"
+                placeholder="29"
+                suffix="years"
+              />
+              <OnboardingNumberField
+                id="onboarding-training-age"
+                v-model="onboarding.form.trainingAgeMonths"
+                :error="errorFor('trainingAgeMonths')"
+                label="Training age"
+                :max="1200"
+                :min="0"
+                placeholder="18"
+                suffix="months"
+              />
+              <OnboardingNumberField
+                id="onboarding-bodyweight"
+                v-model="onboarding.form.currentBodyweightValue"
+                :error="errorFor('currentBodyweightValue')"
+                label="Current bodyweight"
+                :max="400"
+                :min="20"
+                placeholder="72.5"
+                :suffix="onboarding.form.bodyweightUnit"
+              />
+              <OnboardingNumberField
+                id="onboarding-height"
+                v-model="onboarding.form.heightValue"
+                :error="errorFor('heightValue')"
+                label="Height"
+                :max="onboarding.form.heightUnit === 'in' ? 100 : 250"
+                :min="onboarding.form.heightUnit === 'in' ? 36 : 90"
+                placeholder="178"
+                :suffix="onboarding.form.heightUnit"
+              />
+            </div>
+            <div class="grid gap-5 lg:grid-cols-3">
+              <OnboardingChoiceGrid
+                v-model="onboarding.form.bodyweightUnit"
+                columns="compact"
+                label="Bodyweight unit"
+                name="onboarding-bodyweight-unit"
+                :options="bodyweightUnitOptions"
+              />
+              <OnboardingChoiceGrid
+                v-model="onboarding.form.heightUnit"
+                columns="compact"
+                label="Height unit"
+                name="onboarding-height-unit"
+                :options="heightUnitOptions"
+              />
+              <OnboardingChoiceGrid
+                v-model="onboarding.form.experienceLevel"
+                columns="compact"
+                label="Training level"
+                name="onboarding-experience"
+                :options="experienceLevelOptions"
+              />
+            </div>
             <OnboardingChoiceGrid
-              v-model="onboarding.form.primaryGoal"
-              :error="errorFor('primaryGoal')"
-              label="Primary goal"
-              name="onboarding-primary-goal"
-              :options="goalOptions"
-            />
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.secondaryGoals"
-              :error="errorFor('secondaryGoals')"
-              help="Choose up to two supporting goals that fit the main outcome."
-              label="Supporting goals"
-              :max-selections="2"
-              multiple
-              name="onboarding-secondary-goals"
-              :options="compatibleSecondaryGoalOptions"
-            />
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.targetSkills"
-              :error="errorFor('targetSkills')"
-              help="Choose one to eight. These become the first progression families Leverly cares about."
-              label="Skill and strength targets"
-              :max-selections="8"
-              multiple
-              name="onboarding-target-skills"
-              :options="targetSkillOptions"
-            />
-            <OnboardingChoiceGrid
-              v-if="selectedTargetSkillOptions.length"
-              v-model="onboarding.form.primaryTargetSkill"
-              :error="errorFor('primaryTargetSkill')"
-              help="Pick one primary roadmap. Leverly can support other skills, but the first block needs a clear priority."
-              label="Primary roadmap"
-              name="onboarding-primary-target-skill"
-              :options="selectedTargetSkillOptions"
-            />
-            <OnboardingChoiceGrid
-              v-if="selectedTargetSkillOptions.length > 1"
-              v-model="onboarding.form.secondaryTargetSkills"
-              :error="errorFor('secondaryTargetSkills')"
-              help="Choose up to two lighter exposures. Avoid stacking too many tendon-heavy goals at once."
-              label="Secondary exposure"
-              :max-selections="2"
-              multiple
-              name="onboarding-secondary-target-skills"
-              :options="
-                selectedTargetSkillOptions.filter((option) => option.value !== onboarding.form.primaryTargetSkill)
-              "
-            />
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.baseFocusAreas"
-              :error="errorFor('baseFocusAreas')"
-              help="Choose one to four base areas. These protect progress when the main skill is not ready for harder work yet."
-              label="Base-development focus"
+              v-model="onboarding.form.priorSportBackground"
+              :error="errorFor('priorSportBackground')"
+              help="Choose up to four. Pick 'None yet' if you are starting without a useful carryover."
+              label="Relevant background"
               :max-selections="4"
               multiple
-              name="onboarding-base-focus"
-              :options="baseFocusOptions"
+              name="onboarding-prior-sport"
+              :options="priorSportOptions"
             />
           </div>
         </OnboardingStepPanel>
@@ -372,7 +499,7 @@ function removeWeightedMovement(index: number): void {
 
         <OnboardingStepPanel
           v-if="activeStep === 'level'"
-          eyebrow="Step 3"
+          eyebrow="Step 4"
           title="Place your current progressions."
           description="These quick tests tell Leverly whether to suggest reps, assistance, holds, regressions, or harder variations."
         >
@@ -610,7 +737,7 @@ function removeWeightedMovement(index: number): void {
 
         <OnboardingStepPanel
           v-if="activeStep === 'mobility'"
-          eyebrow="Step 4"
+          eyebrow="Step 3"
           title="Check positions that change the recommendation."
           description="A skill can be limited by mobility or tissue tolerance before strength. Mark only what you know right now."
         >
@@ -685,8 +812,106 @@ function removeWeightedMovement(index: number): void {
         </OnboardingStepPanel>
 
         <OnboardingStepPanel
-          v-if="activeStep === 'readiness'"
+          v-if="activeStep === 'roadmap'"
           eyebrow="Step 6"
+          title="Choose from the roadmap your assessment unlocked."
+          description="Active targets are limited to skills that are ready now or make sense as a bridge. Bigger aspirations can stay visible without forcing the first plan to skip foundations."
+        >
+          <div class="space-y-6">
+            <div class="border-line-subtle bg-surface-primary rounded-card border p-5">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="bg-accent-primary-soft text-ink-primary rounded-full px-3 py-1 text-xs font-semibold">
+                  {{ onboarding.form.roadmapSuggestions.level }}
+                </span>
+                <p class="text-ink-primary text-sm font-semibold">
+                  {{ onboarding.form.roadmapSuggestions.summary }}
+                </p>
+              </div>
+              <ul
+                v-if="onboarding.form.roadmapSuggestions.body_context.notes.length"
+                class="text-ink-secondary mt-4 grid gap-2 text-sm leading-6"
+              >
+                <li v-for="note in onboarding.form.roadmapSuggestions.body_context.notes" :key="note">
+                  {{ note }}
+                </li>
+              </ul>
+            </div>
+
+            <OnboardingChoiceGrid
+              v-model="onboarding.form.primaryGoal"
+              :error="errorFor('primaryGoal')"
+              label="Primary goal"
+              name="onboarding-primary-goal"
+              :options="goalOptions"
+            />
+            <OnboardingChoiceGrid
+              v-model="onboarding.form.secondaryGoals"
+              :error="errorFor('secondaryGoals')"
+              help="Choose up to two supporting goals that fit the main outcome."
+              label="Supporting goals"
+              :max-selections="2"
+              multiple
+              name="onboarding-secondary-goals"
+              :options="compatibleSecondaryGoalOptions"
+            />
+            <OnboardingChoiceGrid
+              v-model="onboarding.form.targetSkills"
+              :error="errorFor('targetSkills')"
+              help="Choose up to three active targets from the ready-now and bridge recommendations."
+              label="Active roadmap targets"
+              :max-selections="3"
+              multiple
+              name="onboarding-target-skills"
+              :options="activeRoadmapOptions"
+            />
+            <OnboardingChoiceGrid
+              v-if="selectedTargetSkillOptions.length"
+              v-model="onboarding.form.primaryTargetSkill"
+              :error="errorFor('primaryTargetSkill')"
+              help="Pick one target as the main priority for the first training block."
+              label="Primary roadmap"
+              name="onboarding-primary-target-skill"
+              :options="selectedTargetSkillOptions"
+            />
+            <OnboardingChoiceGrid
+              v-if="selectedTargetSkillOptions.length > 1"
+              v-model="onboarding.form.secondaryTargetSkills"
+              :error="errorFor('secondaryTargetSkills')"
+              help="Choose up to two lighter exposures that should not compete with the main roadmap."
+              label="Secondary exposure"
+              :max-selections="2"
+              multiple
+              name="onboarding-secondary-target-skills"
+              :options="
+                selectedTargetSkillOptions.filter((option) => option.value !== onboarding.form.primaryTargetSkill)
+              "
+            />
+            <OnboardingChoiceGrid
+              v-model="onboarding.form.longTermTargetSkills"
+              :error="errorFor('longTermTargetSkills')"
+              help="Keep big skills visible here without making them the first block's main target."
+              label="Long-term aspirations"
+              :max-selections="8"
+              multiple
+              name="onboarding-long-term-targets"
+              :options="longTermRoadmapOptions"
+            />
+            <OnboardingChoiceGrid
+              v-model="onboarding.form.baseFocusAreas"
+              :error="errorFor('baseFocusAreas')"
+              help="These guide regressions and support work behind the selected roadmap."
+              label="Base-development focus"
+              :max-selections="4"
+              multiple
+              name="onboarding-base-focus"
+              :options="suggestedBaseFocusOptions"
+            />
+          </div>
+        </OnboardingStepPanel>
+
+        <OnboardingStepPanel
+          v-if="activeStep === 'readiness'"
+          eyebrow="Step 7"
           title="Add today’s recovery and pain signal."
           description="This does not diagnose anything. It only keeps the first recommendations conservative when pain, soreness, or poor readiness should change the plan."
         >
@@ -743,7 +968,7 @@ function removeWeightedMovement(index: number): void {
 
         <OnboardingStepPanel
           v-if="activeStep === 'starter'"
-          eyebrow="Step 7"
+          eyebrow="Step 8"
           title="Review the first placement."
           description="This is the shape Leverly can start from before the exercise catalog and progression tree are attached."
         >

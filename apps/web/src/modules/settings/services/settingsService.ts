@@ -12,6 +12,7 @@ type AthleteProfileResponse = NonNullable<ApiResponseBody<'/me/profile', 'get'>>
 type AthleteProfile = AthleteProfileResponse['data']
 
 type ProfileUpdateBody = {
+  readonly age_years: number | null
   readonly available_equipment: string[]
   readonly base_focus_areas: string[]
   readonly baseline_tests: Record<string, unknown>
@@ -23,6 +24,9 @@ type ProfileUpdateBody = {
   readonly experience_level: string
   readonly injury_notes: string | null
   readonly intensity_preference: string
+  readonly height_unit: string
+  readonly height_value: number | null
+  readonly long_term_target_skills: string[]
   readonly movement_limitations: Array<{
     readonly area: string
     readonly notes: string | null
@@ -33,6 +37,7 @@ type ProfileUpdateBody = {
   readonly preferred_session_minutes: number | null
   readonly preferred_training_days: string[]
   readonly preferred_training_time: string
+  readonly prior_sport_background: string[]
   readonly primary_goal: string | null
   readonly primary_target_skill: string | null
   readonly progression_pace: string
@@ -71,6 +76,7 @@ export class ProfileSettingsValidationError extends Error {
 export function defaultProfileSettingsForm(): ProfileSettingsForm {
   return {
     availableEquipment: [],
+    ageYears: '',
     baseFocusAreas: [],
     baselineTests: {
       archHoldSeconds: '',
@@ -102,6 +108,9 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     experienceLevel: 'new',
     injuryNotes: '',
     intensityPreference: 'auto',
+    heightUnit: 'cm',
+    heightValue: '',
+    longTermTargetSkills: [],
     movementLimitation: {
       area: 'wrist',
       notes: '',
@@ -112,6 +121,7 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     preferredSessionMinutes: '45',
     preferredTrainingDays: [],
     preferredTrainingTime: 'flexible',
+    priorSportBackground: [],
     primaryGoal: 'strength',
     primaryTargetSkill: '',
     progressionPace: 'balanced',
@@ -207,6 +217,7 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
   }
 
   addNumberError(errors, 'trainingAgeMonths', form.trainingAgeMonths, 0, 1200, 'Training age must be 0 to 1200 months.')
+  addNumberError(errors, 'ageYears', form.ageYears, 13, 90, 'Age must be between 13 and 90.')
   addNumberError(
     errors,
     'currentBodyweightValue',
@@ -214,6 +225,14 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
     20,
     400,
     'Bodyweight must be between 20 and 400.',
+  )
+  addNumberError(
+    errors,
+    'heightValue',
+    form.heightValue,
+    form.heightUnit === 'in' ? 36 : 90,
+    form.heightUnit === 'in' ? 100 : 250,
+    form.heightUnit === 'in' ? 'Height must be 36 to 100 inches.' : 'Height must be 90 to 250 cm.',
   )
   addNumberError(
     errors,
@@ -251,6 +270,10 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
     errors.secondaryTargetSkills = 'Secondary targets must be listed target skills and differ from the primary target.'
   }
 
+  if (form.longTermTargetSkills.some((skill) => targetSkills.includes(skill))) {
+    errors.longTermTargetSkills = 'Long-term targets should be different from active targets.'
+  }
+
   if (form.baseFocusAreas.length > 4) {
     errors.baseFocusAreas = 'Choose up to four base focus areas.'
   }
@@ -274,6 +297,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
 
   return {
     availableEquipment: profile.available_equipment.filter(isSupportedEquipment),
+    ageYears: profile.age_years === null || profile.age_years === undefined ? '' : String(profile.age_years),
     baseFocusAreas: [...profile.base_focus_areas],
     baselineTests: {
       archHoldSeconds:
@@ -330,6 +354,10 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     experienceLevel: profile.experience_level,
     injuryNotes: profile.injury_notes ?? '',
     intensityPreference: profile.intensity_preference,
+    heightUnit: profile.height_unit ?? 'cm',
+    heightValue:
+      profile.height_value === null || profile.height_value === undefined ? '' : String(profile.height_value),
+    longTermTargetSkills: [...(profile.long_term_target_skills ?? [])],
     movementLimitation: {
       area: limitation?.area ?? 'wrist',
       notes: limitation?.notes ?? '',
@@ -341,6 +369,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
       profile.preferred_session_minutes === null ? '' : String(profile.preferred_session_minutes),
     preferredTrainingDays: [...profile.preferred_training_days],
     preferredTrainingTime: profile.preferred_training_time,
+    priorSportBackground: [...(profile.prior_sport_background ?? [])],
     primaryGoal: profile.primary_goal ?? 'strength',
     primaryTargetSkill: profile.primary_target_skill ?? '',
     progressionPace: profile.progression_pace,
@@ -401,6 +430,7 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
       : []
 
   return {
+    age_years: nullableNumber(form.ageYears),
     available_equipment: form.availableEquipment.filter(isSupportedEquipment),
     base_focus_areas: [...form.baseFocusAreas],
     baseline_tests: {
@@ -443,11 +473,15 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     experience_level: form.experienceLevel,
     injury_notes: form.injuryNotes.trim() || null,
     intensity_preference: form.intensityPreference,
+    height_unit: form.heightUnit,
+    height_value: nullableNumber(form.heightValue),
+    long_term_target_skills: [...form.longTermTargetSkills],
     movement_limitations: movementLimitations,
     mobility_checks: { ...form.mobilityChecks },
     preferred_session_minutes: nullableNumber(form.preferredSessionMinutes),
     preferred_training_days: form.preferredTrainingDays,
     preferred_training_time: form.preferredTrainingTime,
+    prior_sport_background: [...form.priorSportBackground],
     primary_goal: form.primaryGoal || null,
     primary_target_skill: form.primaryTargetSkill || null,
     progression_pace: form.progressionPace,
@@ -536,6 +570,7 @@ function mapServerField(field: string): keyof ProfileSettingsForm | null {
   const base = field.split('.')[0]
   const map: Record<string, keyof ProfileSettingsForm> = {
     available_equipment: 'availableEquipment',
+    age_years: 'ageYears',
     base_focus_areas: 'baseFocusAreas',
     baseline_tests: 'baselineTests',
     bodyweight_unit: 'bodyweightUnit',
@@ -546,11 +581,15 @@ function mapServerField(field: string): keyof ProfileSettingsForm | null {
     experience_level: 'experienceLevel',
     injury_notes: 'injuryNotes',
     intensity_preference: 'intensityPreference',
+    height_unit: 'heightUnit',
+    height_value: 'heightValue',
+    long_term_target_skills: 'longTermTargetSkills',
     movement_limitations: 'movementLimitation',
     mobility_checks: 'mobilityChecks',
     preferred_session_minutes: 'preferredSessionMinutes',
     preferred_training_days: 'preferredTrainingDays',
     preferred_training_time: 'preferredTrainingTime',
+    prior_sport_background: 'priorSportBackground',
     primary_goal: 'primaryGoal',
     primary_target_skill: 'primaryTargetSkill',
     progression_pace: 'progressionPace',

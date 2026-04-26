@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
+use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,12 +24,22 @@ class AthleteOnboardingFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'age_years' => 29,
+            'training_age_months' => 18,
+            'experience_level' => 'intermediate',
+            'current_bodyweight_value' => 72.5,
+            'bodyweight_unit' => 'kg',
+            'height_value' => 178,
+            'height_unit' => 'cm',
+            'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
             'target_skills' => ['strict_pull_up', 'handstand'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
+            'long_term_target_skills' => ['front_lever'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
+            'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home'],
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],

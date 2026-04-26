@@ -55,6 +55,9 @@ export function findContractProblems(openApiSource) {
     ['athlete profile display name property', 'display_name:'],
     ['athlete profile timezone property', 'timezone:'],
     ['athlete profile unit system property', 'unit_system:'],
+    ['athlete profile age property', 'age_years:'],
+    ['athlete profile height property', 'height_value:'],
+    ['athlete profile roadmap suggestions property', 'roadmap_suggestions:'],
     ['athlete profile primary target skill property', 'primary_target_skill:'],
     ['athlete profile baseline tests property', 'baseline_tests:'],
     ['athlete profile mobility checks property', 'mobility_checks:'],
@@ -63,6 +66,9 @@ export function findContractProblems(openApiSource) {
     ['athlete onboarding path', '  /me/onboarding:'],
     ['athlete onboarding get operation ID', 'operationId: getOnboardingState'],
     ['athlete onboarding update operation ID', 'operationId: updateOnboardingState'],
+    ['athlete onboarding age property', 'age_years:'],
+    ['athlete onboarding height property', 'height_value:'],
+    ['athlete onboarding roadmap suggestions property', 'roadmap_suggestions:'],
     ['athlete onboarding level tests property', 'current_level_tests:'],
     ['athlete onboarding primary target skill property', 'primary_target_skill:'],
     ['athlete onboarding mobility checks property', 'mobility_checks:'],
@@ -170,22 +176,50 @@ export interface WeightedBaselines {
   readonly movements: readonly WeightedBaselineMovement[]
 }
 
+export interface RoadmapTrack {
+  readonly skill: string
+  readonly label: string
+  readonly reason: string
+  readonly base_focus_areas: readonly string[]
+  readonly next_gate: string
+  readonly compatible_secondary_skills: readonly string[]
+}
+
+export interface RoadmapSuggestions {
+  readonly level: string
+  readonly summary: string
+  readonly body_context: {
+    readonly notes: readonly string[]
+  }
+  readonly base_focus_areas: readonly string[]
+  readonly unlocked_tracks: readonly RoadmapTrack[]
+  readonly bridge_tracks: readonly RoadmapTrack[]
+  readonly long_term_tracks: readonly RoadmapTrack[]
+  readonly deferred_tracks: readonly RoadmapTrack[]
+}
+
 export interface AthleteProfile {
   readonly id: string
   readonly user_id: string
   readonly display_name: string
   readonly timezone: string
   readonly unit_system: string
+  readonly age_years: number | null
   readonly training_age_months: number | null
   readonly experience_level: string
   readonly current_bodyweight_value: number | null
   readonly bodyweight_unit: string
+  readonly height_value: number | null
+  readonly height_unit: string
+  readonly prior_sport_background: readonly string[]
   readonly primary_goal: string | null
   readonly secondary_goals: readonly string[]
   readonly target_skills: readonly string[]
   readonly primary_target_skill: string | null
   readonly secondary_target_skills: readonly string[]
+  readonly long_term_target_skills: readonly string[]
   readonly base_focus_areas: readonly string[]
+  readonly roadmap_suggestions: RoadmapSuggestions
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
   readonly movement_limitations: readonly MovementLimitation[]
@@ -233,12 +267,22 @@ export interface OnboardingSkillStatus {
 export interface AthleteOnboarding {
   readonly id: string
   readonly user_id: string
+  readonly age_years: number | null
+  readonly training_age_months: number | null
+  readonly experience_level: string
+  readonly current_bodyweight_value: number | null
+  readonly bodyweight_unit: string
+  readonly height_value: number | null
+  readonly height_unit: string
+  readonly prior_sport_background: readonly string[]
   readonly primary_goal: string | null
   readonly secondary_goals: readonly string[]
   readonly target_skills: readonly string[]
   readonly primary_target_skill: string | null
   readonly secondary_target_skills: readonly string[]
+  readonly long_term_target_skills: readonly string[]
   readonly base_focus_areas: readonly string[]
+  readonly roadmap_suggestions: RoadmapSuggestions
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
   readonly preferred_training_days: readonly string[]

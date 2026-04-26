@@ -3,6 +3,7 @@ import type { OnboardingStepId } from '../types'
 
 defineProps<{
   activeStep: OnboardingStepId
+  lockedStepIds?: OnboardingStepId[]
   steps: Array<{ id: OnboardingStepId; label: string }>
 }>()
 
@@ -16,14 +17,17 @@ defineEmits<{
     class="border-line-subtle bg-surface-elevated shadow-card-soft rounded-card border p-2"
     aria-label="Onboarding steps"
   >
-    <ol class="grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
+    <ol class="grid gap-2 sm:grid-cols-4 xl:grid-cols-8">
       <li v-for="(step, index) in steps" :key="step.id">
         <button
           class="rounded-control flex min-h-12 w-full items-center gap-3 px-3 text-left text-sm transition"
+          :disabled="lockedStepIds?.includes(step.id)"
           :class="
             step.id === activeStep
               ? 'bg-accent-primary shadow-control text-white'
-              : 'text-ink-secondary hover:bg-accent-primary-soft hover:text-ink-primary'
+              : lockedStepIds?.includes(step.id)
+                ? 'text-ink-muted cursor-not-allowed opacity-55'
+                : 'text-ink-secondary hover:bg-accent-primary-soft hover:text-ink-primary'
           "
           type="button"
           @click="$emit('select', step.id)"

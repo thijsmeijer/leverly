@@ -3,11 +3,12 @@ import { computed, type Ref } from 'vue'
 import type { OnboardingStepId } from '../types'
 
 export const onboardingSteps: Array<{ id: OnboardingStepId; label: string; short: string }> = [
-  { id: 'goals', label: 'Goals', short: 'Targets' },
+  { id: 'context', label: 'Context', short: 'Stats' },
   { id: 'equipment', label: 'Equipment', short: 'Tools' },
-  { id: 'level', label: 'Level tests', short: 'Tests' },
   { id: 'mobility', label: 'Positions', short: 'Mobility' },
+  { id: 'level', label: 'Level tests', short: 'Tests' },
   { id: 'availability', label: 'Availability', short: 'Schedule' },
+  { id: 'roadmap', label: 'Roadmap', short: 'Targets' },
   { id: 'readiness', label: 'Readiness', short: 'Safety' },
   { id: 'starter', label: 'Starter plan', short: 'Plan' },
 ]

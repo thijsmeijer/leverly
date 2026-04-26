@@ -68,12 +68,22 @@ paths:
                     properties:
                       id: { type: string }
                       user_id: { type: string }
+                      age_years: { type: integer }
+                      training_age_months: { type: integer }
+                      experience_level: { type: string }
+                      current_bodyweight_value: { type: number }
+                      bodyweight_unit: { type: string }
+                      height_value: { type: integer }
+                      height_unit: { type: string }
+                      prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
                       primary_target_skill: { type: string }
                       secondary_target_skills: { type: array, items: { type: string } }
+                      long_term_target_skills: { type: array, items: { type: string } }
                       base_focus_areas: { type: array, items: { type: string } }
+                      roadmap_suggestions: { type: object, properties: { level: { type: string }, summary: { type: string } } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       preferred_training_days: { type: array, items: { type: string } }
@@ -120,12 +130,22 @@ paths:
                     properties:
                       id: { type: string }
                       user_id: { type: string }
+                      age_years: { type: integer }
+                      training_age_months: { type: integer }
+                      experience_level: { type: string }
+                      current_bodyweight_value: { type: number }
+                      bodyweight_unit: { type: string }
+                      height_value: { type: integer }
+                      height_unit: { type: string }
+                      prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
                       primary_target_skill: { type: string }
                       secondary_target_skills: { type: array, items: { type: string } }
+                      long_term_target_skills: { type: array, items: { type: string } }
                       base_focus_areas: { type: array, items: { type: string } }
+                      roadmap_suggestions: { type: object, properties: { level: { type: string }, summary: { type: string } } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       preferred_training_days: { type: array, items: { type: string } }
@@ -158,6 +178,62 @@ paths:
                 complete:
                   type: boolean
                   description: 'When true, validates and marks onboarding complete.'
+                age_years:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Athlete age in years. Must be at least 13. Must not be greater than 90.'
+                training_age_months:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Total training experience in months. Must be at least 0. Must not be greater than 1200.'
+                experience_level:
+                  type: string
+                  description: 'Self-assessed training experience band.'
+                  enum:
+                    - new
+                    - beginner
+                    - intermediate
+                    - advanced
+                    - elite
+                current_bodyweight_value:
+                  type:
+                    - number
+                    - 'null'
+                  description: 'Current bodyweight in the selected unit. Must be at least 20. Must not be greater than 400.'
+                bodyweight_unit:
+                  type: string
+                  description: 'Bodyweight unit.'
+                  enum:
+                    - kg
+                    - lb
+                height_value:
+                  type:
+                    - number
+                    - 'null'
+                  description: 'Current height in the selected unit. Must be at least 36. Must not be greater than 250.'
+                height_unit:
+                  type: string
+                  description: 'Height unit.'
+                  enum:
+                    - cm
+                    - in
+                prior_sport_background:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - none
+                      - strength_training
+                      - gymnastics
+                      - climbing
+                      - martial_arts
+                      - endurance_sport
+                      - team_sport
+                      - dance_or_mobility
+                      - other
                 primary_goal:
                   type:
                     - string
@@ -239,6 +315,33 @@ paths:
                     - one_arm_pull_up
                     - human_flag
                 secondary_target_skills:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strict_push_up
+                      - one_arm_push_up
+                      - strict_pull_up
+                      - weighted_pull_up
+                      - strict_dip
+                      - ring_dip
+                      - weighted_dip
+                      - muscle_up
+                      - weighted_muscle_up
+                      - l_sit
+                      - v_sit
+                      - handstand
+                      - handstand_push_up
+                      - press_to_handstand
+                      - front_lever
+                      - back_lever
+                      - planche
+                      - pistol_squat
+                      - nordic_curl
+                      - one_arm_pull_up
+                      - human_flag
+                long_term_target_skills:
                   type: array
                   description: ''
                   items:
@@ -502,16 +605,22 @@ paths:
                       display_name: { type: string, description: 'Profile display name.' }
                       timezone: { type: string }
                       unit_system: { type: string }
+                      age_years: { type: integer }
                       training_age_months: { type: integer }
                       experience_level: { type: string }
                       current_bodyweight_value: { type: number }
                       bodyweight_unit: { type: string }
+                      height_value: { type: integer }
+                      height_unit: { type: string }
+                      prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
                       primary_target_skill: { type: string }
                       secondary_target_skills: { type: array, items: { type: string } }
+                      long_term_target_skills: { type: array, items: { type: string } }
                       base_focus_areas: { type: array, items: { type: string } }
+                      roadmap_suggestions: { type: object, properties: { level: { type: string }, summary: { type: string } } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
@@ -559,16 +668,22 @@ paths:
                       display_name: { type: string }
                       timezone: { type: string }
                       unit_system: { type: string }
+                      age_years: { type: integer }
                       training_age_months: { type: integer }
                       experience_level: { type: string }
                       current_bodyweight_value: { type: number }
                       bodyweight_unit: { type: string }
+                      height_value: { type: integer }
+                      height_unit: { type: string }
+                      prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
                       target_skills: { type: array, items: { type: string } }
                       primary_target_skill: { type: string }
                       secondary_target_skills: { type: array, items: { type: string } }
+                      long_term_target_skills: { type: array, items: { type: string } }
                       base_focus_areas: { type: array, items: { type: string } }
+                      roadmap_suggestions: { type: object, properties: { level: { type: string }, summary: { type: string } } }
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
@@ -607,6 +722,11 @@ paths:
                   enum:
                     - metric
                     - imperial
+                age_years:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'Athlete age in years. Must be at least 13. Must not be greater than 90.'
                 training_age_months:
                   type:
                     - integer
@@ -632,6 +752,32 @@ paths:
                   enum:
                     - kg
                     - lb
+                height_value:
+                  type:
+                    - number
+                    - 'null'
+                  description: 'Current height in the selected unit. Must be at least 36. Must not be greater than 250.'
+                height_unit:
+                  type: string
+                  description: 'Height unit.'
+                  enum:
+                    - cm
+                    - in
+                prior_sport_background:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - none
+                      - strength_training
+                      - gymnastics
+                      - climbing
+                      - martial_arts
+                      - endurance_sport
+                      - team_sport
+                      - dance_or_mobility
+                      - other
                 primary_goal:
                   type:
                     - string
@@ -713,6 +859,33 @@ paths:
                     - one_arm_pull_up
                     - human_flag
                 secondary_target_skills:
+                  type: array
+                  description: ''
+                  items:
+                    type: string
+                    enum:
+                      - strict_push_up
+                      - one_arm_push_up
+                      - strict_pull_up
+                      - weighted_pull_up
+                      - strict_dip
+                      - ring_dip
+                      - weighted_dip
+                      - muscle_up
+                      - weighted_muscle_up
+                      - l_sit
+                      - v_sit
+                      - handstand
+                      - handstand_push_up
+                      - press_to_handstand
+                      - front_lever
+                      - back_lever
+                      - planche
+                      - pistol_squat
+                      - nordic_curl
+                      - one_arm_pull_up
+                      - human_flag
+                long_term_target_skills:
                   type: array
                   description: ''
                   items:

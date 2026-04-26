@@ -1,0 +1,612 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Training\Support;
+
+final class CalisthenicsRoadmapSuggester
+{
+    private const array TARGET_LABELS = [
+        'strict_push_up' => 'Strict push-up',
+        'one_arm_push_up' => 'One-arm push-up',
+        'strict_pull_up' => 'Strict pull-up',
+        'weighted_pull_up' => 'Weighted pull-up',
+        'strict_dip' => 'Strict dip',
+        'ring_dip' => 'Ring dip',
+        'weighted_dip' => 'Weighted dip',
+        'muscle_up' => 'Muscle-up',
+        'weighted_muscle_up' => 'Weighted muscle-up',
+        'l_sit' => 'L-sit',
+        'v_sit' => 'V-sit',
+        'handstand' => 'Handstand',
+        'handstand_push_up' => 'Handstand push-up',
+        'press_to_handstand' => 'Press to handstand',
+        'front_lever' => 'Front lever',
+        'back_lever' => 'Back lever',
+        'planche' => 'Planche',
+        'pistol_squat' => 'Pistol squat',
+        'nordic_curl' => 'Nordic curl',
+        'one_arm_pull_up' => 'One-arm pull-up',
+        'human_flag' => 'Human flag',
+    ];
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function suggest(array $data): array
+    {
+        $signals = self::signals($data);
+
+        $unlocked = [];
+        $bridge = [];
+        $longTerm = [];
+        $deferred = [];
+
+        self::placeTrack(
+            $signals['has_push_base'],
+            $unlocked,
+            $bridge,
+            self::track(
+                'strict_push_up',
+                $signals['has_push_base'] ? 'Your pressing baseline can support direct push-up volume.' : 'Build the first clean push-up before heavier pressing goals.',
+                ['push_capacity', 'core_bodyline'],
+                $signals['has_push_base'] ? 'Build repeatable sets of 8 to 12 strict reps.' : 'Own incline or knee push-ups with a rigid bodyline.',
+                ['handstand', 'strict_dip'],
+            ),
+        );
+
+        self::placeTrack(
+            $signals['has_pull_base'],
+            $unlocked,
+            $bridge,
+            self::track(
+                'strict_pull_up',
+                $signals['has_strict_pull_up'] ? 'Strict pull-ups are already in range for direct progression.' : 'Your rows, hangs, or assisted pulling can bridge toward the first strict pull-up.',
+                ['pull_capacity', 'row_volume', 'core_bodyline'],
+                $signals['has_strict_pull_up'] ? 'Build toward 3 clean sets of 6 to 8.' : 'Accumulate quality rows, hangs, scap pulls, and assisted reps.',
+                ['l_sit', 'front_lever'],
+            ),
+        );
+
+        self::placeTrack(
+            $signals['has_dip_base'],
+            $unlocked,
+            $bridge,
+            self::track(
+                'strict_dip',
+                $signals['has_strict_dip'] ? 'Dip reps or support strength are ready for focused dip progression.' : 'Support holds and assisted dips are the right bridge before strict dips.',
+                ['dip_support', 'push_capacity', 'straight_arm_tolerance'],
+                $signals['has_strict_dip'] ? 'Build controlled depth for 3 sets of 6 to 8.' : 'Own stable support and pain-free assisted dip depth.',
+                ['l_sit', 'ring_dip'],
+            ),
+        );
+
+        if ($signals['handstand_ready']) {
+            $unlocked[] = self::track(
+                'handstand',
+                'Your wall handstand, shoulder line, and wrist signal are ready for regular handstand practice.',
+                ['handstand_line', 'core_bodyline', 'mobility_positions'],
+                'Build a clean wall line and controlled balance entries.',
+                ['l_sit', 'strict_push_up'],
+            );
+        } else {
+            $bridge[] = self::track(
+                'handstand',
+                'Start with wrist, shoulder, hollow, and wall-line preparation before chasing freestanding balance.',
+                ['handstand_line', 'core_bodyline', 'mobility_positions'],
+                'Reach a comfortable wall handstand and pain-free wrist loading.',
+                ['strict_push_up', 'l_sit'],
+            );
+        }
+
+        if ($signals['l_sit_ready']) {
+            $unlocked[] = self::track(
+                'l_sit',
+                'Your support and midline tests can support compression work now.',
+                ['compression', 'core_bodyline', 'dip_support'],
+                'Build a repeatable tuck or full L-sit hold.',
+                ['handstand', 'strict_dip'],
+            );
+        } else {
+            $bridge[] = self::track(
+                'l_sit',
+                'Compression and support strength should come before harder seated hold targets.',
+                ['compression', 'core_bodyline', 'dip_support'],
+                'Own hollow holds, hanging knee raises, and stable support.',
+                ['strict_dip', 'handstand'],
+            );
+        }
+
+        if ($signals['pistol_ready']) {
+            $unlocked[] = self::track(
+                'pistol_squat',
+                'Your squat pattern and ankle signal can support single-leg progression.',
+                ['leg_strength', 'mobility_positions'],
+                'Build controlled assisted pistols before chasing full depth reps.',
+                ['nordic_curl'],
+            );
+        } else {
+            $bridge[] = self::track(
+                'pistol_squat',
+                'Leg strength or ankle position should be built before making pistols a main target.',
+                ['leg_strength', 'mobility_positions'],
+                'Reach stable split squats and pain-free squat depth.',
+                ['nordic_curl'],
+            );
+        }
+
+        self::addAdvancedTracks($signals, $unlocked, $bridge, $longTerm, $deferred);
+        self::addRequestedAspirations($data, $unlocked, $bridge, $longTerm, $deferred);
+
+        $baseFocusAreas = self::uniqueStrings(array_slice(array_merge(
+            ...array_map(
+                fn (array $track): array => is_array($track['base_focus_areas'] ?? null) ? $track['base_focus_areas'] : [],
+                [...$unlocked, ...$bridge],
+            ),
+        ), 0, 4));
+
+        return [
+            'level' => self::level($signals),
+            'summary' => self::summary($signals),
+            'body_context' => self::bodyContext($data),
+            'base_focus_areas' => $baseFocusAreas,
+            'unlocked_tracks' => self::dedupeTracks($unlocked),
+            'bridge_tracks' => self::dedupeTracks($bridge),
+            'long_term_tracks' => self::dedupeTracks($longTerm),
+            'deferred_tracks' => self::dedupeTracks($deferred),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function activeSkillSlugs(array $suggestions): array
+    {
+        return self::trackSlugs([
+            ...(is_array($suggestions['unlocked_tracks'] ?? null) ? $suggestions['unlocked_tracks'] : []),
+            ...(is_array($suggestions['bridge_tracks'] ?? null) ? $suggestions['bridge_tracks'] : []),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function empty(): array
+    {
+        return [
+            'level' => 'foundation',
+            'summary' => 'Complete the baseline tests to unlock a useful roadmap.',
+            'body_context' => ['notes' => []],
+            'base_focus_areas' => [],
+            'unlocked_tracks' => [],
+            'bridge_tracks' => [],
+            'long_term_tracks' => [],
+            'deferred_tracks' => [],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $signals
+     * @param  list<array<string, mixed>>  $unlocked
+     * @param  list<array<string, mixed>>  $bridge
+     * @param  list<array<string, mixed>>  $longTerm
+     * @param  list<array<string, mixed>>  $deferred
+     */
+    private static function addAdvancedTracks(array $signals, array &$unlocked, array &$bridge, array &$longTerm, array &$deferred): void
+    {
+        if ($signals['front_lever_bridge']) {
+            $bridge[] = self::track(
+                'front_lever',
+                'Your pulling and hollow base can start lever-specific rows and tuck work.',
+                ['pull_capacity', 'row_volume', 'core_bodyline', 'straight_arm_tolerance'],
+                'Own tuck lever rows and 10 to 15 second tuck holds.',
+                ['strict_pull_up', 'l_sit'],
+            );
+        } else {
+            $longTerm[] = self::track(
+                'front_lever',
+                'Front lever should wait behind pull volume, rows, and hollow body strength.',
+                ['pull_capacity', 'row_volume', 'core_bodyline'],
+                'Reach strict pull-up capacity and strong horizontal rows first.',
+                ['strict_pull_up'],
+            );
+        }
+
+        if ($signals['muscle_up_bridge']) {
+            $bridge[] = self::track(
+                'muscle_up',
+                'Pulling and dip numbers are close enough for transition prep while strength continues building.',
+                ['pull_capacity', 'dip_support', 'weighted_strength'],
+                'Build chest-to-bar pulls and deep dips before full attempts.',
+                ['strict_pull_up', 'strict_dip'],
+            );
+        } else {
+            $longTerm[] = self::track(
+                'muscle_up',
+                'Muscle-up work needs stronger pulling height and dip depth before it becomes a main target.',
+                ['pull_capacity', 'dip_support', 'row_volume'],
+                'Reach chest-to-bar pulling and controlled deep dips.',
+                ['strict_pull_up', 'strict_dip'],
+            );
+        }
+
+        if ($signals['ring_dip_bridge']) {
+            $bridge[] = self::track(
+                'ring_dip',
+                'Support strength is close enough to introduce ring stability carefully.',
+                ['dip_support', 'straight_arm_tolerance', 'push_capacity'],
+                'Own stable ring support before strict ring dip volume.',
+                ['strict_dip', 'l_sit'],
+            );
+        } else {
+            $longTerm[] = self::track(
+                'ring_dip',
+                'Ring dips should wait until bar dips and support holds are stable.',
+                ['dip_support', 'straight_arm_tolerance'],
+                'Build strict bar dips and ring support first.',
+                ['strict_dip'],
+            );
+        }
+
+        if ($signals['planche_bridge']) {
+            $bridge[] = self::track(
+                'planche',
+                'Your pressing base can support early planche leans and straight-arm prep.',
+                ['push_capacity', 'straight_arm_tolerance', 'core_bodyline'],
+                'Keep this as bridge work until wrists and scapular protraction tolerate volume.',
+                ['strict_push_up', 'handstand'],
+            );
+        } else {
+            $deferred[] = self::track(
+                'planche',
+                'Planche is a long-term strength skill; build push-up, wrist, hollow, and support foundations first.',
+                ['push_capacity', 'straight_arm_tolerance', 'core_bodyline'],
+                'Reach reliable push-up volume and pain-free straight-arm loading.',
+                ['strict_push_up', 'handstand'],
+            );
+        }
+
+        if ($signals['weighted_pull_ready']) {
+            $unlocked[] = self::track(
+                'weighted_pull_up',
+                'Strict pull-up volume is high enough to start measured added-load work.',
+                ['pull_capacity', 'weighted_strength'],
+                'Build repeatable sets before testing heavier loads.',
+                ['strict_pull_up'],
+            );
+        } else {
+            $longTerm[] = self::track(
+                'weighted_pull_up',
+                'Weighted pulling should come after consistent strict pull-up sets.',
+                ['pull_capacity', 'weighted_strength'],
+                'Reach roughly 3 sets of 8 strict pull-ups.',
+                ['strict_pull_up'],
+            );
+        }
+
+        if ($signals['one_arm_pull_ready']) {
+            $bridge[] = self::track(
+                'one_arm_pull_up',
+                'Your weighted pulling signal can support controlled unilateral pulling prep.',
+                ['weighted_strength', 'pull_capacity', 'straight_arm_tolerance'],
+                'Use assisted one-arm work while preserving strict bilateral strength.',
+                ['weighted_pull_up', 'front_lever'],
+            );
+        } else {
+            $deferred[] = self::track(
+                'one_arm_pull_up',
+                'One-arm pull-up work should wait behind a much stronger weighted pull-up base.',
+                ['weighted_strength', 'pull_capacity'],
+                'Build toward heavy weighted pull-ups and resilient elbow tolerance first.',
+                ['strict_pull_up', 'weighted_pull_up'],
+            );
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  list<array<string, mixed>>  $unlocked
+     * @param  list<array<string, mixed>>  $bridge
+     * @param  list<array<string, mixed>>  $longTerm
+     * @param  list<array<string, mixed>>  $deferred
+     */
+    private static function addRequestedAspirations(array $data, array $unlocked, array $bridge, array &$longTerm, array &$deferred): void
+    {
+        $activeSlugs = self::trackSlugs([...$unlocked, ...$bridge]);
+        $knownSlugs = self::trackSlugs([...$unlocked, ...$bridge, ...$longTerm, ...$deferred]);
+        $requested = is_array($data['long_term_target_skills'] ?? null) ? $data['long_term_target_skills'] : [];
+
+        foreach ($requested as $skill) {
+            if (! is_string($skill) || in_array($skill, $activeSlugs, true) || in_array($skill, $knownSlugs, true)) {
+                continue;
+            }
+
+            if (! isset(self::TARGET_LABELS[$skill])) {
+                continue;
+            }
+
+            $longTerm[] = self::track(
+                $skill,
+                'Keep this visible as a later roadmap while the current plan builds the required base.',
+                ['core_bodyline', 'pull_capacity', 'push_capacity'],
+                'Let baseline tests unlock the right bridge when readiness improves.',
+                [],
+            );
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function signals(array $data): array
+    {
+        $tests = is_array($data['current_level_tests'] ?? null) ? $data['current_level_tests'] : [];
+        $pushUps = is_array($tests['push_ups'] ?? null) ? $tests['push_ups'] : [];
+        $rows = is_array($tests['rows'] ?? null) ? $tests['rows'] : [];
+        $pullUps = is_array($tests['pull_ups'] ?? null) ? $tests['pull_ups'] : [];
+        $dips = is_array($tests['dips'] ?? null) ? $tests['dips'] : [];
+        $squat = is_array($tests['squat'] ?? null) ? $tests['squat'] : [];
+        $mobility = is_array($data['mobility_checks'] ?? null) ? $data['mobility_checks'] : [];
+
+        $pushReps = self::intValue($pushUps['max_strict_reps'] ?? null);
+        $rowReps = self::intValue($rows['max_strict_reps'] ?? null);
+        $pullReps = self::intValue($pullUps['max_strict_reps'] ?? null);
+        $dipReps = self::intValue($dips['max_strict_reps'] ?? null);
+        $supportHold = max(
+            self::intValue($dips['support_hold_seconds'] ?? null),
+            self::intValue($tests['support_hold_seconds'] ?? null),
+        );
+        $squatReps = self::intValue($squat['max_reps'] ?? null);
+        $hollowHold = self::intValue($tests['hollow_hold_seconds'] ?? null);
+        $wallHandstand = self::intValue($tests['wall_handstand_seconds'] ?? null);
+        $lSitHold = self::intValue($tests['l_sit_hold_seconds'] ?? null);
+        $deadHang = self::intValue($tests['dead_hang_seconds'] ?? null);
+
+        $hasPushBase = $pushReps >= 1 || self::progressionAtLeast($pushUps['progression'] ?? null, CalisthenicsPlacementOptions::PUSH_UP_PROGRESSIONS, 'strict_push_up');
+        $hasRowBase = $rowReps >= 8 || self::progressionAtLeast($rows['progression'] ?? null, CalisthenicsPlacementOptions::ROW_PROGRESSIONS, 'inverted_row');
+        $hasStrictPullUp = $pullReps >= 1 || self::progressionAtLeast($pullUps['progression'] ?? null, CalisthenicsPlacementOptions::PULL_UP_PROGRESSIONS, 'strict_pull_up');
+        $hasPullBase = $hasStrictPullUp || $hasRowBase || $deadHang >= 20 || self::progressionAtLeast($pullUps['progression'] ?? null, CalisthenicsPlacementOptions::PULL_UP_PROGRESSIONS, 'scapular_pull');
+        $hasStrictDip = $dipReps >= 1 || self::progressionAtLeast($dips['progression'] ?? null, CalisthenicsPlacementOptions::DIP_PROGRESSIONS, 'bar_dip');
+        $hasDipBase = $hasStrictDip || $supportHold >= 15 || self::progressionAtLeast($dips['progression'] ?? null, CalisthenicsPlacementOptions::DIP_PROGRESSIONS, 'support_hold');
+        $wristBlocked = in_array($mobility['wrist_extension'] ?? 'not_tested', ['blocked', 'painful'], true);
+        $shoulderBlocked = in_array($mobility['shoulder_flexion'] ?? 'not_tested', ['blocked', 'painful'], true);
+        $ankleBlocked = in_array($mobility['ankle_dorsiflexion'] ?? 'not_tested', ['blocked', 'painful'], true);
+        $weightedPullRatio = self::weightedPullRatio($data);
+
+        return [
+            'push_reps' => $pushReps,
+            'pull_reps' => $pullReps,
+            'dip_reps' => $dipReps,
+            'hollow_hold' => $hollowHold,
+            'has_push_base' => $hasPushBase,
+            'has_row_base' => $hasRowBase,
+            'has_pull_base' => $hasPullBase,
+            'has_strict_pull_up' => $hasStrictPullUp,
+            'has_dip_base' => $hasDipBase,
+            'has_strict_dip' => $hasStrictDip,
+            'handstand_ready' => $hasPushBase && $hollowHold >= 20 && $wallHandstand >= 10 && ! $wristBlocked && ! $shoulderBlocked,
+            'l_sit_ready' => ($supportHold >= 10 || $hasDipBase) && ($hollowHold >= 20 || $lSitHold >= 5),
+            'pistol_ready' => ($squatReps >= 10 || self::progressionAtLeast($squat['progression'] ?? null, CalisthenicsPlacementOptions::SQUAT_PROGRESSIONS, 'split_squat')) && ! $ankleBlocked,
+            'front_lever_bridge' => $hasPullBase && $pullReps >= 3 && $hollowHold >= 20,
+            'muscle_up_bridge' => $pullReps >= 3 && $dipReps >= 3,
+            'ring_dip_bridge' => $hasStrictDip && $supportHold >= 20,
+            'planche_bridge' => $pushReps >= 15 && $hollowHold >= 25 && ! $wristBlocked,
+            'weighted_pull_ready' => $pullReps >= 8,
+            'one_arm_pull_ready' => $weightedPullRatio >= 0.45,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $signals
+     */
+    private static function level(array $signals): string
+    {
+        if (($signals['pull_reps'] ?? 0) >= 8 && ($signals['dip_reps'] ?? 0) >= 8 && ($signals['push_reps'] ?? 0) >= 25) {
+            return 'advanced';
+        }
+
+        if (($signals['push_reps'] ?? 0) >= 10 && ($signals['pull_reps'] ?? 0) >= 1 && ($signals['hollow_hold'] ?? 0) >= 20) {
+            return 'intermediate';
+        }
+
+        if (($signals['has_push_base'] ?? false) && ($signals['has_pull_base'] ?? false)) {
+            return 'beginner';
+        }
+
+        return 'foundation';
+    }
+
+    /**
+     * @param  array<string, mixed>  $signals
+     */
+    private static function summary(array $signals): string
+    {
+        return match (self::level($signals)) {
+            'advanced' => 'You can handle focused skill blocks, but advanced targets still need one main priority.',
+            'intermediate' => 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
+            'beginner' => 'The best path is a tight bridge from current progressions into clean foundational skills.',
+            default => 'Build the first reliable push, pull, squat, and bodyline signals before advanced skills become main targets.',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{notes: list<string>}
+     */
+    private static function bodyContext(array $data): array
+    {
+        $notes = [];
+        $age = self::intValue($data['age_years'] ?? null);
+        $trainingAge = self::intValue($data['training_age_months'] ?? null);
+        $bodyweight = self::numberValue($data['current_bodyweight_value'] ?? null);
+        $height = self::numberValue($data['height_value'] ?? null);
+        $heightUnit = $data['height_unit'] ?? 'cm';
+        $bodyweightUnit = $data['bodyweight_unit'] ?? 'kg';
+
+        if ($age >= 40) {
+            $notes[] = 'Use a slightly longer ramp-up and keep recovery checks in the first blocks.';
+        }
+
+        if ($trainingAge > 0 && $trainingAge < 6) {
+            $notes[] = 'Treat the first block as foundation building even if the long-term skills are advanced.';
+        }
+
+        $bmi = self::bmi($bodyweight, is_string($bodyweightUnit) ? $bodyweightUnit : 'kg', $height, is_string($heightUnit) ? $heightUnit : 'cm');
+        if ($bmi !== null && $bmi >= 30.0) {
+            $notes[] = 'Prioritize joint-friendly volume, pulling base, and gradual leverage before high-load unilateral targets.';
+        }
+
+        return ['notes' => $notes];
+    }
+
+    private static function weightedPullRatio(array $data): float
+    {
+        $bodyweight = self::numberValue($data['current_bodyweight_value'] ?? null);
+        if ($bodyweight <= 0.0) {
+            return 0.0;
+        }
+
+        $bodyweightUnit = $data['bodyweight_unit'] ?? 'kg';
+        $weightedBaselines = is_array($data['weighted_baselines'] ?? null) ? $data['weighted_baselines'] : [];
+        $unit = $weightedBaselines['unit'] ?? $bodyweightUnit;
+        $movements = is_array($weightedBaselines['movements'] ?? null) ? $weightedBaselines['movements'] : [];
+
+        foreach ($movements as $movement) {
+            if (! is_array($movement) || ($movement['movement'] ?? null) !== 'weighted_pull_up') {
+                continue;
+            }
+
+            $load = self::numberValue($movement['external_load_value'] ?? null);
+
+            if ($load <= 0.0) {
+                continue;
+            }
+
+            if ($unit !== $bodyweightUnit) {
+                $load = $unit === 'lb' ? $load * 0.45359237 : $load / 0.45359237;
+            }
+
+            return $load / $bodyweight;
+        }
+
+        return 0.0;
+    }
+
+    private static function bmi(float $bodyweight, string $bodyweightUnit, float $height, string $heightUnit): ?float
+    {
+        if ($bodyweight <= 0.0 || $height <= 0.0) {
+            return null;
+        }
+
+        $kg = $bodyweightUnit === 'lb' ? $bodyweight * 0.45359237 : $bodyweight;
+        $meters = $heightUnit === 'in' ? $height * 0.0254 : $height / 100;
+
+        if ($meters <= 0.0) {
+            return null;
+        }
+
+        return $kg / ($meters * $meters);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $unlocked
+     * @param  list<array<string, mixed>>  $bridge
+     * @param  array<string, mixed>  $track
+     */
+    private static function placeTrack(bool $unlockedCondition, array &$unlocked, array &$bridge, array $track): void
+    {
+        if ($unlockedCondition) {
+            $unlocked[] = $track;
+
+            return;
+        }
+
+        $bridge[] = $track;
+    }
+
+    /**
+     * @param  list<string>  $baseFocusAreas
+     * @param  list<string>  $compatibleSecondarySkills
+     * @return array<string, mixed>
+     */
+    private static function track(string $skill, string $reason, array $baseFocusAreas, string $nextGate, array $compatibleSecondarySkills): array
+    {
+        return [
+            'skill' => $skill,
+            'label' => self::TARGET_LABELS[$skill] ?? $skill,
+            'reason' => $reason,
+            'base_focus_areas' => $baseFocusAreas,
+            'next_gate' => $nextGate,
+            'compatible_secondary_skills' => $compatibleSecondarySkills,
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $tracks
+     * @return list<array<string, mixed>>
+     */
+    private static function dedupeTracks(array $tracks): array
+    {
+        $deduped = [];
+
+        foreach ($tracks as $track) {
+            $skill = $track['skill'] ?? null;
+
+            if (! is_string($skill) || isset($deduped[$skill])) {
+                continue;
+            }
+
+            $deduped[$skill] = $track;
+        }
+
+        return array_values($deduped);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $tracks
+     * @return list<string>
+     */
+    private static function trackSlugs(array $tracks): array
+    {
+        return self::uniqueStrings(array_filter(
+            array_map(fn (array $track): mixed => $track['skill'] ?? null, $tracks),
+            is_string(...),
+        ));
+    }
+
+    /**
+     * @param  list<mixed>  $values
+     * @return list<string>
+     */
+    private static function uniqueStrings(array $values): array
+    {
+        return array_values(array_unique(array_filter($values, is_string(...))));
+    }
+
+    /**
+     * @param  list<string>  $ordered
+     */
+    private static function progressionAtLeast(mixed $value, array $ordered, string $minimum): bool
+    {
+        if (! is_string($value)) {
+            return false;
+        }
+
+        $valueIndex = array_search($value, $ordered, true);
+        $minimumIndex = array_search($minimum, $ordered, true);
+
+        return is_int($valueIndex) && is_int($minimumIndex) && $valueIndex >= $minimumIndex;
+    }
+
+    private static function intValue(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    private static function numberValue(mixed $value): float
+    {
+        return is_numeric($value) ? (float) $value : 0.0;
+    }
+}

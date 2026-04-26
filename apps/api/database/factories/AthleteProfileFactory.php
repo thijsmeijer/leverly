@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,16 +27,22 @@ class AthleteProfileFactory extends Factory
             'display_name' => fake()->name(),
             'timezone' => fake()->timezone(),
             'unit_system' => 'metric',
+            'age_years' => fake()->numberBetween(18, 45),
             'training_age_months' => fake()->numberBetween(0, 84),
             'experience_level' => fake()->randomElement(AthleteProfileOptions::EXPERIENCE_LEVELS),
             'current_bodyweight_value' => fake()->randomFloat(2, 45, 115),
             'bodyweight_unit' => 'kg',
+            'height_value' => fake()->randomFloat(2, 155, 195),
+            'height_unit' => 'cm',
+            'prior_sport_background' => ['strength_training'],
             'primary_goal' => fake()->randomElement(AthleteProfileOptions::GOALS),
             'secondary_goals' => ['strength', 'skill'],
             'target_skills' => ['handstand', 'strict_pull_up'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
+            'long_term_target_skills' => ['front_lever'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
+            'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home'],
             'movement_limitations' => [],

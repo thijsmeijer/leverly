@@ -1,6 +1,8 @@
 import {
   compatibleSecondaryGoals,
+  bodyweightUnitOptions,
   equipmentCategories,
+  experienceLevelOptions,
   goalOptions,
   limitationAreaOptions,
   trainingDayOptions,
@@ -10,7 +12,44 @@ import {
 
 import type { ChoiceOption } from '../types'
 
-export { compatibleSecondaryGoals, equipmentCategories, goalOptions, trainingDayOptions, trainingLocationOptions }
+export {
+  bodyweightUnitOptions,
+  compatibleSecondaryGoals,
+  equipmentCategories,
+  experienceLevelOptions,
+  goalOptions,
+  trainingDayOptions,
+  trainingLocationOptions,
+}
+
+export const heightUnitOptions: ChoiceOption[] = [
+  { label: 'cm', value: 'cm' },
+  { label: 'in', value: 'in' },
+]
+
+export const priorSportOptions: ChoiceOption[] = [
+  { label: 'None yet', value: 'none', description: 'Starting fresh is useful signal too.' },
+  {
+    label: 'Strength training',
+    value: 'strength_training',
+    description: 'Weights, machines, or structured strength work.',
+  },
+  { label: 'Gymnastics', value: 'gymnastics', description: 'Skill, shape, tumbling, or apparatus background.' },
+  { label: 'Climbing', value: 'climbing', description: 'Grip, pulling, and body-tension background.' },
+  { label: 'Martial arts', value: 'martial_arts', description: 'Body control, mobility, and conditioning.' },
+  {
+    label: 'Endurance sport',
+    value: 'endurance_sport',
+    description: 'Running, cycling, rowing, or similar aerobic base.',
+  },
+  { label: 'Team sport', value: 'team_sport', description: 'Field or court sport background.' },
+  {
+    label: 'Dance or mobility',
+    value: 'dance_or_mobility',
+    description: 'Flexibility, line, or body awareness background.',
+  },
+  { label: 'Other', value: 'other', description: 'Anything else that may affect starting point.' },
+]
 
 export const targetSkillOptions: ChoiceOption[] = [
   {

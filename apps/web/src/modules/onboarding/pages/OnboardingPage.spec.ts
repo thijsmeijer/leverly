@@ -21,12 +21,13 @@ describe('OnboardingPage', () => {
     })
     await flushPromises()
 
-    expect(wrapper.find('h1').text()).toContain('Build the signal')
+    expect(wrapper.find('h1').text()).toContain('Find the strongest path')
     expect(wrapper.text()).toContain('Strict pull-up')
     expect(wrapper.text()).toContain('Handstand')
-    expect(wrapper.text()).toContain('Goals')
+    expect(wrapper.text()).toContain('Context')
     expect(wrapper.text()).toContain('Equipment')
     expect(wrapper.text()).toContain('Positions')
+    expect(wrapper.text()).toContain('Roadmap')
     expect(wrapper.text()).toContain('Starter plan')
   })
 
@@ -103,9 +104,12 @@ describe('OnboardingPage', () => {
 function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     data: {
+      age_years: 29,
       available_equipment: ['pull_up_bar', 'rings'],
       base_focus_areas: ['pull_capacity', 'core_bodyline'],
+      bodyweight_unit: 'kg',
       completed_at: null,
+      current_bodyweight_value: 72.5,
       current_level_tests: {
         arch_hold_seconds: 25,
         dead_hang_seconds: 30,
@@ -138,8 +142,12 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         support_hold_seconds: 25,
         wall_handstand_seconds: 20,
       },
+      experience_level: 'intermediate',
+      height_unit: 'cm',
+      height_value: 178,
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       is_complete: false,
+      long_term_target_skills: ['planche'],
       missing_sections: [],
       mobility_checks: {
         ankle_dorsiflexion: 'limited',
@@ -154,9 +162,11 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday', 'friday'],
       preferred_training_time: 'evening',
+      prior_sport_background: ['strength_training'],
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       readiness_rating: 4,
+      roadmap_suggestions: roadmapSuggestions(),
       secondary_goals: ['strength'],
       secondary_target_skills: ['strict_pull_up'],
       skill_statuses: {
@@ -169,6 +179,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       soreness_level: 2,
       starter_plan_key: 'skill_strength_split',
       target_skills: ['strict_pull_up', 'handstand'],
+      training_age_months: 18,
       training_locations: ['home'],
       user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',
       weighted_baselines: {
@@ -179,5 +190,47 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       weekly_session_goal: 3,
       ...overrides,
     },
+  }
+}
+
+function roadmapSuggestions() {
+  return {
+    base_focus_areas: ['pull_capacity', 'core_bodyline'],
+    body_context: {
+      notes: [],
+    },
+    bridge_tracks: [
+      {
+        base_focus_areas: ['pull_capacity', 'row_volume'],
+        compatible_secondary_skills: ['l_sit'],
+        label: 'Strict pull-up',
+        next_gate: 'Build toward 3 clean sets of 6 to 8.',
+        reason: 'Strict pull-ups are already in range for direct progression.',
+        skill: 'strict_pull_up',
+      },
+    ],
+    deferred_tracks: [],
+    level: 'intermediate',
+    long_term_tracks: [
+      {
+        base_focus_areas: ['push_capacity', 'straight_arm_tolerance'],
+        compatible_secondary_skills: ['strict_push_up'],
+        label: 'Planche',
+        next_gate: 'Reach reliable push-up volume and pain-free straight-arm loading.',
+        reason: 'Planche is a long-term strength skill.',
+        skill: 'planche',
+      },
+    ],
+    summary: 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
+    unlocked_tracks: [
+      {
+        base_focus_areas: ['handstand_line', 'core_bodyline'],
+        compatible_secondary_skills: ['l_sit'],
+        label: 'Handstand',
+        next_gate: 'Build a clean wall line and controlled balance entries.',
+        reason: 'Your wall handstand is ready for regular handstand practice.',
+        skill: 'handstand',
+      },
+    ],
   }
 }

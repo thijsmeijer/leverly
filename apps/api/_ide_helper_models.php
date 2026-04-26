@@ -15,9 +15,22 @@ namespace App\Models{
 /**
  * @property string $id
  * @property string $user_id
+ * @property int|null $age_years
+ * @property int|null $training_age_months
+ * @property string $experience_level
+ * @property float|null $current_bodyweight_value
+ * @property string $bodyweight_unit
+ * @property float|null $height_value
+ * @property string $height_unit
+ * @property array<array-key, mixed> $prior_sport_background
  * @property string|null $primary_goal
  * @property array<array-key, mixed> $secondary_goals
  * @property array<array-key, mixed> $target_skills
+ * @property string|null $primary_target_skill
+ * @property array<array-key, mixed> $secondary_target_skills
+ * @property array<array-key, mixed> $long_term_target_skills
+ * @property array<array-key, mixed> $base_focus_areas
+ * @property array<array-key, mixed> $roadmap_suggestions
  * @property array<array-key, mixed> $available_equipment
  * @property array<array-key, mixed> $training_locations
  * @property array<array-key, mixed> $preferred_training_days
@@ -26,6 +39,8 @@ namespace App\Models{
  * @property string $preferred_training_time
  * @property array<array-key, mixed> $current_level_tests
  * @property array<array-key, mixed> $skill_statuses
+ * @property array<array-key, mixed> $mobility_checks
+ * @property array<array-key, mixed> $weighted_baselines
  * @property int|null $readiness_rating
  * @property int|null $sleep_quality
  * @property int|null $soreness_level
@@ -42,11 +57,20 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding ownedBy(\App\Models\User|string|int $user)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereAgeYears($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereAvailableEquipment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereBaseFocusAreas($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereBodyweightUnit($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCompletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCurrentBodyweightValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereCurrentLevelTests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereExperienceLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereHeightUnit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereHeightValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereLongTermTargetSkills($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereMobilityChecks($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainAreas($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainLevel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePainNotes($value)
@@ -54,17 +78,23 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredTrainingDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePreferredTrainingTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePrimaryGoal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePrimaryTargetSkill($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding wherePriorSportBackground($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereReadinessRating($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereRoadmapSuggestions($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSecondaryGoals($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSecondaryTargetSkills($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSkillStatuses($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSleepQuality($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereSorenessLevel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereStarterPlanKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereTargetSkills($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereTrainingAgeMonths($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereTrainingLocations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereWeeklySessionGoal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteOnboarding whereWeightedBaselines($value)
  * @mixin \Eloquent
  */
 	#[\AllowDynamicProperties]
@@ -78,16 +108,29 @@ namespace App\Models{
  * @property string $display_name
  * @property string $timezone
  * @property string $unit_system
+ * @property int|null $age_years
  * @property int|null $training_age_months
  * @property string $experience_level
  * @property float|null $current_bodyweight_value
  * @property string $bodyweight_unit
+ * @property float|null $height_value
+ * @property string $height_unit
+ * @property array<array-key, mixed> $prior_sport_background
  * @property string|null $primary_goal
  * @property array<array-key, mixed> $secondary_goals
  * @property array<array-key, mixed> $target_skills
+ * @property string|null $primary_target_skill
+ * @property array<array-key, mixed> $secondary_target_skills
+ * @property array<array-key, mixed> $long_term_target_skills
+ * @property array<array-key, mixed> $base_focus_areas
+ * @property array<array-key, mixed> $roadmap_suggestions
  * @property array<array-key, mixed> $available_equipment
  * @property array<array-key, mixed> $training_locations
  * @property array<array-key, mixed> $movement_limitations
+ * @property array<array-key, mixed> $baseline_tests
+ * @property array<array-key, mixed> $skill_statuses
+ * @property array<array-key, mixed> $mobility_checks
+ * @property array<array-key, mixed> $weighted_baselines
  * @property string|null $injury_notes
  * @property array<array-key, mixed> $preferred_training_days
  * @property int|null $preferred_session_minutes
@@ -106,7 +149,10 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile ownedBy(\App\Models\User|string|int $user)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereAgeYears($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereAvailableEquipment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereBaseFocusAreas($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereBaselineTests($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereBodyweightUnit($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereCurrentBodyweightValue($value)
@@ -114,17 +160,26 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereDisplayName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereEffortTrackingPreference($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereExperienceLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereHeightUnit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereHeightValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereInjuryNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereIntensityPreference($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereLongTermTargetSkills($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereMobilityChecks($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereMovementLimitations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePreferredSessionMinutes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePreferredTrainingDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePreferredTrainingTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePrimaryGoal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePrimaryTargetSkill($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile wherePriorSportBackground($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereProgressionPace($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereRoadmapSuggestions($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereSecondaryGoals($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereSecondaryTargetSkills($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereSessionStructurePreferences($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereSkillStatuses($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereTargetSkills($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereTimezone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereTrainingAgeMonths($value)
@@ -133,6 +188,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereWeeklySessionGoal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AthleteProfile whereWeightedBaselines($value)
  * @mixin \Eloquent
  */
 	#[\AllowDynamicProperties]

@@ -19,6 +19,7 @@ import {
   effortTrackingOptions,
   experienceLevelOptions,
   goalOptions,
+  heightUnitOptions,
   intensityPreferenceOptions,
   limitationAreaOptions,
   limitationSeverityOptions,
@@ -26,6 +27,7 @@ import {
   mobilityCheckOptions,
   mobilityStatusOptions,
   progressionPaceOptions,
+  priorSportOptions,
   pullUpProgressionOptions,
   pushUpProgressionOptions,
   rowProgressionOptions,
@@ -309,6 +311,14 @@ function removeWeightedMovement(index: number): void {
             name="bodyweight-unit"
             :options="bodyweightUnitOptions"
           />
+          <ProfileChoiceGrid
+            v-model="form.heightUnit"
+            columns="compact"
+            :error="fieldErrors.heightUnit"
+            label="Height unit"
+            name="height-unit"
+            :options="heightUnitOptions"
+          />
         </div>
       </ProfileFormSection>
 
@@ -321,7 +331,16 @@ function removeWeightedMovement(index: number): void {
         title="Experience, goals, and tools"
         description="Set the main outcome, support goals, and equipment context that shape your recommendations."
       >
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <ProfileTextField
+            id="profile-age"
+            v-model="form.ageYears"
+            :error="fieldErrors.ageYears"
+            input-mode="numeric"
+            label="Age"
+            placeholder="29"
+            type="number"
+          />
           <ProfileTextField
             id="training-age-months"
             v-model="form.trainingAgeMonths"
@@ -340,6 +359,15 @@ function removeWeightedMovement(index: number): void {
             placeholder="72.5"
             type="number"
           />
+          <ProfileTextField
+            id="profile-height"
+            v-model="form.heightValue"
+            :error="fieldErrors.heightValue"
+            input-mode="decimal"
+            label="Height"
+            placeholder="178"
+            type="number"
+          />
           <ProfileSelectField
             id="experience-level"
             v-model="form.experienceLevel"
@@ -350,6 +378,16 @@ function removeWeightedMovement(index: number): void {
         </div>
 
         <div class="mt-5 space-y-5">
+          <ProfileChoiceGrid
+            v-model="form.priorSportBackground"
+            :error="fieldErrors.priorSportBackground"
+            help="Choose up to four. Pick 'None yet' if you are starting without a useful carryover."
+            label="Relevant background"
+            :max-selections="4"
+            multiple
+            name="profile-prior-sport"
+            :options="priorSportOptions"
+          />
           <ProfileChoiceGrid
             v-model="form.primaryGoal"
             :error="fieldErrors.primaryGoal"
@@ -379,9 +417,9 @@ function removeWeightedMovement(index: number): void {
               <ProfileChoiceGrid
                 v-model="targetSkillValues"
                 :error="fieldErrors.targetSkillsText"
-                help="Choose one to eight skill or strength outcomes."
-                label="Skill and strength targets"
-                :max-selections="8"
+                help="Choose up to three active skill or strength outcomes for the current block."
+                label="Active skill targets"
+                :max-selections="3"
                 multiple
                 name="profile-target-skills"
                 :options="targetSkillOptions"
@@ -435,6 +473,16 @@ function removeWeightedMovement(index: number): void {
                   </RouterLink>
                 </div>
               </div>
+              <ProfileChoiceGrid
+                v-model="form.longTermTargetSkills"
+                :error="fieldErrors.longTermTargetSkills"
+                help="Keep later aspirations visible without making them drive the current block."
+                label="Long-term aspirations"
+                :max-selections="8"
+                multiple
+                name="profile-long-term-targets"
+                :options="targetSkillOptions.filter((option) => !targetSkillValues.includes(option.value))"
+              />
               <ProfileChoiceGrid
                 v-model="form.baseFocusAreas"
                 :error="fieldErrors.baseFocusAreas"

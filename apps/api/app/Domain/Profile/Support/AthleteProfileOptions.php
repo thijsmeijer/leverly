@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Profile\Support;
 
 use App\Domain\Training\Support\CalisthenicsPlacementOptions;
+use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
+use App\Models\AthleteProfile;
 use App\Models\User;
 
 final class AthleteProfileOptions
@@ -12,6 +14,20 @@ final class AthleteProfileOptions
     public const array UNIT_SYSTEMS = ['metric', 'imperial'];
 
     public const array BODYWEIGHT_UNITS = ['kg', 'lb'];
+
+    public const array HEIGHT_UNITS = ['cm', 'in'];
+
+    public const array PRIOR_SPORT_BACKGROUNDS = [
+        'none',
+        'strength_training',
+        'gymnastics',
+        'climbing',
+        'martial_arts',
+        'endurance_sport',
+        'team_sport',
+        'dance_or_mobility',
+        'other',
+    ];
 
     public const array EXPERIENCE_LEVELS = ['new', 'beginner', 'intermediate', 'advanced', 'elite'];
 
@@ -126,13 +142,18 @@ final class AthleteProfileOptions
             'display_name' => $user->name,
             'timezone' => 'UTC',
             'unit_system' => 'metric',
+            'age_years' => null,
             'bodyweight_unit' => 'kg',
+            'height_unit' => 'cm',
             'experience_level' => 'new',
+            'prior_sport_background' => [],
             'secondary_goals' => [],
             'target_skills' => [],
             'primary_target_skill' => null,
             'secondary_target_skills' => [],
+            'long_term_target_skills' => [],
             'base_focus_areas' => [],
+            'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => [],
             'training_locations' => [],
             'movement_limitations' => [],
@@ -160,9 +181,11 @@ final class AthleteProfileOptions
             'secondary_goals',
             'target_skills',
             'secondary_target_skills',
+            'long_term_target_skills',
             'base_focus_areas',
             'available_equipment',
             'training_locations',
+            'prior_sport_background',
             'preferred_training_days',
             'session_structure_preferences',
         ] as $key) {
@@ -181,7 +204,76 @@ final class AthleteProfileOptions
             }
         }
 
+        unset($data['roadmap_suggestions']);
+
         return $data;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function recordData(AthleteProfile $profile): array
+    {
+        return [
+            'display_name' => $profile->display_name,
+            'timezone' => $profile->timezone,
+            'unit_system' => $profile->unit_system,
+            'age_years' => $profile->age_years,
+            'training_age_months' => $profile->training_age_months,
+            'experience_level' => $profile->experience_level,
+            'current_bodyweight_value' => $profile->current_bodyweight_value,
+            'bodyweight_unit' => $profile->bodyweight_unit,
+            'height_value' => $profile->height_value,
+            'height_unit' => $profile->height_unit,
+            'prior_sport_background' => $profile->prior_sport_background ?? [],
+            'primary_goal' => $profile->primary_goal,
+            'secondary_goals' => $profile->secondary_goals ?? [],
+            'target_skills' => $profile->target_skills ?? [],
+            'primary_target_skill' => $profile->primary_target_skill,
+            'secondary_target_skills' => $profile->secondary_target_skills ?? [],
+            'long_term_target_skills' => $profile->long_term_target_skills ?? [],
+            'base_focus_areas' => $profile->base_focus_areas ?? [],
+            'roadmap_suggestions' => $profile->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
+            'available_equipment' => $profile->available_equipment ?? [],
+            'training_locations' => $profile->training_locations ?? [],
+            'movement_limitations' => $profile->movement_limitations ?? [],
+            'baseline_tests' => $profile->baseline_tests ?? CalisthenicsPlacementOptions::emptyLevelTests(),
+            'skill_statuses' => $profile->skill_statuses ?? [],
+            'mobility_checks' => $profile->mobility_checks ?? CalisthenicsPlacementOptions::emptyMobilityChecks(),
+            'weighted_baselines' => $profile->weighted_baselines ?? CalisthenicsPlacementOptions::emptyWeightedBaselines(),
+            'injury_notes' => $profile->injury_notes,
+            'preferred_training_days' => $profile->preferred_training_days ?? [],
+            'preferred_session_minutes' => $profile->preferred_session_minutes,
+            'weekly_session_goal' => $profile->weekly_session_goal,
+            'preferred_training_time' => $profile->preferred_training_time,
+            'progression_pace' => $profile->progression_pace,
+            'intensity_preference' => $profile->intensity_preference,
+            'effort_tracking_preference' => $profile->effort_tracking_preference,
+            'deload_preference' => $profile->deload_preference,
+            'session_structure_preferences' => $profile->session_structure_preferences ?? [],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $base
+     * @param  array<string, mixed>  $incoming
+     * @return array<string, mixed>
+     */
+    public static function mergeProfileData(array $base, array $incoming): array
+    {
+        $merged = [...$base, ...$incoming];
+
+        foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
+            if (is_array($base[$key] ?? null) && is_array($incoming[$key] ?? null)) {
+                $merged[$key] = array_replace_recursive($base[$key], $incoming[$key]);
+            }
+        }
+
+        $roadmapSource = $merged;
+        $roadmapSource['current_level_tests'] = $merged['baseline_tests'] ?? CalisthenicsPlacementOptions::emptyLevelTests();
+        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest($roadmapSource);
+
+        return $merged;
     }
 
     /**

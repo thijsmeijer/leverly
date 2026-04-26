@@ -25,18 +25,25 @@ class UpsertAthleteProfileRequest extends FormRequest
             'display_name' => ['sometimes', 'string', 'min:1', 'max:120'],
             'timezone' => ['sometimes', 'string', 'max:80', 'timezone:all'],
             'unit_system' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::UNIT_SYSTEMS)],
+            'age_years' => ['sometimes', 'nullable', 'integer', 'min:13', 'max:90'],
             'training_age_months' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:1200'],
             'experience_level' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::EXPERIENCE_LEVELS)],
             'current_bodyweight_value' => ['sometimes', 'nullable', 'numeric', 'min:20', 'max:400'],
             'bodyweight_unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::BODYWEIGHT_UNITS)],
+            'height_value' => ['sometimes', 'nullable', 'numeric', 'min:36', 'max:250'],
+            'height_unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::HEIGHT_UNITS)],
+            'prior_sport_background' => ['sometimes', 'array', 'max:4'],
+            'prior_sport_background.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::PRIOR_SPORT_BACKGROUNDS)],
             'primary_goal' => ['sometimes', 'nullable', 'string', Rule::in(AthleteProfileOptions::GOALS)],
             'secondary_goals' => ['sometimes', 'array', 'max:2'],
             'secondary_goals.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::GOALS)],
-            'target_skills' => ['sometimes', 'array', 'max:20'],
+            'target_skills' => ['sometimes', 'array', 'max:3'],
             'target_skills.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
             'primary_target_skill' => ['sometimes', 'nullable', 'string', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
             'secondary_target_skills' => ['sometimes', 'array', 'max:2'],
             'secondary_target_skills.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
+            'long_term_target_skills' => ['sometimes', 'array', 'max:8'],
+            'long_term_target_skills.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::TARGET_SKILLS)],
             'base_focus_areas' => ['sometimes', 'array', 'max:4'],
             'base_focus_areas.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::BASE_FOCUS_AREAS)],
             'available_equipment' => ['sometimes', 'array', 'max:20'],
@@ -94,15 +101,20 @@ class UpsertAthleteProfileRequest extends FormRequest
             'display_name' => ['description' => 'Profile display name.', 'example' => 'Ada Athlete'],
             'timezone' => ['description' => 'IANA timezone.', 'example' => 'Europe/Amsterdam'],
             'unit_system' => ['description' => 'Preferred unit system.', 'example' => 'metric'],
+            'age_years' => ['description' => 'Athlete age in years.', 'example' => 29],
             'training_age_months' => ['description' => 'Total training experience in months.', 'example' => 18],
             'experience_level' => ['description' => 'Training experience band.', 'example' => 'intermediate'],
             'current_bodyweight_value' => ['description' => 'Current bodyweight in the selected unit.', 'example' => 72.5],
             'bodyweight_unit' => ['description' => 'Bodyweight unit.', 'example' => 'kg'],
+            'height_value' => ['description' => 'Current height in the selected unit.', 'example' => 178],
+            'height_unit' => ['description' => 'Height unit.', 'example' => 'cm'],
+            'prior_sport_background' => ['description' => 'Relevant prior sport or training background.', 'example' => ['strength_training']],
             'primary_goal' => ['description' => 'Primary training goal.', 'example' => 'skill'],
             'secondary_goals' => ['description' => 'Additional training goals.', 'example' => ['strength', 'mobility']],
-            'target_skills' => ['description' => 'Controlled skill targets the athlete wants to unlock.', 'example' => ['handstand', 'strict_pull_up']],
+            'target_skills' => ['description' => 'Current active skill targets.', 'example' => ['handstand', 'strict_pull_up']],
             'primary_target_skill' => ['description' => 'The one roadmap the current plan should prioritize.', 'example' => 'handstand'],
             'secondary_target_skills' => ['description' => 'Optional target skills that can receive lighter exposure.', 'example' => ['strict_pull_up']],
+            'long_term_target_skills' => ['description' => 'Later aspirations that should not drive the current block yet.', 'example' => ['planche']],
             'base_focus_areas' => ['description' => 'Base-development areas that support the selected roadmap.', 'example' => ['pull_capacity', 'core_bodyline']],
             'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['pull_up_bar', 'rings', 'parallettes']],
             'training_locations' => ['description' => 'Preferred training locations.', 'example' => ['home', 'park']],
@@ -174,6 +186,21 @@ class UpsertAthleteProfileRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                $height = $this->input('height_value');
+                $heightUnit = $this->input('height_unit', 'cm');
+
+                if (is_numeric($height) && is_string($heightUnit)) {
+                    $height = (float) $height;
+
+                    if ($heightUnit === 'cm' && ($height < 90 || $height > 250)) {
+                        $validator->errors()->add('height_value', 'Height must be between 90 and 250 cm.');
+                    }
+
+                    if ($heightUnit === 'in' && ($height < 36 || $height > 100)) {
+                        $validator->errors()->add('height_value', 'Height must be between 36 and 100 inches.');
+                    }
+                }
+
                 $primaryGoal = $this->input('primary_goal');
                 $secondaryGoals = $this->input('secondary_goals', []);
 
@@ -232,6 +259,20 @@ class UpsertAthleteProfileRequest extends FormRequest
                         );
                     }
                 }
+
+                $longTermTargetSkills = $this->input('long_term_target_skills', []);
+
+                if (is_array($longTermTargetSkills)) {
+                    foreach ($longTermTargetSkills as $index => $longTermTargetSkill) {
+                        if (is_string($longTermTargetSkill) && in_array($longTermTargetSkill, $targetSkills, true)) {
+                            $validator->errors()->add(
+                                "long_term_target_skills.{$index}",
+                                'A long-term target cannot also be an active target.',
+                            );
+                        }
+                    }
+                }
+
             },
         ];
     }

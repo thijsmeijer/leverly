@@ -40,6 +40,7 @@ export interface ProfileBaselineTestsForm {
 }
 
 export interface ProfileSettingsForm {
+  ageYears: string
   availableEquipment: string[]
   baseFocusAreas: string[]
   baselineTests: ProfileBaselineTestsForm
@@ -51,11 +52,15 @@ export interface ProfileSettingsForm {
   experienceLevel: string
   injuryNotes: string
   intensityPreference: string
+  heightUnit: string
+  heightValue: string
+  longTermTargetSkills: string[]
   movementLimitation: MovementLimitationForm
   mobilityChecks: Record<string, string>
   preferredSessionMinutes: string
   preferredTrainingDays: string[]
   preferredTrainingTime: string
+  priorSportBackground: string[]
   primaryGoal: string
   primaryTargetSkill: string
   progressionPace: string

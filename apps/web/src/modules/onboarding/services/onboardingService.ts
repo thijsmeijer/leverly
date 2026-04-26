@@ -1,7 +1,7 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 
 import { mobilityCheckOptions, skillStatusKeys } from '../data/onboardingOptions'
-import type { OnboardingFieldErrors, OnboardingForm, OnboardingState } from '../types'
+import type { OnboardingFieldErrors, OnboardingForm, OnboardingRoadmapSuggestions, OnboardingState } from '../types'
 
 type ServerValidationBody = {
   readonly errors?: Record<string, string[]>
@@ -12,9 +12,12 @@ type AthleteOnboardingResponse = NonNullable<ApiResponseBody<'/me/onboarding', '
 type AthleteOnboarding = AthleteOnboardingResponse['data']
 
 type OnboardingUpdateBody = {
+  readonly age_years: number | null
   readonly available_equipment: string[]
   readonly base_focus_areas: string[]
+  readonly bodyweight_unit: string
   readonly complete?: boolean
+  readonly current_bodyweight_value: number | null
   readonly current_level_tests: {
     readonly arch_hold_seconds: number | null
     readonly dead_hang_seconds: number | null
@@ -47,6 +50,10 @@ type OnboardingUpdateBody = {
     readonly support_hold_seconds: number | null
     readonly wall_handstand_seconds: number | null
   }
+  readonly experience_level: string
+  readonly height_unit: string
+  readonly height_value: number | null
+  readonly long_term_target_skills: string[]
   readonly mobility_checks: Record<string, string>
   readonly pain_areas: string[]
   readonly pain_level: number | null
@@ -54,6 +61,7 @@ type OnboardingUpdateBody = {
   readonly preferred_session_minutes: number | null
   readonly preferred_training_days: string[]
   readonly preferred_training_time: string
+  readonly prior_sport_background: string[]
   readonly primary_goal: string | null
   readonly primary_target_skill: string | null
   readonly readiness_rating: number | null
@@ -72,6 +80,7 @@ type OnboardingUpdateBody = {
   readonly soreness_level: number | null
   readonly starter_plan_key: string | null
   readonly target_skills: string[]
+  readonly training_age_months: number | null
   readonly training_locations: string[]
   readonly weighted_baselines: {
     readonly experience: string
@@ -98,8 +107,11 @@ export class OnboardingValidationError extends Error {
 
 export function defaultOnboardingForm(): OnboardingForm {
   return {
+    ageYears: '',
     availableEquipment: [],
     baseFocusAreas: [],
+    bodyweightUnit: 'kg',
+    currentBodyweightValue: '',
     currentLevelTests: {
       archHoldSeconds: '',
       deadHangSeconds: '',
@@ -122,6 +134,10 @@ export function defaultOnboardingForm(): OnboardingForm {
       supportHoldSeconds: '',
       wallHandstandSeconds: '',
     },
+    experienceLevel: 'new',
+    heightUnit: 'cm',
+    heightValue: '',
+    longTermTargetSkills: [],
     mobilityChecks: Object.fromEntries(mobilityCheckOptions.map((option) => [option.value, 'not_tested'])),
     painAreas: [],
     painLevel: '0',
@@ -129,9 +145,11 @@ export function defaultOnboardingForm(): OnboardingForm {
     preferredSessionMinutes: '45',
     preferredTrainingDays: [],
     preferredTrainingTime: 'flexible',
+    priorSportBackground: [],
     primaryTargetSkill: '',
     primaryGoal: 'skill',
     readinessRating: '3',
+    roadmapSuggestions: emptyRoadmapSuggestions(),
     secondaryGoals: [],
     secondaryTargetSkills: [],
     skillStatuses: Object.fromEntries(
@@ -149,6 +167,7 @@ export function defaultOnboardingForm(): OnboardingForm {
     sorenessLevel: '2',
     starterPlanKey: 'full_body_3_day',
     targetSkills: [],
+    trainingAgeMonths: '',
     trainingLocations: [],
     weightedBaselines: {
       experience: 'none',
@@ -200,17 +219,40 @@ export async function saveOnboarding(
 export function validateOnboardingStep(form: OnboardingForm, step: string): OnboardingFieldErrors {
   const errors: OnboardingFieldErrors = {}
 
-  if (step === 'goals') {
+  if (step === 'context') {
+    addNumberError(errors, 'ageYears', form.ageYears, 13, 90)
+    addNumberError(errors, 'trainingAgeMonths', form.trainingAgeMonths, 0, 1200)
+    addNumberError(errors, 'currentBodyweightValue', form.currentBodyweightValue, 20, 400)
+    addNumberError(
+      errors,
+      'heightValue',
+      form.heightValue,
+      form.heightUnit === 'in' ? 36 : 90,
+      form.heightUnit === 'in' ? 100 : 250,
+    )
+
+    if (form.priorSportBackground.length === 0) {
+      errors.priorSportBackground = 'Choose at least one background option, even if you are starting fresh.'
+    }
+  }
+
+  if (step === 'roadmap') {
+    const activeSkills = activeRoadmapSkills(form.roadmapSuggestions)
+
     if (!form.primaryGoal) {
       errors.primaryGoal = 'Choose the main outcome for your first plan.'
     }
 
     if (form.targetSkills.length === 0) {
-      errors.targetSkills = 'Choose at least one skill or strength target.'
+      errors.targetSkills = 'Choose one suggested current or bridge target.'
+    }
+
+    if (form.targetSkills.some((skill) => !activeSkills.includes(skill))) {
+      errors.targetSkills = 'Active targets must come from the suggested current or bridge roadmap.'
     }
 
     if (!form.primaryTargetSkill || !form.targetSkills.includes(form.primaryTargetSkill)) {
-      errors.primaryTargetSkill = 'Choose the one target Leverly should prioritize first.'
+      errors.primaryTargetSkill = 'Choose the one suggested target Leverly should prioritize first.'
     }
 
     if (
@@ -222,7 +264,11 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     }
 
     if (form.baseFocusAreas.length === 0) {
-      errors.baseFocusAreas = 'Choose at least one base area that should support the roadmap.'
+      errors.baseFocusAreas = 'Choose at least one base area from the recommendation.'
+    }
+
+    if (form.longTermTargetSkills.some((skill) => form.targetSkills.includes(skill))) {
+      errors.longTermTargetSkills = 'Long-term targets should be different from the active roadmap.'
     }
   }
 
@@ -296,8 +342,12 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
 
   return {
     ...defaults,
+    ageYears: onboarding.age_years === null ? '' : String(onboarding.age_years),
     availableEquipment: [...onboarding.available_equipment],
     baseFocusAreas: [...onboarding.base_focus_areas],
+    bodyweightUnit: onboarding.bodyweight_unit,
+    currentBodyweightValue:
+      onboarding.current_bodyweight_value === null ? '' : String(onboarding.current_bodyweight_value),
     currentLevelTests: {
       archHoldSeconds:
         onboarding.current_level_tests.arch_hold_seconds === null
@@ -362,6 +412,10 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
           ? ''
           : String(onboarding.current_level_tests.wall_handstand_seconds),
     },
+    experienceLevel: onboarding.experience_level,
+    heightUnit: onboarding.height_unit,
+    heightValue: onboarding.height_value === null ? '' : String(onboarding.height_value),
+    longTermTargetSkills: [...onboarding.long_term_target_skills],
     mobilityChecks: { ...defaults.mobilityChecks, ...onboarding.mobility_checks },
     painAreas: [...onboarding.pain_areas],
     painLevel: onboarding.pain_level === null ? defaults.painLevel : String(onboarding.pain_level),
@@ -372,10 +426,12 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
         : String(onboarding.preferred_session_minutes),
     preferredTrainingDays: [...onboarding.preferred_training_days],
     preferredTrainingTime: onboarding.preferred_training_time,
+    priorSportBackground: [...onboarding.prior_sport_background],
     primaryTargetSkill: onboarding.primary_target_skill ?? defaults.primaryTargetSkill,
     primaryGoal: onboarding.primary_goal ?? defaults.primaryGoal,
     readinessRating:
       onboarding.readiness_rating === null ? defaults.readinessRating : String(onboarding.readiness_rating),
+    roadmapSuggestions: onboarding.roadmap_suggestions,
     secondaryGoals: [...onboarding.secondary_goals],
     secondaryTargetSkills: [...onboarding.secondary_target_skills],
     skillStatuses: {
@@ -402,6 +458,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     sorenessLevel: onboarding.soreness_level === null ? defaults.sorenessLevel : String(onboarding.soreness_level),
     starterPlanKey: onboarding.starter_plan_key ?? defaults.starterPlanKey,
     targetSkills: [...onboarding.target_skills],
+    trainingAgeMonths: onboarding.training_age_months === null ? '' : String(onboarding.training_age_months),
     trainingLocations: [...onboarding.training_locations],
     weightedBaselines: {
       experience: onboarding.weighted_baselines.experience,
@@ -423,8 +480,11 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
 
 function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean }): OnboardingUpdateBody {
   const body: OnboardingUpdateBody = {
+    age_years: nullableInteger(form.ageYears),
     available_equipment: [...form.availableEquipment],
     base_focus_areas: [...form.baseFocusAreas],
+    bodyweight_unit: form.bodyweightUnit,
+    current_bodyweight_value: nullableNumber(form.currentBodyweightValue),
     current_level_tests: {
       arch_hold_seconds: nullableInteger(form.currentLevelTests.archHoldSeconds),
       dead_hang_seconds: nullableInteger(form.currentLevelTests.deadHangSeconds),
@@ -457,6 +517,10 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
       support_hold_seconds: nullableInteger(form.currentLevelTests.supportHoldSeconds),
       wall_handstand_seconds: nullableInteger(form.currentLevelTests.wallHandstandSeconds),
     },
+    experience_level: form.experienceLevel,
+    height_unit: form.heightUnit,
+    height_value: nullableNumber(form.heightValue),
+    long_term_target_skills: [...form.longTermTargetSkills],
     mobility_checks: { ...form.mobilityChecks },
     pain_areas: [...form.painAreas],
     pain_level: nullableInteger(form.painLevel),
@@ -464,6 +528,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     preferred_session_minutes: nullableInteger(form.preferredSessionMinutes),
     preferred_training_days: [...form.preferredTrainingDays],
     preferred_training_time: form.preferredTrainingTime,
+    prior_sport_background: [...form.priorSportBackground],
     primary_goal: form.primaryGoal || null,
     primary_target_skill: form.primaryTargetSkill || null,
     readiness_rating: nullableInteger(form.readinessRating),
@@ -484,6 +549,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     soreness_level: nullableInteger(form.sorenessLevel),
     starter_plan_key: form.starterPlanKey || null,
     target_skills: [...form.targetSkills],
+    training_age_months: nullableInteger(form.trainingAgeMonths),
     training_locations: [...form.trainingLocations],
     weighted_baselines: {
       experience: form.weightedBaselines.experience,
@@ -554,7 +620,14 @@ function mapServerValidationErrors(body: unknown): OnboardingFieldErrors {
 function serverKeyToField(key: string): string {
   const directMap: Record<string, string> = {
     available_equipment: 'availableEquipment',
+    age_years: 'ageYears',
     base_focus_areas: 'baseFocusAreas',
+    bodyweight_unit: 'bodyweightUnit',
+    current_bodyweight_value: 'currentBodyweightValue',
+    experience_level: 'experienceLevel',
+    height_unit: 'heightUnit',
+    height_value: 'heightValue',
+    long_term_target_skills: 'longTermTargetSkills',
     mobility_checks: 'mobilityChecks',
     pain_areas: 'painAreas',
     pain_level: 'painLevel',
@@ -562,6 +635,7 @@ function serverKeyToField(key: string): string {
     preferred_session_minutes: 'preferredSessionMinutes',
     preferred_training_days: 'preferredTrainingDays',
     preferred_training_time: 'preferredTrainingTime',
+    prior_sport_background: 'priorSportBackground',
     primary_goal: 'primaryGoal',
     primary_target_skill: 'primaryTargetSkill',
     readiness_rating: 'readinessRating',
@@ -571,6 +645,7 @@ function serverKeyToField(key: string): string {
     soreness_level: 'sorenessLevel',
     starter_plan_key: 'starterPlanKey',
     target_skills: 'targetSkills',
+    training_age_months: 'trainingAgeMonths',
     training_locations: 'trainingLocations',
     weighted_baselines: 'weightedBaselines',
     weekly_session_goal: 'weeklySessionGoal',
@@ -592,4 +667,23 @@ function serverKeyToField(key: string): string {
 
 function isServerValidationBody(body: unknown): body is ServerValidationBody {
   return typeof body === 'object' && body !== null
+}
+
+function emptyRoadmapSuggestions(): OnboardingRoadmapSuggestions {
+  return {
+    base_focus_areas: [],
+    body_context: {
+      notes: [],
+    },
+    bridge_tracks: [],
+    deferred_tracks: [],
+    level: 'foundation',
+    long_term_tracks: [],
+    summary: 'Complete the baseline tests to unlock a useful roadmap.',
+    unlocked_tracks: [],
+  }
+}
+
+function activeRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
+  return [...suggestions.unlocked_tracks, ...suggestions.bridge_tracks].map((track) => track.skill)
 }

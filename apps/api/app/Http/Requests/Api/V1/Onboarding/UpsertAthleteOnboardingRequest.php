@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api\V1\Onboarding;
 
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,14 +26,25 @@ class UpsertAthleteOnboardingRequest extends FormRequest
     {
         return [
             'complete' => ['sometimes', 'boolean'],
+            'age_years' => ['sometimes', 'nullable', 'integer', 'min:13', 'max:90'],
+            'training_age_months' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:1200'],
+            'experience_level' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::EXPERIENCE_LEVELS)],
+            'current_bodyweight_value' => ['sometimes', 'nullable', 'numeric', 'min:20', 'max:400'],
+            'bodyweight_unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::BODYWEIGHT_UNITS)],
+            'height_value' => ['sometimes', 'nullable', 'numeric', 'min:36', 'max:250'],
+            'height_unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::HEIGHT_UNITS)],
+            'prior_sport_background' => ['sometimes', 'array', 'max:4'],
+            'prior_sport_background.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::PRIOR_SPORT_BACKGROUNDS)],
             'primary_goal' => ['sometimes', 'nullable', 'string', Rule::in(AthleteProfileOptions::GOALS)],
             'secondary_goals' => ['sometimes', 'array', 'max:2'],
             'secondary_goals.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::GOALS)],
-            'target_skills' => ['sometimes', 'array', 'max:8'],
+            'target_skills' => ['sometimes', 'array', 'max:3'],
             'target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'primary_target_skill' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'secondary_target_skills' => ['sometimes', 'array', 'max:2'],
             'secondary_target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
+            'long_term_target_skills' => ['sometimes', 'array', 'max:8'],
+            'long_term_target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'base_focus_areas' => ['sometimes', 'array', 'max:4'],
             'base_focus_areas.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::BASE_FOCUS_AREAS)],
             'available_equipment' => ['sometimes', 'array', 'max:20'],
@@ -128,11 +140,20 @@ class UpsertAthleteOnboardingRequest extends FormRequest
     {
         return [
             'complete' => ['description' => 'When true, validates and marks onboarding complete.', 'example' => true],
+            'age_years' => ['description' => 'Athlete age in years.', 'example' => 29],
+            'training_age_months' => ['description' => 'Total training experience in months.', 'example' => 18],
+            'experience_level' => ['description' => 'Self-assessed training experience band.', 'example' => 'intermediate'],
+            'current_bodyweight_value' => ['description' => 'Current bodyweight in the selected unit.', 'example' => 72.5],
+            'bodyweight_unit' => ['description' => 'Bodyweight unit.', 'example' => 'kg'],
+            'height_value' => ['description' => 'Current height in the selected unit.', 'example' => 178],
+            'height_unit' => ['description' => 'Height unit.', 'example' => 'cm'],
+            'prior_sport_background' => ['description' => 'Relevant prior sport or training background.', 'example' => ['strength_training']],
             'primary_goal' => ['description' => 'Primary training goal.', 'example' => 'skill'],
             'secondary_goals' => ['description' => 'Compatible secondary goals.', 'example' => ['strength']],
-            'target_skills' => ['description' => 'Controlled calisthenics skill target slugs.', 'example' => ['strict_pull_up', 'handstand']],
+            'target_skills' => ['description' => 'Current active skill target slugs from the generated roadmap.', 'example' => ['strict_pull_up', 'handstand']],
             'primary_target_skill' => ['description' => 'The one roadmap the first plan should prioritize.', 'example' => 'handstand'],
             'secondary_target_skills' => ['description' => 'Optional target skills that can receive lighter exposure.', 'example' => ['strict_pull_up']],
+            'long_term_target_skills' => ['description' => 'Later aspirations that should not drive the first block yet.', 'example' => ['planche']],
             'base_focus_areas' => ['description' => 'Base-development areas that should support the primary roadmap.', 'example' => ['pull_capacity', 'core_bodyline']],
             'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['pull_up_bar', 'rings']],
             'training_locations' => ['description' => 'Where the athlete can train.', 'example' => ['home', 'park']],
@@ -204,6 +225,8 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             function (Validator $validator): void {
                 $this->validateSecondaryGoals($validator);
                 $this->validatePlacementTargets($validator);
+                $this->validateHeight($validator);
+                $this->validateRoadmapTargets($validator);
                 $this->validateCompletion($validator);
             },
         ];
@@ -237,6 +260,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
         $targetSkills = $this->input('target_skills', []);
         $primaryTargetSkill = $this->input('primary_target_skill');
         $secondaryTargetSkills = $this->input('secondary_target_skills', []);
+        $longTermTargetSkills = $this->input('long_term_target_skills', []);
 
         if (! is_array($targetSkills)) {
             return;
@@ -271,6 +295,76 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                     'Secondary targets must also be selected target skills.',
                 );
             }
+        }
+
+        if (! is_array($longTermTargetSkills)) {
+            return;
+        }
+
+        foreach ($longTermTargetSkills as $index => $longTermTargetSkill) {
+            if (is_string($longTermTargetSkill) && in_array($longTermTargetSkill, $targetSkills, true)) {
+                $validator->errors()->add(
+                    "long_term_target_skills.{$index}",
+                    'A long-term target cannot also be an active target.',
+                );
+            }
+        }
+    }
+
+    private function validateHeight(Validator $validator): void
+    {
+        $height = $this->input('height_value');
+        $unit = $this->input('height_unit', 'cm');
+
+        if (! is_numeric($height) || ! is_string($unit)) {
+            return;
+        }
+
+        $height = (float) $height;
+
+        if ($unit === 'cm' && ($height < 90 || $height > 250)) {
+            $validator->errors()->add('height_value', 'Height must be between 90 and 250 cm.');
+        }
+
+        if ($unit === 'in' && ($height < 36 || $height > 100)) {
+            $validator->errors()->add('height_value', 'Height must be between 36 and 100 inches.');
+        }
+    }
+
+    private function validateRoadmapTargets(Validator $validator): void
+    {
+        $targetSkills = $this->input('target_skills', []);
+        $primaryTargetSkill = $this->input('primary_target_skill');
+
+        if (! is_array($targetSkills) || $targetSkills === []) {
+            return;
+        }
+
+        $current = AthleteOnboarding::query()
+            ->ownedBy($this->user())
+            ->first();
+
+        $candidate = AthleteOnboardingOptions::mergeForCompletion($current, $this->all());
+        $activeSkillSlugs = CalisthenicsRoadmapSuggester::activeSkillSlugs(
+            CalisthenicsRoadmapSuggester::suggest($candidate),
+        );
+
+        foreach ($targetSkills as $index => $targetSkill) {
+            if (! is_string($targetSkill) || in_array($targetSkill, $activeSkillSlugs, true)) {
+                continue;
+            }
+
+            $validator->errors()->add(
+                "target_skills.{$index}",
+                'Active targets must come from the current or bridge roadmap suggestions.',
+            );
+        }
+
+        if (is_string($primaryTargetSkill) && ! in_array($primaryTargetSkill, $activeSkillSlugs, true)) {
+            $validator->errors()->add(
+                'primary_target_skill',
+                'The primary target must come from the current or bridge roadmap suggestions.',
+            );
         }
     }
 

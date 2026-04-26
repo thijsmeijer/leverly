@@ -34,11 +34,19 @@ class AthleteOnboardingApiTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonPath('data.user_id', $user->id)
+            ->assertJsonPath('data.age_years', 29)
+            ->assertJsonPath('data.training_age_months', 18)
+            ->assertJsonPath('data.current_bodyweight_value', 72.5)
+            ->assertJsonPath('data.height_value', 178)
+            ->assertJsonPath('data.prior_sport_background.0', 'strength_training')
             ->assertJsonPath('data.primary_goal', 'skill')
             ->assertJsonPath('data.target_skills.0', 'strict_pull_up')
             ->assertJsonPath('data.primary_target_skill', 'handstand')
             ->assertJsonPath('data.secondary_target_skills.0', 'strict_pull_up')
+            ->assertJsonPath('data.long_term_target_skills.0', 'planche')
             ->assertJsonPath('data.base_focus_areas.0', 'pull_capacity')
+            ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
+            ->assertJsonPath('data.roadmap_suggestions.unlocked_tracks.0.skill', 'strict_push_up')
             ->assertJsonPath('data.current_level_tests.push_ups.max_strict_reps', 18)
             ->assertJsonPath('data.current_level_tests.rows.progression', 'inverted_row')
             ->assertJsonPath('data.current_level_tests.pull_ups.progression', 'strict_pull_up')
@@ -71,11 +79,18 @@ class AthleteOnboardingApiTest extends TestCase
             ->sole();
 
         $this->assertSame('skill', $profile->primary_goal);
+        $this->assertSame(29, $profile->age_years);
+        $this->assertSame(18, $profile->training_age_months);
+        $this->assertSame(72.5, $profile->current_bodyweight_value);
+        $this->assertSame(178.0, $profile->height_value);
+        $this->assertSame(['strength_training'], $profile->prior_sport_background);
         $this->assertSame(['strength'], $profile->secondary_goals);
         $this->assertSame(['strict_pull_up', 'handstand'], $profile->target_skills);
         $this->assertSame('handstand', $profile->primary_target_skill);
         $this->assertSame(['strict_pull_up'], $profile->secondary_target_skills);
+        $this->assertSame(['planche'], $profile->long_term_target_skills);
         $this->assertSame(['pull_capacity', 'core_bodyline', 'handstand_line'], $profile->base_focus_areas);
+        $this->assertSame('intermediate', $profile->roadmap_suggestions['level']);
         $this->assertSame(['pull_up_bar', 'rings', 'parallettes'], $profile->available_equipment);
         $this->assertSame('inverted_row', $profile->baseline_tests['rows']['progression']);
         $this->assertSame('limited', $profile->mobility_checks['wrist_extension']);
@@ -101,12 +116,17 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.user_id', $user->id)
             ->assertJsonPath('data.is_complete', false)
             ->assertJsonPath('data.current_level_tests.push_ups.max_strict_reps', null)
-            ->assertJsonPath('data.missing_sections.0', 'goal');
+            ->assertJsonPath('data.missing_sections.0', 'age');
 
         $draftId = $draftResponse->json('data.id');
 
         $this->patchJson('/api/v1/me/onboarding', [
             'primary_goal' => 'strength',
+            'age_years' => 31,
+            'training_age_months' => 12,
+            'current_bodyweight_value' => 80,
+            'height_value' => 181,
+            'prior_sport_background' => ['none'],
             'target_skills' => ['strict_dip'],
             'available_equipment' => ['dip_bars'],
             'current_level_tests' => [
@@ -116,6 +136,7 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.id', $draftId)
             ->assertJsonPath('data.primary_goal', 'strength')
+            ->assertJsonPath('data.age_years', 31)
             ->assertJsonPath('data.target_skills.0', 'strict_dip')
             ->assertJsonPath('data.available_equipment.0', 'dip_bars')
             ->assertJsonPath('data.current_level_tests.push_ups.max_strict_reps', 24)
@@ -149,7 +170,37 @@ class AthleteOnboardingApiTest extends TestCase
         ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['complete'])
-            ->assertJsonPath('errors.complete.0', 'Onboarding cannot be completed until target_skills is provided.');
+            ->assertJsonPath('errors.complete.0', 'Onboarding cannot be completed until age is provided.');
+    }
+
+    public function test_active_targets_must_match_generated_current_or_bridge_tracks(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $payload = $this->completePayload([
+            'current_level_tests' => [
+                'push_ups' => ['progression' => 'wall_push_up', 'max_strict_reps' => 0, 'form_quality' => 2],
+                'rows' => ['progression' => 'vertical_row', 'max_strict_reps' => 4],
+                'pull_ups' => ['max_strict_reps' => 0, 'progression' => 'dead_hang', 'assistance' => null, 'form_quality' => 2],
+                'dips' => ['progression' => 'support_hold', 'max_strict_reps' => 0, 'support_hold_seconds' => 5],
+                'squat' => ['max_reps' => 8, 'progression' => 'box_squat'],
+                'hollow_hold_seconds' => 8,
+                'arch_hold_seconds' => 8,
+                'dead_hang_seconds' => 10,
+                'support_hold_seconds' => 5,
+                'wall_handstand_seconds' => 0,
+                'l_sit_hold_seconds' => 0,
+            ],
+            'target_skills' => ['planche'],
+            'primary_target_skill' => 'planche',
+            'secondary_target_skills' => [],
+            'long_term_target_skills' => ['strict_pull_up'],
+            'base_focus_areas' => ['push_capacity', 'core_bodyline'],
+        ]);
+
+        $this->patchJson('/api/v1/me/onboarding', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['target_skills.0', 'primary_target_skill']);
     }
 
     public function test_onboarding_validation_rejects_malformed_algorithm_inputs(): void
@@ -158,10 +209,19 @@ class AthleteOnboardingApiTest extends TestCase
 
         $this->patchJson('/api/v1/me/onboarding', [
             'primary_goal' => 'random',
+            'age_years' => 5,
+            'training_age_months' => -1,
+            'experience_level' => 'superhuman',
+            'current_bodyweight_value' => 3,
+            'bodyweight_unit' => 'stone',
+            'height_value' => 12,
+            'height_unit' => 'hands',
+            'prior_sport_background' => ['space_walking'],
             'secondary_goals' => ['conditioning', 'mobility', 'strength'],
             'target_skills' => ['generic fitness'],
             'primary_target_skill' => 'generic fitness',
             'secondary_target_skills' => ['handstand'],
+            'long_term_target_skills' => ['generic fitness'],
             'base_focus_areas' => ['random'],
             'available_equipment' => ['machine'],
             'training_locations' => ['moon'],
@@ -200,10 +260,19 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'primary_goal',
+                'age_years',
+                'training_age_months',
+                'experience_level',
+                'current_bodyweight_value',
+                'bodyweight_unit',
+                'height_value',
+                'height_unit',
+                'prior_sport_background.0',
                 'secondary_goals',
                 'target_skills.0',
                 'primary_target_skill',
                 'secondary_target_skills.0',
+                'long_term_target_skills.0',
                 'base_focus_areas.0',
                 'available_equipment.0',
                 'training_locations.0',
@@ -261,15 +330,24 @@ class AthleteOnboardingApiTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function completePayload(): array
+    private function completePayload(array $overrides = []): array
     {
         return [
             'complete' => true,
+            'age_years' => 29,
+            'training_age_months' => 18,
+            'experience_level' => 'intermediate',
+            'current_bodyweight_value' => 72.5,
+            'bodyweight_unit' => 'kg',
+            'height_value' => 178,
+            'height_unit' => 'cm',
+            'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
             'target_skills' => ['strict_pull_up', 'handstand'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
+            'long_term_target_skills' => ['planche'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline', 'handstand_line'],
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home'],
@@ -315,6 +393,7 @@ class AthleteOnboardingApiTest extends TestCase
             'pain_areas' => ['wrist'],
             'pain_notes' => 'Wrists feel loaded after high-volume handstand work.',
             'starter_plan_key' => 'skill_strength_split',
+            ...$overrides,
         ];
     }
 }

@@ -6,6 +6,7 @@ namespace App\Domain\Onboarding\Support;
 
 use App\Domain\Profile\Support\AthleteProfileOptions;
 use App\Domain\Training\Support\CalisthenicsPlacementOptions;
+use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use App\Models\User;
 
@@ -51,12 +52,22 @@ final class AthleteOnboardingOptions
     public static function defaultsFor(User $user): array
     {
         return [
+            'age_years' => null,
+            'training_age_months' => null,
+            'experience_level' => 'new',
+            'current_bodyweight_value' => null,
+            'bodyweight_unit' => 'kg',
+            'height_value' => null,
+            'height_unit' => 'cm',
+            'prior_sport_background' => [],
             'primary_goal' => null,
             'secondary_goals' => [],
             'target_skills' => [],
             'primary_target_skill' => null,
             'secondary_target_skills' => [],
+            'long_term_target_skills' => [],
             'base_focus_areas' => [],
+            'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => [],
             'training_locations' => [],
             'preferred_training_days' => [],
@@ -113,16 +124,20 @@ final class AthleteOnboardingOptions
             'secondary_goals',
             'target_skills',
             'secondary_target_skills',
+            'long_term_target_skills',
             'base_focus_areas',
             'available_equipment',
             'training_locations',
             'preferred_training_days',
             'pain_areas',
+            'prior_sport_background',
         ] as $key) {
             if (array_key_exists($key, $data) && is_array($data[$key])) {
                 $data[$key] = array_values(array_unique($data[$key]));
             }
         }
+
+        unset($data['roadmap_suggestions']);
 
         return $data;
     }
@@ -142,6 +157,8 @@ final class AthleteOnboardingOptions
             }
         }
 
+        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest($merged);
+
         return $merged;
     }
 
@@ -153,8 +170,24 @@ final class AthleteOnboardingOptions
     {
         $missing = [];
 
-        if (! is_string($candidate['primary_goal'] ?? null) || $candidate['primary_goal'] === '') {
-            $missing[] = 'goal';
+        if (! is_int($candidate['age_years'] ?? null)) {
+            $missing[] = 'age';
+        }
+
+        if (! is_int($candidate['training_age_months'] ?? null)) {
+            $missing[] = 'training_age';
+        }
+
+        if (! is_numeric($candidate['current_bodyweight_value'] ?? null)) {
+            $missing[] = 'bodyweight';
+        }
+
+        if (! is_numeric($candidate['height_value'] ?? null)) {
+            $missing[] = 'height';
+        }
+
+        if (empty($candidate['prior_sport_background']) || ! is_array($candidate['prior_sport_background'])) {
+            $missing[] = 'training_background';
         }
 
         if (empty($candidate['target_skills']) || ! is_array($candidate['target_skills'])) {
@@ -167,6 +200,10 @@ final class AthleteOnboardingOptions
 
         if (empty($candidate['base_focus_areas']) || ! is_array($candidate['base_focus_areas'])) {
             $missing[] = 'base_focus_areas';
+        }
+
+        if (! is_string($candidate['primary_goal'] ?? null) || $candidate['primary_goal'] === '') {
+            $missing[] = 'goal';
         }
 
         if (empty($candidate['training_locations']) || ! is_array($candidate['training_locations'])) {
@@ -251,7 +288,7 @@ final class AthleteOnboardingOptions
     public static function mergeForCompletion(?AthleteOnboarding $onboarding, array $incoming): array
     {
         return self::mergeDraftData(
-            $onboarding === null ? [] : self::recordData($onboarding),
+            $onboarding === null ? self::defaultsFor(new User) : self::recordData($onboarding),
             self::normalize($incoming),
         );
     }
@@ -262,12 +299,22 @@ final class AthleteOnboardingOptions
     public static function recordData(AthleteOnboarding $onboarding): array
     {
         return [
+            'age_years' => $onboarding->age_years,
+            'training_age_months' => $onboarding->training_age_months,
+            'experience_level' => $onboarding->experience_level,
+            'current_bodyweight_value' => $onboarding->current_bodyweight_value,
+            'bodyweight_unit' => $onboarding->bodyweight_unit,
+            'height_value' => $onboarding->height_value,
+            'height_unit' => $onboarding->height_unit,
+            'prior_sport_background' => $onboarding->prior_sport_background ?? [],
             'primary_goal' => $onboarding->primary_goal,
             'secondary_goals' => $onboarding->secondary_goals ?? [],
             'target_skills' => $onboarding->target_skills ?? [],
             'primary_target_skill' => $onboarding->primary_target_skill,
             'secondary_target_skills' => $onboarding->secondary_target_skills ?? [],
+            'long_term_target_skills' => $onboarding->long_term_target_skills ?? [],
             'base_focus_areas' => $onboarding->base_focus_areas ?? [],
+            'roadmap_suggestions' => $onboarding->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => $onboarding->available_equipment ?? [],
             'training_locations' => $onboarding->training_locations ?? [],
             'preferred_training_days' => $onboarding->preferred_training_days ?? [],
@@ -302,13 +349,23 @@ final class AthleteOnboardingOptions
             'target_skills',
             'primary_target_skill',
             'secondary_target_skills',
+            'long_term_target_skills',
             'base_focus_areas',
+            'age_years',
+            'training_age_months',
+            'experience_level',
+            'current_bodyweight_value',
+            'bodyweight_unit',
+            'height_value',
+            'height_unit',
+            'prior_sport_background',
             'available_equipment',
             'training_locations',
             'preferred_training_days',
             'preferred_session_minutes',
             'weekly_session_goal',
             'preferred_training_time',
+            'roadmap_suggestions',
         ] as $key) {
             if (array_key_exists($key, $data)) {
                 $profileData[$key] = $data[$key];

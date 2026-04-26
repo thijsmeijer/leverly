@@ -29,8 +29,8 @@ describe('App', () => {
       route: '/onboarding',
     })
 
-    expect(wrapper.text()).toContain('Build the signal for your first calisthenics plan')
-    expect(wrapper.text()).toContain('Pick the outcome and exact skills.')
+    expect(wrapper.text()).toContain('Find the strongest path for your next calisthenics block')
+    expect(wrapper.text()).toContain('Start with the athlete behind the skills.')
     expect(wrapper.find('[aria-label="Mobile primary"]').exists()).toBe(false)
   })
 

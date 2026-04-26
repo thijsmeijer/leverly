@@ -19,9 +19,15 @@ final class UpsertAthleteProfileAction
             'user_id' => $user->getKey(),
         ]);
 
+        $baseData = $profile->exists
+            ? AthleteProfileOptions::recordData($profile)
+            : AthleteProfileOptions::defaultsFor($user);
+
         $profile->fill([
-            ...($profile->exists ? [] : AthleteProfileOptions::defaultsFor($user)),
-            ...AthleteProfileOptions::normalize($data),
+            ...AthleteProfileOptions::mergeProfileData(
+                $baseData,
+                AthleteProfileOptions::normalize($data),
+            ),
             'user_id' => $user->getKey(),
         ]);
 

@@ -71,6 +71,12 @@ paths:
                         type: string
                       unit_system:
                         type: string
+                      age_years:
+                        type: integer
+                      height_value:
+                        type: number
+                      roadmap_suggestions:
+                        type: object
                       preferred_session_minutes:
                         type: integer
                       primary_target_skill:
@@ -100,6 +106,12 @@ paths:
                         type: string
                       unit_system:
                         type: string
+                      age_years:
+                        type: integer
+                      height_value:
+                        type: number
+                      roadmap_suggestions:
+                        type: object
                       preferred_session_minutes:
                         type: integer
                       primary_target_skill:
@@ -126,6 +138,12 @@ paths:
                     properties:
                       current_level_tests:
                         type: object
+                      age_years:
+                        type: integer
+                      height_value:
+                        type: number
+                      roadmap_suggestions:
+                        type: object
                       primary_target_skill:
                         type: string
                       mobility_checks:
@@ -150,6 +168,12 @@ paths:
                     type: object
                     properties:
                       current_level_tests:
+                        type: object
+                      age_years:
+                        type: integer
+                      height_value:
+                        type: number
+                      roadmap_suggestions:
                         type: object
                       primary_target_skill:
                         type: string

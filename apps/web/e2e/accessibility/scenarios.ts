@@ -78,9 +78,12 @@ async function setupAuthenticatedUser(page: Page): Promise<void> {
 function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     data: {
+      age_years: 29,
       available_equipment: ['pull_up_bar', 'rings'],
       base_focus_areas: ['pull_capacity', 'core_bodyline'],
+      bodyweight_unit: 'kg',
       completed_at: null,
+      current_bodyweight_value: 72.5,
       current_level_tests: {
         arch_hold_seconds: 25,
         dead_hang_seconds: 30,
@@ -113,8 +116,12 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         support_hold_seconds: 25,
         wall_handstand_seconds: 20,
       },
+      experience_level: 'intermediate',
+      height_unit: 'cm',
+      height_value: 178,
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       is_complete: false,
+      long_term_target_skills: ['planche'],
       missing_sections: [],
       mobility_checks: {
         ankle_dorsiflexion: 'limited',
@@ -129,9 +136,11 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday', 'friday'],
       preferred_training_time: 'evening',
+      prior_sport_background: ['strength_training'],
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       readiness_rating: 4,
+      roadmap_suggestions: roadmapSuggestions(),
       secondary_goals: ['strength'],
       secondary_target_skills: ['strict_pull_up'],
       skill_statuses: {
@@ -144,6 +153,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       soreness_level: 2,
       starter_plan_key: 'skill_strength_split',
       target_skills: ['strict_pull_up', 'handstand'],
+      training_age_months: 18,
       training_locations: ['home'],
       user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',
       weighted_baselines: {
@@ -160,6 +170,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
 function profileResponse() {
   return {
     data: {
+      age_years: 29,
       available_equipment: ['pull_up_bar', 'rings'],
       base_focus_areas: ['pull_capacity', 'core_bodyline'],
       baseline_tests: {
@@ -181,9 +192,12 @@ function profileResponse() {
       display_name: 'Ada Athlete',
       effort_tracking_preference: 'rir',
       experience_level: 'intermediate',
+      height_unit: 'cm',
+      height_value: 178,
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       injury_notes: 'No sharp pain.',
       intensity_preference: 'auto',
+      long_term_target_skills: ['planche'],
       movement_limitations: [
         {
           area: 'wrist',
@@ -202,9 +216,11 @@ function profileResponse() {
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday'],
       preferred_training_time: 'evening',
+      prior_sport_background: ['strength_training'],
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       progression_pace: 'balanced',
+      roadmap_suggestions: roadmapSuggestions(),
       secondary_goals: ['strength'],
       secondary_target_skills: ['strict_pull_up'],
       session_structure_preferences: ['skill_first'],
@@ -227,5 +243,36 @@ function profileResponse() {
       },
       weekly_session_goal: 3,
     },
+  }
+}
+
+function roadmapSuggestions() {
+  return {
+    base_focus_areas: ['pull_capacity', 'core_bodyline'],
+    body_context: { notes: [] },
+    bridge_tracks: [
+      {
+        base_focus_areas: ['pull_capacity', 'row_volume'],
+        compatible_secondary_skills: ['l_sit'],
+        label: 'Strict pull-up',
+        next_gate: 'Build toward 3 clean sets of 6 to 8.',
+        reason: 'Strict pull-ups are already in range for direct progression.',
+        skill: 'strict_pull_up',
+      },
+    ],
+    deferred_tracks: [],
+    level: 'intermediate',
+    long_term_tracks: [],
+    summary: 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
+    unlocked_tracks: [
+      {
+        base_focus_areas: ['handstand_line', 'core_bodyline'],
+        compatible_secondary_skills: ['l_sit'],
+        label: 'Handstand',
+        next_gate: 'Build a clean wall line and controlled balance entries.',
+        reason: 'Your wall handstand is ready for regular handstand practice.',
+        skill: 'handstand',
+      },
+    ],
   }
 }
