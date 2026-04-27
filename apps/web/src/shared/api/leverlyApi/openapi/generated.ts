@@ -119,7 +119,11 @@ export interface RoadmapNode {
 export interface RoadmapEtaRange {
   readonly min_weeks: number | null
   readonly max_weeks: number | null
+  readonly p50_weeks?: number | null
+  readonly p80_weeks?: number | null
   readonly label: string
+  readonly confidence?: number | null
+  readonly modifiers?: readonly string[]
 }
 
 export interface RoadmapConfidence {
@@ -167,18 +171,44 @@ export interface RoadmapFoundationLane {
 
 export interface RoadmapExplanation {
   readonly summary: string
+  readonly primary_now: string
   readonly why_this_goal: readonly string[]
+  readonly what_is_missing: readonly string[]
+  readonly this_block_should_improve: readonly string[]
+  readonly not_trained_yet: readonly string[]
+  readonly what_would_change_recommendation: readonly string[]
   readonly watch_out_for: readonly string[]
   readonly fallback: string
 }
 
+export interface RoadmapDomainBottleneck {
+  readonly domain: string
+  readonly label: string
+  readonly score: number
+  readonly confidence: number | null
+  readonly reason: string
+  readonly missing_inputs: readonly string[]
+}
+
+export interface RoadmapCurrentBlockFocus {
+  readonly label: string
+  readonly eta_range: RoadmapEtaRange
+  readonly lanes: readonly string[]
+  readonly focus_areas: readonly string[]
+  readonly should_improve: readonly string[]
+  readonly retest_cadence: readonly string[]
+}
+
 export interface RoadmapIntermediate {
   readonly progression_graph_placement: Readonly<Record<string, unknown>>
+  readonly placements?: Readonly<Record<string, unknown>>
   readonly domain_scores: Readonly<Record<string, unknown>>
   readonly domain_uncertainty: Readonly<Record<string, unknown>>
   readonly hard_gate_results: readonly Readonly<Record<string, unknown>>[]
   readonly readiness_scores: readonly Readonly<Record<string, unknown>>[]
   readonly compatibility_costs: readonly Readonly<Record<string, unknown>>[]
+  readonly lane_selection?: Readonly<Record<string, unknown>>
+  readonly roadmap_layers?: Readonly<Record<string, unknown>>
   readonly eta_modifiers: readonly Readonly<Record<string, unknown>>[]
 }
 
@@ -198,8 +228,10 @@ export interface RoadmapSuggestions {
   readonly blockers: readonly RoadmapBlocker[]
   readonly unlock_conditions: readonly RoadmapUnlockCondition[]
   readonly compatibility_tags: readonly string[]
+  readonly domain_bottlenecks: readonly RoadmapDomainBottleneck[]
+  readonly current_block_focus: RoadmapCurrentBlockFocus
   readonly explanation: RoadmapExplanation
-  readonly intermediate: RoadmapIntermediate
+  readonly intermediate?: RoadmapIntermediate
   readonly body_context: {
     readonly notes: readonly string[]
   }

@@ -56,10 +56,11 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
             ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
             ->assertJsonPath('data.roadmap_suggestions.compatible_secondary_goal.skill', 'strict_pull_up')
-            ->assertJsonPath('data.roadmap_suggestions.deferred_goals.0.skill', 'one_arm_pull_up')
-            ->assertJsonPath('data.roadmap_suggestions.eta_range.label', '8-16 weeks')
+            ->assertJsonPath('data.roadmap_suggestions.deferred_goals.0.skill', 'planche')
+            ->assertJsonPath('data.roadmap_suggestions.eta_range.label', '8-24 weeks')
             ->assertJsonPath('data.roadmap_suggestions.confidence.level', 'medium')
-            ->assertJsonPath('data.roadmap_suggestions.intermediate.compatibility_costs.0.skill', 'strict_pull_up')
+            ->assertJsonPath('data.roadmap_suggestions.current_block_focus.lanes.0', 'handstand')
+            ->assertJsonMissingPath('data.roadmap_suggestions.intermediate')
             ->assertJsonPath('data.available_equipment.3', 'rings')
             ->assertJsonPath('data.movement_limitations.0.area', 'wrist')
             ->assertJsonPath('data.pain_flags.wrist.severity', 'mild')
@@ -81,6 +82,8 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.preferred_training_days.2', 'friday')
             ->assertJsonPath('data.progression_pace', 'balanced')
             ->assertJsonPath('data.effort_tracking_preference', 'rir');
+
+        $this->assertNotEmpty($response->json('data.roadmap_suggestions.domain_bottlenecks'));
 
         $profileId = $response->json('data.id');
 
@@ -122,6 +125,21 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.preferred_session_minutes', 45)
             ->assertJsonPath('data.secondary_goals.1', 'mobility')
             ->assertJsonPath('data.available_equipment.2', 'box_bench');
+    }
+
+    public function test_profile_roadmap_intermediate_payload_is_debug_opt_in(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->patchJson('/api/v1/me/profile?include_roadmap_intermediate=1', $this->validPayload())
+            ->assertOk()
+            ->assertJsonPath('data.roadmap_suggestions.intermediate.progression_graph_placement.primary.skill', 'handstand');
+
+        $skills = collect($response->json('data.roadmap_suggestions.intermediate.readiness_scores'))
+            ->pluck('skill')
+            ->all();
+
+        $this->assertContains('handstand', $skills);
     }
 
     public function test_profile_data_is_scoped_to_the_signed_in_user(): void

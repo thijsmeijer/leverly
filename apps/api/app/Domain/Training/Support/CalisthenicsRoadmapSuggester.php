@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Training\Support;
 
 use App\Domain\Training\Roadmap\RoadmapInput;
+use App\Domain\Training\Roadmap\RoadmapInputMapper;
 use App\Domain\Training\Roadmap\RoadmapResult;
 
 final class CalisthenicsRoadmapSuggester
@@ -36,7 +37,7 @@ final class CalisthenicsRoadmapSuggester
     /**
      * @return array<string, mixed>
      */
-    public static function suggest(RoadmapInput $input): array
+    public static function suggest(RoadmapInput $input, bool $includeIntermediate = false): array
     {
         $signals = self::signals($input);
 
@@ -157,7 +158,27 @@ final class CalisthenicsRoadmapSuggester
             'bridge_tracks' => self::dedupeTracks($bridge),
             'long_term_tracks' => self::dedupeTracks($longTerm),
             'deferred_tracks' => self::dedupeTracks($deferred),
-        ])->toArray();
+        ], $includeIntermediate)->toArray();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function suggestFromAthleteData(array $data, bool $includeIntermediate = false): array
+    {
+        return self::suggest(RoadmapInputMapper::fromAthleteData($data), $includeIntermediate);
+    }
+
+    /**
+     * @param  array<string, mixed>  $suggestions
+     * @return array<string, mixed>
+     */
+    public static function withoutIntermediate(array $suggestions): array
+    {
+        unset($suggestions['intermediate']);
+
+        return $suggestions;
     }
 
     /**

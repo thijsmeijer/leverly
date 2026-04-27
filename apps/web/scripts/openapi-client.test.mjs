@@ -88,7 +88,9 @@ paths:
                             type: object
                           eta_range:
                             type: object
-                          intermediate:
+                          domain_bottlenecks:
+                            type: array
+                          current_block_focus:
                             type: object
                       preferred_session_minutes:
                         type: integer
@@ -140,7 +142,9 @@ paths:
                             type: object
                           eta_range:
                             type: object
-                          intermediate:
+                          domain_bottlenecks:
+                            type: array
+                          current_block_focus:
                             type: object
                       preferred_session_minutes:
                         type: integer
@@ -189,7 +193,9 @@ paths:
                             type: object
                           eta_range:
                             type: object
-                          intermediate:
+                          domain_bottlenecks:
+                            type: array
+                          current_block_focus:
                             type: object
                       primary_target_skill:
                         type: string
@@ -237,7 +243,9 @@ paths:
                             type: object
                           eta_range:
                             type: object
-                          intermediate:
+                          domain_bottlenecks:
+                            type: array
+                          current_block_focus:
                             type: object
                       primary_target_skill:
                         type: string
@@ -288,6 +296,9 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('readonly top_support_hold_seconds: number | null')
     expect(generated).toContain('readonly version: string')
     expect(generated).toContain('readonly eta_range: RoadmapEtaRange')
+    expect(generated).toContain('readonly domain_bottlenecks: readonly RoadmapDomainBottleneck[]')
+    expect(generated).toContain('readonly current_block_focus: RoadmapCurrentBlockFocus')
+    expect(generated).toContain('readonly intermediate?: RoadmapIntermediate')
     expect(generated).toContain("readonly '/me'")
     expect(generated).toContain("readonly '/me/profile'")
     expect(generated).toContain("readonly '/me/onboarding'")

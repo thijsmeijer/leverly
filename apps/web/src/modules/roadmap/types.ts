@@ -4,9 +4,13 @@ export interface RoadmapNode {
 }
 
 export interface RoadmapEtaRange {
+  readonly confidence?: number | null
   readonly label: string
   readonly maxWeeks: number | null
   readonly minWeeks: number | null
+  readonly modifiers?: readonly string[]
+  readonly p50Weeks?: number | null
+  readonly p80Weeks?: number | null
 }
 
 export interface RoadmapConfidence {
@@ -63,9 +67,32 @@ export interface RoadmapFoundationLane {
 
 export interface RoadmapExplanation {
   readonly fallback: string
+  readonly notTrainedYet: readonly string[]
+  readonly primaryNow: string
   readonly summary: string
+  readonly thisBlockShouldImprove: readonly string[]
+  readonly whatIsMissing: readonly string[]
+  readonly whatWouldChangeRecommendation: readonly string[]
   readonly watchOutFor: readonly string[]
   readonly whyThisGoal: readonly string[]
+}
+
+export interface RoadmapDomainBottleneck {
+  readonly confidence: number | null
+  readonly domain: string
+  readonly label: string
+  readonly missingInputs: readonly string[]
+  readonly reason: string
+  readonly score: number | null
+}
+
+export interface RoadmapCurrentBlockFocus {
+  readonly etaRange: RoadmapEtaRange
+  readonly focusAreas: readonly string[]
+  readonly label: string
+  readonly lanes: readonly string[]
+  readonly retestCadence: readonly string[]
+  readonly shouldImprove: readonly string[]
 }
 
 export interface RoadmapIntermediate {
@@ -88,7 +115,9 @@ export interface RoadmapSuggestions {
   readonly compatibilityTags: readonly string[]
   readonly compatibleSecondaryGoal: RoadmapGoal | null
   readonly confidence: RoadmapConfidence
+  readonly currentBlockFocus: RoadmapCurrentBlockFocus
   readonly currentProgressionNode: RoadmapNode
+  readonly domainBottlenecks: readonly RoadmapDomainBottleneck[]
   readonly deferredGoals: readonly RoadmapGoal[]
   readonly deferredTracks: readonly RoadmapTrack[]
   readonly etaRange: RoadmapEtaRange

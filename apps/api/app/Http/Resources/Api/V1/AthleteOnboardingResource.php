@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
+use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -18,6 +19,13 @@ class AthleteOnboardingResource extends JsonResource
     public function toArray(Request $request): array
     {
         $data = AthleteOnboardingOptions::recordData($this->resource);
+        $data['roadmap_suggestions'] = $request->boolean('include_roadmap_intermediate')
+            ? CalisthenicsRoadmapSuggester::suggestFromAthleteData($data, includeIntermediate: true)
+            : CalisthenicsRoadmapSuggester::withoutIntermediate(
+                is_array($data['roadmap_suggestions'] ?? null)
+                    ? $data['roadmap_suggestions']
+                    : CalisthenicsRoadmapSuggester::empty(),
+            );
 
         return [
             'id' => $this->id,

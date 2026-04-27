@@ -1,6 +1,8 @@
 import type {
   RoadmapBlocker,
   RoadmapConfidence,
+  RoadmapCurrentBlockFocus,
+  RoadmapDomainBottleneck,
   RoadmapEtaRange,
   RoadmapExplanation,
   RoadmapFoundationLane,
@@ -31,11 +33,13 @@ export function mapRoadmapSuggestions(value: unknown): RoadmapSuggestions {
     compatibilityTags: stringArray(source.compatibility_tags ?? source.compatibilityTags),
     compatibleSecondaryGoal: mapNullableGoal(source.compatible_secondary_goal ?? source.compatibleSecondaryGoal),
     confidence: mapConfidence(source.confidence),
+    currentBlockFocus: mapCurrentBlockFocus(source.current_block_focus ?? source.currentBlockFocus),
     currentProgressionNode: mapNode(
       source.current_progression_node ?? source.currentProgressionNode,
       'foundation.current',
       'Baseline not placed yet',
     ),
+    domainBottlenecks: recordArray(source.domain_bottlenecks ?? source.domainBottlenecks).map(mapDomainBottleneck),
     deferredGoals: recordArray(source.deferred_goals ?? source.deferredGoals).map(mapGoal),
     deferredTracks: recordArray(source.deferred_tracks ?? source.deferredTracks).map(mapTrack),
     etaRange: mapEtaRange(source.eta_range ?? source.etaRange),
@@ -132,9 +136,13 @@ function mapEtaRange(value: unknown): RoadmapEtaRange {
   const source = recordValue(value)
 
   return {
+    confidence: nullableNumber(source.confidence),
     label: stringValue(source.label, 'Complete assessment'),
     maxWeeks: nullableNumber(source.max_weeks ?? source.maxWeeks),
     minWeeks: nullableNumber(source.min_weeks ?? source.minWeeks),
+    modifiers: stringArray(source.modifiers),
+    p50Weeks: nullableNumber(source.p50_weeks ?? source.p50Weeks),
+    p80Weeks: nullableNumber(source.p80_weeks ?? source.p80Weeks),
   }
 }
 
@@ -170,9 +178,40 @@ function mapExplanation(value: unknown): RoadmapExplanation {
 
   return {
     fallback: stringValue(source.fallback, ''),
+    notTrainedYet: stringArray(source.not_trained_yet ?? source.notTrainedYet),
+    primaryNow: stringValue(source.primary_now ?? source.primaryNow, ''),
     summary: stringValue(source.summary, ''),
+    thisBlockShouldImprove: stringArray(source.this_block_should_improve ?? source.thisBlockShouldImprove),
+    whatIsMissing: stringArray(source.what_is_missing ?? source.whatIsMissing),
+    whatWouldChangeRecommendation: stringArray(
+      source.what_would_change_recommendation ?? source.whatWouldChangeRecommendation,
+    ),
     watchOutFor: stringArray(source.watch_out_for ?? source.watchOutFor),
     whyThisGoal: stringArray(source.why_this_goal ?? source.whyThisGoal),
+  }
+}
+
+function mapDomainBottleneck(value: UnknownRecord): RoadmapDomainBottleneck {
+  return {
+    confidence: nullableNumber(value.confidence),
+    domain: stringValue(value.domain, ''),
+    label: stringValue(value.label, ''),
+    missingInputs: stringArray(value.missing_inputs ?? value.missingInputs),
+    reason: stringValue(value.reason, ''),
+    score: nullableNumber(value.score),
+  }
+}
+
+function mapCurrentBlockFocus(value: unknown): RoadmapCurrentBlockFocus {
+  const source = recordValue(value)
+
+  return {
+    etaRange: mapEtaRange(source.eta_range ?? source.etaRange),
+    focusAreas: stringArray(source.focus_areas ?? source.focusAreas),
+    label: stringValue(source.label, 'Current block'),
+    lanes: stringArray(source.lanes),
+    retestCadence: stringArray(source.retest_cadence ?? source.retestCadence),
+    shouldImprove: stringArray(source.should_improve ?? source.shouldImprove),
   }
 }
 

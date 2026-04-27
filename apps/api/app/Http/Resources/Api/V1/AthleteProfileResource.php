@@ -19,6 +19,11 @@ class AthleteProfileResource extends JsonResource
     public function toArray(Request $request): array
     {
         $profileData = AthleteProfileOptions::recordData($this->resource);
+        $roadmapSuggestions = $request->boolean('include_roadmap_intermediate')
+            ? CalisthenicsRoadmapSuggester::suggestFromAthleteData($profileData, includeIntermediate: true)
+            : CalisthenicsRoadmapSuggester::withoutIntermediate(
+                $this->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
+            );
 
         return [
             'id' => $this->id,
@@ -44,7 +49,7 @@ class AthleteProfileResource extends JsonResource
             'base_focus_areas' => $this->base_focus_areas ?? [],
             'required_goal_modules' => $profileData['required_goal_modules'],
             'goal_modules' => $profileData['goal_modules'],
-            'roadmap_suggestions' => $this->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
+            'roadmap_suggestions' => $roadmapSuggestions,
             'available_equipment' => $this->available_equipment ?? [],
             'training_locations' => $this->training_locations ?? [],
             'movement_limitations' => $this->movement_limitations ?? [],

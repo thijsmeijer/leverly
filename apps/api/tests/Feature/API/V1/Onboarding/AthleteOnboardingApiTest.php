@@ -59,15 +59,17 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.roadmap_suggestions.next_node.id', 'handstand.next')
             ->assertJsonPath('data.roadmap_suggestions.next_milestone.id', 'handstand.milestone')
             ->assertJsonPath('data.roadmap_suggestions.eta_range.min_weeks', 8)
-            ->assertJsonPath('data.roadmap_suggestions.eta_range.max_weeks', 16)
+            ->assertJsonPath('data.roadmap_suggestions.eta_range.max_weeks', 24)
             ->assertJsonPath('data.roadmap_suggestions.confidence.level', 'medium')
             ->assertJsonPath('data.roadmap_suggestions.blockers.0.key', 'wrist_extension')
             ->assertJsonPath('data.roadmap_suggestions.unlock_conditions.0.skill', 'handstand')
             ->assertJsonPath('data.roadmap_suggestions.compatibility_tags.0', 'overhead')
             ->assertJsonPath('data.roadmap_suggestions.explanation.summary', 'Handstand is the clearest first roadmap priority from the current assessment.')
-            ->assertJsonPath('data.roadmap_suggestions.intermediate.progression_graph_placement.primary.skill', 'handstand')
-            ->assertJsonPath('data.roadmap_suggestions.intermediate.domain_scores.vertical_pull.score', 0.4)
-            ->assertJsonPath('data.roadmap_suggestions.intermediate.hard_gate_results.0.key', 'pain')
+            ->assertJsonPath('data.roadmap_suggestions.explanation.primary_now', 'Handstand is the primary roadmap right now.')
+            ->assertJsonPath('data.roadmap_suggestions.explanation.this_block_should_improve.0', 'Inversion and balance')
+            ->assertJsonPath('data.roadmap_suggestions.current_block_focus.lanes.0', 'handstand')
+            ->assertJsonPath('data.roadmap_suggestions.current_block_focus.retest_cadence.2', '4-6 week block retest')
+            ->assertJsonMissingPath('data.roadmap_suggestions.intermediate')
             ->assertJsonPath('data.roadmap_suggestions.unlocked_tracks.0.skill', 'strict_push_up')
             ->assertJsonPath('data.current_level_tests.push_ups.max_strict_reps', 18)
             ->assertJsonPath('data.current_level_tests.pull_ups.max_strict_reps', 4)
@@ -96,6 +98,8 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.starter_plan_key', 'skill_strength_split')
             ->assertJsonPath('data.is_complete', true)
             ->assertJsonPath('data.missing_sections', []);
+
+        $this->assertNotEmpty($response->json('data.roadmap_suggestions.domain_bottlenecks'));
 
         $onboardingId = $response->json('data.id');
 
@@ -145,6 +149,109 @@ class AthleteOnboardingApiTest extends TestCase
         $this->assertSame('recurring', $profile->pain_flags['wrist']['status']);
         $this->assertSame('wrist', $profile->movement_limitations[0]['area']);
         $this->assertSame('mild', $profile->movement_limitations[0]['severity']);
+    }
+
+    public function test_roadmap_intermediate_payload_is_only_returned_when_requested(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->patchJson('/api/v1/me/onboarding?include_roadmap_intermediate=1', $this->completePayload())
+            ->assertOk()
+            ->assertJsonPath('data.roadmap_suggestions.intermediate.compatibility_costs.0.skill', 'strict_pull_up');
+
+        $skills = collect($response->json('data.roadmap_suggestions.intermediate.readiness_scores'))
+            ->pluck('skill')
+            ->all();
+
+        $this->assertContains('handstand', $skills);
+    }
+
+    public function test_roadmap_explains_safety_deferral_and_missing_data(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->patchJson('/api/v1/me/onboarding', [
+            'age_years' => 42,
+            'training_age_months' => 2,
+            'current_bodyweight_value' => 98,
+            'height_value' => 176,
+            'weight_trend' => 'cutting',
+            'primary_goal' => 'skill',
+            'primary_target_skill' => 'front_lever',
+            'secondary_target_skills' => ['one_arm_pull_up'],
+            'long_term_target_skills' => ['planche'],
+            'available_equipment' => [],
+            'weekly_session_goal' => 3,
+            'pain_level' => 7,
+            'current_level_tests' => [
+                'push_ups' => ['max_strict_reps' => 5],
+            ],
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.roadmap_suggestions.confidence.level', 'low')
+            ->assertJsonPath('data.roadmap_suggestions.explanation.what_is_missing.0', 'Objective baseline data')
+            ->assertJsonPath('data.roadmap_suggestions.explanation.what_would_change_recommendation.0', 'Pain returning below 4/10 would reopen progression choices.');
+
+        $deferred = collect($response->json('data.roadmap_suggestions.deferred_goals'));
+
+        $frontLever = $deferred->firstWhere('skill', 'front_lever');
+
+        $this->assertIsArray($frontLever);
+        $this->assertStringContainsString('pain', strtolower((string) $frontLever['explanation']));
+        $this->assertContains('Required equipment is missing.', array_column($frontLever['unlock_conditions'], 'label'));
+    }
+
+    public function test_roadmap_explains_incompatible_secondary_goal(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->patchJson('/api/v1/me/onboarding', [
+            'age_years' => 29,
+            'training_age_months' => 30,
+            'current_bodyweight_value' => 75,
+            'height_value' => 178,
+            'primary_goal' => 'skill',
+            'primary_target_skill' => 'muscle_up',
+            'secondary_target_skills' => ['one_arm_pull_up'],
+            'available_equipment' => ['pull_up_bar', 'dip_bars'],
+            'weekly_session_goal' => 4,
+            'current_level_tests' => [
+                'pull_ups' => ['max_strict_reps' => 10, 'fallback_variant' => 'none'],
+                'dips' => ['max_strict_reps' => 10, 'fallback_variant' => 'none'],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 15],
+                'hollow_hold_seconds' => 35,
+                'passive_hang_seconds' => 45,
+                'top_support_hold_seconds' => 35,
+            ],
+            'goal_modules' => [
+                'pull_skill' => [
+                    'highest_progression' => 'high_pull_up',
+                    'metric_type' => 'reps',
+                    'reps' => 4,
+                    'hold_seconds' => null,
+                    'load_value' => null,
+                    'load_unit' => 'kg',
+                    'quality' => 'clean',
+                    'notes' => null,
+                ],
+            ],
+            'skill_statuses' => [
+                'one_arm_pull_up' => ['status' => 'strict_one_arm_pull_up', 'max_strict_reps' => 1],
+            ],
+        ])->assertOk();
+
+        $deferred = collect($response->json('data.roadmap_suggestions.deferred_goals'));
+        $oneArmPullUp = $deferred->firstWhere('skill', 'one_arm_pull_up');
+
+        $this->assertIsArray($oneArmPullUp);
+        $this->assertSame(
+            'Too much overlapping vertical pull and elbow-flexor stress with the primary lane.',
+            $oneArmPullUp['explanation'],
+        );
+        $this->assertContains(
+            'Too much overlapping vertical pull and elbow-flexor stress with the primary lane.',
+            $response->json('data.roadmap_suggestions.explanation.not_trained_yet'),
+        );
     }
 
     public function test_athlete_can_read_and_update_onboarding_draft(): void
