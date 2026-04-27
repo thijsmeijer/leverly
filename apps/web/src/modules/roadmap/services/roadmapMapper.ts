@@ -13,6 +13,7 @@ import type {
   RoadmapMicroTestRequest,
   RoadmapNode,
   RoadmapPortfolio,
+  RoadmapPortfolioAdaptation,
   RoadmapPortfolioDayTimeLedger,
   RoadmapPortfolioExplanation,
   RoadmapPortfolioFoundationLayer,
@@ -93,6 +94,7 @@ export function mapRoadmapPortfolio(value: unknown): RoadmapPortfolio {
       accessoryTracks: recordArray(activePortfolio.accessory_tracks ?? activePortfolio.accessoryTracks).map(
         mapPortfolioTrack,
       ),
+      adaptation: mapPortfolioAdaptation(activePortfolio.adaptation),
       developmentTracks: recordArray(activePortfolio.development_tracks ?? activePortfolio.developmentTracks).map(
         mapPortfolioTrack,
       ),
@@ -161,6 +163,7 @@ function mapPortfolioTrack(value: UnknownRecord): RoadmapPortfolioTrack {
 
   return {
     confidence: mapConfidence(value.confidence),
+    adaptation: mapPortfolioAdaptation(value.adaptation),
     currentNode: mapNode(value.current_node ?? value.currentNode, `${skillTrackId}.current`, 'Current placement'),
     displayName: stringValue(value.display_name ?? value.displayName, stringValue(value.label, 'Roadmap target')),
     estimatedMinutesPerWeek: numberValue(value.estimated_minutes_per_week ?? value.estimatedMinutesPerWeek, 0),
@@ -174,6 +177,28 @@ function mapPortfolioTrack(value: UnknownRecord): RoadmapPortfolioTrack {
     weeklyExposures: numberValue(value.weekly_exposures ?? value.weeklyExposures, 0),
     whyIncluded: stringArray(value.why_included ?? value.whyIncluded),
     whyNotHigherPriority: stringArray(value.why_not_higher_priority ?? value.whyNotHigherPriority),
+  }
+}
+
+function mapPortfolioAdaptation(value: unknown): RoadmapPortfolioAdaptation {
+  const source = recordValue(value)
+
+  return {
+    averageFormScore: nullableNumber(source.average_form_score ?? source.averageFormScore),
+    averageRir: nullableNumber(source.average_rir ?? source.averageRir),
+    averageRpe: nullableNumber(source.average_rpe ?? source.averageRpe),
+    blendWeight: numberValue(source.blend_weight ?? source.blendWeight, 0),
+    completedModuleEvidence: numberValue(source.completed_module_evidence ?? source.completedModuleEvidence, 0),
+    completionRatio: nullableNumber(source.completion_ratio ?? source.completionRatio),
+    etaBasis: stringValue(source.eta_basis ?? source.etaBasis, 'prior'),
+    evidenceWeeks: numberValue(source.evidence_weeks ?? source.evidenceWeeks, 0),
+    inputs: booleanRecord(source.inputs),
+    maxPainLevel: nullableNumber(source.max_pain_level ?? source.maxPainLevel),
+    nextAction: stringValue(source.next_action ?? source.nextAction, ''),
+    observedProgressDelta: nullableNumber(source.observed_progress_delta ?? source.observedProgressDelta),
+    sessionLogs: numberValue(source.session_logs ?? source.sessionLogs, 0),
+    status: stringValue(source.status, 'prior_based'),
+    warnings: stringArray(source.warnings),
   }
 }
 
@@ -605,6 +630,19 @@ function numberRecord(value: unknown): Readonly<Record<string, number>> {
 
     if (parsed !== null) {
       mapped[key] = parsed
+    }
+  })
+
+  return mapped
+}
+
+function booleanRecord(value: unknown): Readonly<Record<string, boolean>> {
+  const source = recordValue(value)
+  const mapped: Record<string, boolean> = {}
+
+  Object.entries(source).forEach(([key, nestedValue]) => {
+    if (typeof nestedValue === 'boolean') {
+      mapped[key] = nestedValue
     }
   })
 

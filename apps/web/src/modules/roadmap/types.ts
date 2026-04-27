@@ -177,6 +177,25 @@ export interface RoadmapPortfolioTrack {
   readonly modules: readonly Record<string, unknown>[]
   readonly whyIncluded: readonly string[]
   readonly whyNotHigherPriority: readonly string[]
+  readonly adaptation: RoadmapPortfolioAdaptation
+}
+
+export interface RoadmapPortfolioAdaptation {
+  readonly status: string
+  readonly etaBasis: string
+  readonly evidenceWeeks: number
+  readonly blendWeight: number
+  readonly warnings: readonly string[]
+  readonly nextAction?: string
+  readonly completionRatio?: number | null
+  readonly observedProgressDelta?: number | null
+  readonly maxPainLevel?: number | null
+  readonly averageFormScore?: number | null
+  readonly averageRir?: number | null
+  readonly averageRpe?: number | null
+  readonly sessionLogs?: number
+  readonly completedModuleEvidence?: number
+  readonly inputs?: Readonly<Record<string, boolean>>
 }
 
 export interface RoadmapPortfolioScheduledModule {
@@ -328,6 +347,7 @@ export interface RoadmapPortfolioPhasePlan {
 
 export interface RoadmapActiveSkillPortfolio {
   readonly accessoryTracks: readonly RoadmapPortfolioTrack[]
+  readonly adaptation: RoadmapPortfolioAdaptation
   readonly developmentTracks: readonly RoadmapPortfolioTrack[]
   readonly explanation: RoadmapPortfolioExplanation
   readonly foundationTracks: readonly RoadmapPortfolioTrack[]

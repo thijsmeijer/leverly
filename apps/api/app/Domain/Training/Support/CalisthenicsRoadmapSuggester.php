@@ -220,7 +220,7 @@ final class CalisthenicsRoadmapSuggester
      */
     public static function empty(): array
     {
-        return RoadmapResult::empty()->toArray();
+        return RoadmapPortfolioResult::empty()->toArray();
     }
 
     /**
@@ -228,7 +228,7 @@ final class CalisthenicsRoadmapSuggester
      */
     public static function emptyPortfolio(): array
     {
-        return RoadmapPortfolioResult::empty()->toArray();
+        return self::empty();
     }
 
     /**

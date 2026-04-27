@@ -243,12 +243,17 @@ class AthleteProfileApiTest extends TestCase
         $this->assertNotEmpty($portfolio['phase_plan']['progression_rules']);
         $this->assertNotEmpty($portfolio['stress_ledger']['axes']);
         $this->assertSame(4, $portfolio['time_ledger']['max_sessions_per_week']);
+        $this->assertSame('prior_based', $portfolio['adaptation']['status']);
+        $this->assertSame('prior', $portfolio['adaptation']['eta_basis']);
+        $this->assertSame(0, $portfolio['adaptation']['evidence_weeks']);
         $this->assertNotEmpty($portfolio['explanation']['summary']);
 
         $developmentTracks = $portfolio['development_tracks'];
         $developmentIds = array_column($developmentTracks, 'skill_track_id');
         $primaryTrack = $developmentTracks[0];
 
+        $this->assertSame('prior_based', $primaryTrack['adaptation']['status']);
+        $this->assertSame('collect_training_evidence', $primaryTrack['adaptation']['next_action']);
         $this->assertSame($developmentIds, $roadmap['onboarding_goal_choices']['development']);
         $this->assertSame($primaryTrack['skill_track_id'], $roadmap['primary_goal']['skill']);
         $this->assertSame($primaryTrack['current_node'], $roadmap['current_progression_node']);

@@ -141,6 +141,8 @@ describe('SettingsPage', () => {
     expect(wrapper.text()).toContain('Role')
     expect(wrapper.text()).toContain('Frequency')
     expect(wrapper.text()).toContain('Intensity')
+    expect(wrapper.text()).toContain('ETA source')
+    expect(wrapper.text()).toContain('Baseline prior')
     expect(wrapper.text()).toContain('Next node')
     expect(wrapper.text()).toContain('Next milestone')
     expect(wrapper.text()).toContain('Why included')
@@ -450,6 +452,15 @@ function roadmapPortfolioResponse(overrides: Partial<Record<string, unknown>> = 
         watch_out_for: ['Elbows should feel fresh before high-pull work.'],
         fallback: 'Move front lever work to easier holds when fatigue is high.',
       },
+      adaptation: {
+        status: 'prior_based',
+        eta_basis: 'prior',
+        evidence_weeks: 0,
+        session_logs: 0,
+        completed_module_evidence: 0,
+        blend_weight: 0,
+        warnings: ['No logged training evidence yet; ETA uses baseline and graph priors.'],
+      },
       phase_plan: {
         phase_id: 'phase_1',
         duration_weeks: { min: 6, target: 8, max: 12 },
@@ -561,6 +572,14 @@ function portfolioTrack(
       skillTrackId === 'front_lever' ? ['straight_arm_pull', 'trunk_compression'] : ['wrist_extension'],
     eta_to_next_node: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
     confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete.'] },
+    adaptation: {
+      status: 'prior_based',
+      eta_basis: 'prior',
+      evidence_weeks: 0,
+      blend_weight: 0,
+      next_action: 'collect_training_evidence',
+      warnings: ['No logged training evidence yet; ETA uses baseline and graph priors.'],
+    },
     modules: [{ title: 'Skill primer', intensity_tier: mode === 'development' ? 'high' : 'medium' }],
     why_included: [`${displayName} fits the current weekly portfolio.`],
     why_not_higher_priority: [],

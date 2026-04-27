@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import type {
   RoadmapMicroTestRequest,
   RoadmapPortfolio,
+  RoadmapPortfolioAdaptation,
   RoadmapPortfolioScheduledDay,
   RoadmapPortfolioStressAxis,
   RoadmapPortfolioTrack,
@@ -154,6 +155,16 @@ const weeklyBudgetLabel = computed(() => {
 
   return `${sessions || '...'} sessions / ${minutes || 0} min per week`
 })
+const portfolioEtaBasisLabel = computed(() => etaSourceLabel(activePortfolio.value.adaptation))
+const portfolioEtaEvidenceLabel = computed(() => {
+  const adaptation = activePortfolio.value.adaptation
+
+  if (adaptation.etaBasis === 'blended' && adaptation.evidenceWeeks > 0) {
+    return `${adaptation.evidenceWeeks} weeks of logs blended in.`
+  }
+
+  return adaptation.warnings[0] || 'ETA starts from baseline tests and graph priors.'
+})
 
 watch(
   () => visibleMicroTests.value.map((test) => test.key).join('|'),
@@ -213,6 +224,18 @@ function roleLabel(track: RoadmapPortfolioTrack, fallbackRole: string): string {
 
 function etaLabel(track: RoadmapPortfolioTrack): string {
   return track.etaToNextNode.label || 'ETA after retest'
+}
+
+function etaSourceLabel(adaptation: RoadmapPortfolioAdaptation): string {
+  if (adaptation.etaBasis === 'blended') {
+    return 'Log-adjusted ETA'
+  }
+
+  if (adaptation.etaBasis === 'prior') {
+    return 'Baseline prior'
+  }
+
+  return humanize(adaptation.etaBasis || adaptation.status || 'prior_based')
 }
 
 function trackReason(track: RoadmapPortfolioTrack): string {
@@ -348,7 +371,7 @@ function capitalize(value: string): string {
           work inside the current budget while your choices guide priority.
         </p>
       </div>
-      <dl class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+      <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         <div class="rounded-control bg-surface-primary border-line-subtle border p-4">
           <dt class="text-ink-muted text-xs font-semibold">Phase</dt>
           <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ phaseDuration }}</dd>
@@ -362,6 +385,11 @@ function capitalize(value: string): string {
           <dd class="text-ink-primary mt-1 text-sm font-semibold">
             {{ activePortfolio.explanation.watchOutFor[0] || 'No major stress warning' }}
           </dd>
+        </div>
+        <div class="rounded-control bg-surface-primary border-line-subtle border p-4">
+          <dt class="text-ink-muted text-xs font-semibold">ETA source</dt>
+          <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ portfolioEtaBasisLabel }}</dd>
+          <p class="text-ink-muted mt-1 text-xs leading-5">{{ portfolioEtaEvidenceLabel }}</p>
         </div>
       </dl>
     </div>
@@ -410,6 +438,10 @@ function capitalize(value: string): string {
               <div>
                 <dt class="text-ink-muted font-semibold">ETA</dt>
                 <dd class="text-ink-primary mt-0.5 font-semibold">{{ etaLabel(track) }}</dd>
+              </div>
+              <div>
+                <dt class="text-ink-muted font-semibold">ETA source</dt>
+                <dd class="text-ink-primary mt-0.5 font-semibold">{{ etaSourceLabel(track.adaptation) }}</dd>
               </div>
               <div>
                 <dt class="text-ink-muted font-semibold">Next node</dt>

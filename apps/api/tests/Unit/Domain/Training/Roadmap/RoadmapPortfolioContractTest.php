@@ -30,6 +30,18 @@ final class RoadmapPortfolioContractTest extends TestCase
         $this->assertArrayHasKey('explanation', $portfolio['active_skill_portfolio']);
     }
 
+    public function test_empty_roadmap_defaults_use_the_portfolio_contract(): void
+    {
+        $portfolio = CalisthenicsRoadmapSuggester::empty();
+
+        $this->assertSame('roadmap.portfolio.v3', $portfolio['version']);
+        $this->assertArrayHasKey('active_skill_portfolio', $portfolio);
+        $this->assertArrayHasKey('adaptation', $portfolio['active_skill_portfolio']);
+        $this->assertSame('prior_based', $portfolio['active_skill_portfolio']['adaptation']['status']);
+        $this->assertSame([], $portfolio['active_skill_portfolio']['development_tracks']);
+        $this->assertSame([], $portfolio['onboarding_goal_choices']['development']);
+    }
+
     public function test_beginner_bridge_portfolio_keeps_advanced_goal_visible_without_promoting_it(): void
     {
         $portfolio = CalisthenicsRoadmapSuggester::portfolioFromAthleteData($this->athleteData([

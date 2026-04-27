@@ -100,6 +100,14 @@ describe('roadmapMapper', () => {
             primary_stress_axes: ['straight_arm_pull', 'trunk_rigidity'],
             eta_to_next_node: { min_weeks: 6, max_weeks: 12, label: '6-12 weeks' },
             confidence: { level: 'medium', score: 0.72, reasons: ['Pulling baseline is current.'] },
+            adaptation: {
+              status: 'prior_based',
+              eta_basis: 'prior',
+              evidence_weeks: 0,
+              blend_weight: 0,
+              next_action: 'collect_training_evidence',
+              warnings: ['No logged training evidence yet; ETA uses baseline and graph priors.'],
+            },
             modules: [],
             why_included: ['This is the clearest next pulling skill.'],
             why_not_higher_priority: [],
@@ -178,6 +186,19 @@ describe('roadmapMapper', () => {
           why_this_mix: ['It fits the current pull budget.'],
           watch_out_for: ['Keep elbows calm.'],
           fallback: 'Reduce lever intensity if pulling joints complain.',
+        },
+        adaptation: {
+          status: 'prior_based',
+          eta_basis: 'prior',
+          evidence_weeks: 0,
+          session_logs: 0,
+          completed_module_evidence: 0,
+          blend_weight: 0,
+          warnings: ['No logged training evidence yet; ETA uses baseline and graph priors.'],
+          inputs: {
+            supports_session_logs: true,
+            supports_completed_module_evidence: true,
+          },
         },
         phase_plan: {
           phase_id: 'current_block',
@@ -261,6 +282,18 @@ describe('roadmapMapper', () => {
       mode: 'development',
       weeklyExposures: 2,
       primaryStressAxes: ['straight_arm_pull', 'trunk_rigidity'],
+    })
+    expect(portfolio.activeSkillPortfolio.adaptation).toMatchObject({
+      status: 'prior_based',
+      etaBasis: 'prior',
+      evidenceWeeks: 0,
+      sessionLogs: 0,
+      completedModuleEvidence: 0,
+    })
+    expect(portfolio.activeSkillPortfolio.developmentTracks[0]?.adaptation).toMatchObject({
+      status: 'prior_based',
+      etaBasis: 'prior',
+      nextAction: 'collect_training_evidence',
     })
     expect(portfolio.activeSkillPortfolio.weeklySchedule.days[0]).toMatchObject({
       dayIndex: 1,
