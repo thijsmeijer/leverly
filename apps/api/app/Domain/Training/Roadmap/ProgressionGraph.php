@@ -8,11 +8,13 @@ final readonly class ProgressionGraph
 {
     /**
      * @param  list<ProgressionGraphNode>  $nodes
+     * @param  list<ProgressionGraphEdge>  $edges
      */
     public function __construct(
         public string $family,
         public string $label,
         private array $nodes,
+        private array $edges = [],
     ) {}
 
     /**
@@ -21,6 +23,14 @@ final readonly class ProgressionGraph
     public function nodes(): array
     {
         return $this->nodes;
+    }
+
+    /**
+     * @return list<ProgressionGraphEdge>
+     */
+    public function edges(): array
+    {
+        return $this->edges;
     }
 
     /**
@@ -56,8 +66,19 @@ final readonly class ProgressionGraph
         return null;
     }
 
+    public function edge(string $sourceSlug, string $targetSlug): ?ProgressionGraphEdge
+    {
+        foreach ($this->edges as $edge) {
+            if ($edge->sourceSlug === $sourceSlug && $edge->targetSlug === $targetSlug) {
+                return $edge;
+            }
+        }
+
+        return null;
+    }
+
     /**
-     * @return array{family: string, label: string, nodes: list<array<string, mixed>>}
+     * @return array{family: string, label: string, nodes: list<array<string, mixed>>, edges: list<array<string, mixed>>}
      */
     public function toArray(): array
     {
@@ -67,6 +88,10 @@ final readonly class ProgressionGraph
             'nodes' => array_map(
                 static fn (ProgressionGraphNode $node): array => $node->toArray(),
                 $this->nodes,
+            ),
+            'edges' => array_map(
+                static fn (ProgressionGraphEdge $edge): array => $edge->toArray(),
+                $this->edges,
             ),
         ];
     }

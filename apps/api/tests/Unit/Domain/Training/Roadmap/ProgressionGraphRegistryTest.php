@@ -75,8 +75,62 @@ class ProgressionGraphRegistryTest extends TestCase
                 $this->assertSame($node->edgeTimeBand(), $array['edge_time_band']);
                 $this->assertSame($node->unlock, $array['unlock']);
 
+                $this->assertMatchesRegularExpression('/^[a-z0-9_]+\\.[a-z0-9_]+$/', $node->nodeId);
+                $this->assertSame($graph->family, $node->skillTrackId);
+                $this->assertSame($graph->family, $node->movementFamily);
+                $this->assertContains($node->type, ['dynamic_strength', 'isometric_strength', 'technical_skill', 'mobility_capacity', 'weighted_strength']);
+                $this->assertContains($node->measurementRule, ['max_clean_reps', 'quality_hold_seconds', 'external_load', 'quality_gate']);
+                $this->assertContains($node->fatigueClass, ['low', 'medium', 'high', 'max']);
+                $this->assertNotEmpty($node->tendonClass);
+                $this->assertIsArray($node->requiredEquipment);
+                $this->assertIsArray($node->environmentCapabilities);
+                $this->assertIsArray($node->contraindicatedPainKeys);
+                $this->assertIsArray($node->mobilityRequirements);
+                $this->assertNotEmpty($node->primaryDomains);
+                $this->assertContains($node->evidenceGrade, ['direct', 'inferred', 'supporting']);
+
+                if ($node->schedulable) {
+                    $this->assertNotEmpty($node->stressVector, sprintf('Schedulable node [%s] has no stress vector.', $node->nodeId));
+                }
+
+                $this->assertSame($node->nodeId, $array['node_id']);
+                $this->assertSame($node->skillTrackId, $array['skill_track_id']);
+                $this->assertSame($node->movementFamily, $array['movement_family']);
+                $this->assertSame($node->stressVector, $array['stress_vector']);
+
                 $previousOrder = $node->order;
                 $seenSlugs[] = $node->slug;
+            }
+        }
+    }
+
+    public function test_every_graph_edge_has_timing_and_scheduling_metadata(): void
+    {
+        foreach (ProgressionGraphRegistry::all() as $graph) {
+            $nodes = $graph->nodes();
+
+            $this->assertCount(max(0, count($nodes) - 1), $graph->edges());
+
+            foreach ($graph->edges() as $edge) {
+                $this->assertNotSame($edge->sourceNodeId, $edge->targetNodeId);
+                $this->assertNotNull($graph->node($edge->sourceSlug));
+                $this->assertNotNull($graph->node($edge->targetSlug));
+                $this->assertGreaterThan(0, $edge->p25Weeks);
+                $this->assertGreaterThanOrEqual($edge->p25Weeks, $edge->p50Weeks);
+                $this->assertGreaterThanOrEqual($edge->p50Weeks, $edge->p80Weeks);
+                $this->assertNotEmpty($edge->minimumDomainScores);
+                $this->assertNotEmpty($edge->previousOwnershipRequirements);
+                $this->assertContains($edge->progressionType, ['linear', 'leverage', 'assistance_reduction', 'load', 'skill_integration', 'range_of_motion']);
+                $this->assertContains($edge->riskLevel, ['low', 'medium', 'high', 'max']);
+                $this->assertNotEmpty($edge->notes);
+
+                $array = $edge->toArray();
+
+                $this->assertSame($edge->sourceNodeId, $array['source_node_id']);
+                $this->assertSame($edge->targetNodeId, $array['target_node_id']);
+                $this->assertSame($edge->p50Weeks, $array['base_weeks']['p50']);
+                $this->assertSame($edge->minimumDomainScores, $array['minimum_domain_scores']);
+                $this->assertSame($edge->previousOwnershipRequirements, $array['previous_ownership_requirements']);
             }
         }
     }
@@ -136,12 +190,55 @@ class ProgressionGraphRegistryTest extends TestCase
             'full_wall_hspu',
             'deep_handstand_push_up',
             'freestanding_handstand_push_up',
+            'deep_freestanding_handstand_push_up',
         ]);
 
         $node = ProgressionGraphRegistry::node('handstand', 'freestanding_kick_up');
 
         $this->assertSame('Freestanding kick-up', $node?->label);
         $this->assertSame('hold_seconds', $node?->metricType);
+    }
+
+    public function test_required_v3_skill_progressions_are_ordered(): void
+    {
+        $this->assertGraphContainsSequence('front_lever', [
+            'one_leg_front_lever',
+            'half_lay_front_lever',
+            'straddle_front_lever',
+            'full_front_lever',
+        ]);
+
+        $this->assertGraphContainsSequence('planche', [
+            'planche_lean',
+            'frog_stand',
+            'tuck_planche',
+            'advanced_tuck_planche',
+            'straddle_planche',
+            'full_planche',
+        ]);
+
+        $this->assertGraphContainsSequence('muscle_up', [
+            'three_by_eight_pull_ups',
+            'chest_to_bar_pull_up',
+            'high_pull_up',
+            'straight_bar_dip',
+            'transition_drill',
+            'assisted_muscle_up',
+            'negative_muscle_up',
+            'strict_muscle_up',
+            'weighted_muscle_up',
+        ]);
+
+        $this->assertGraphContainsSequence('hspu', [
+            'pike_push_up',
+            'elevated_pike_push_up',
+            'wall_hspu_negative',
+            'partial_wall_hspu',
+            'full_wall_hspu',
+            'deep_handstand_push_up',
+            'freestanding_handstand_push_up',
+            'deep_freestanding_handstand_push_up',
+        ]);
     }
 
     public function test_target_skills_map_to_their_owning_graph_family(): void
@@ -177,6 +274,27 @@ class ProgressionGraphRegistryTest extends TestCase
 
         $this->assertNull(ProgressionGraphRegistry::targetFamily('unknown_skill'));
         $this->assertNull(ProgressionGraphRegistry::forTargetSkill('unknown_skill'));
+    }
+
+    public function test_target_skills_map_to_current_next_and_long_term_nodes(): void
+    {
+        $frontLever = ProgressionGraphRegistry::targetNodePath('front_lever', 'one_leg_front_lever');
+
+        $this->assertSame('front_lever', $frontLever['family']);
+        $this->assertSame('one_leg_front_lever', $frontLever['current']->slug);
+        $this->assertSame('half_lay_front_lever', $frontLever['next']?->slug);
+        $this->assertSame('full_front_lever', $frontLever['target']->slug);
+
+        $muscleUp = ProgressionGraphRegistry::targetNodePath('muscle_up', 'chest_to_bar_pull_up');
+
+        $this->assertSame('muscle_up', $muscleUp['family']);
+        $this->assertSame('chest_to_bar_pull_up', $muscleUp['current']->slug);
+        $this->assertSame('high_pull_up', $muscleUp['next']?->slug);
+        $this->assertSame('strict_muscle_up', $muscleUp['target']->slug);
+
+        $unknown = ProgressionGraphRegistry::targetNodePath('unknown_skill');
+
+        $this->assertNull($unknown);
     }
 
     /**

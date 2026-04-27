@@ -39,6 +39,30 @@ final class ProgressionGraphRegistry
         'human_flag' => 'human_flag',
     ];
 
+    private const array TARGET_SKILL_NODES = [
+        'strict_push_up' => 'first_push_up',
+        'one_arm_push_up' => 'one_arm_push_up',
+        'strict_pull_up' => 'first_pull_up',
+        'weighted_pull_up' => 'weighted_pull_up',
+        'strict_dip' => 'first_dip',
+        'ring_dip' => 'ring_dip',
+        'weighted_dip' => 'weighted_dip',
+        'muscle_up' => 'strict_muscle_up',
+        'weighted_muscle_up' => 'weighted_muscle_up',
+        'l_sit' => 'full_l_sit',
+        'v_sit' => 'v_sit_prep',
+        'handstand' => 'freestanding_handstand',
+        'handstand_push_up' => 'freestanding_handstand_push_up',
+        'press_to_handstand' => 'freestanding_handstand',
+        'front_lever' => 'full_front_lever',
+        'back_lever' => 'full_back_lever',
+        'planche' => 'full_planche',
+        'pistol_squat' => 'full_pistol_squat',
+        'nordic_curl' => 'nordic_curl',
+        'one_arm_pull_up' => 'one_arm_pull_up',
+        'human_flag' => 'full_human_flag',
+    ];
+
     /**
      * This registry is the current boundary for graph consumers. Keep callers on
      * these methods so later seeded progression storage can replace the arrays.
@@ -122,6 +146,47 @@ final class ProgressionGraphRegistry
     }
 
     /**
+     * @return array{
+     *     family: string,
+     *     current: ProgressionGraphNode,
+     *     next: ProgressionGraphNode|null,
+     *     target: ProgressionGraphNode
+     * }|null
+     */
+    public static function targetNodePath(string $targetSkill, ?string $currentNodeSlug = null): ?array
+    {
+        $graph = self::forTargetSkill($targetSkill);
+
+        if ($graph === null) {
+            return null;
+        }
+
+        $targetSlug = self::TARGET_SKILL_NODES[$targetSkill] ?? null;
+        $target = $targetSlug === null ? null : $graph->node($targetSlug);
+        $current = $currentNodeSlug === null ? null : $graph->node($currentNodeSlug);
+
+        if ($target === null) {
+            $nodes = $graph->nodes();
+            $target = $nodes[array_key_last($nodes)] ?? null;
+        }
+
+        if ($current === null) {
+            $current = $graph->nodes()[0] ?? null;
+        }
+
+        if ($current === null || $target === null) {
+            return null;
+        }
+
+        return [
+            'family' => $graph->family,
+            'current' => $current,
+            'next' => $graph->nextNode($current->slug),
+            'target' => $target,
+        ];
+    }
+
+    /**
      * @param  list<array{0: string, 1: string, 2: string, 3: int, 4: int, 5: string}>  $nodes
      */
     private static function graph(string $family, string $label, array $nodes): ProgressionGraph
@@ -130,12 +195,29 @@ final class ProgressionGraphRegistry
         $graphNodes = [];
 
         foreach ($nodes as [$slug, $nodeLabel, $metricType, $minWeeks, $maxWeeks, $unlock]) {
+            $metadata = self::nodeMetadata($family, $slug, $metricType);
+
             $graphNodes[] = new ProgressionGraphNode(
                 slug: $slug,
+                nodeId: "{$family}.{$slug}",
                 label: $nodeLabel,
                 order: $order,
                 family: $family,
+                skillTrackId: $family,
+                type: $metadata['type'],
+                movementFamily: $family,
                 metricType: $metricType,
+                measurementRule: $metadata['measurement_rule'],
+                fatigueClass: $metadata['fatigue_class'],
+                tendonClass: $metadata['tendon_class'],
+                requiredEquipment: $metadata['required_equipment'],
+                environmentCapabilities: $metadata['environment_capabilities'],
+                contraindicatedPainKeys: $metadata['contraindicated_pain_keys'],
+                mobilityRequirements: $metadata['mobility_requirements'],
+                primaryDomains: $metadata['primary_domains'],
+                stressVector: $metadata['stress_vector'],
+                evidenceGrade: $metadata['evidence_grade'],
+                schedulable: $metadata['schedulable'],
                 minEdgeWeeks: $minWeeks,
                 maxEdgeWeeks: $maxWeeks,
                 unlock: $unlock,
@@ -144,7 +226,361 @@ final class ProgressionGraphRegistry
             $order += 10;
         }
 
-        return new ProgressionGraph($family, $label, $graphNodes);
+        return new ProgressionGraph($family, $label, $graphNodes, self::edges($graphNodes));
+    }
+
+    /**
+     * @return array{
+     *     type: string,
+     *     measurement_rule: string,
+     *     fatigue_class: string,
+     *     tendon_class: string,
+     *     required_equipment: list<string>,
+     *     environment_capabilities: list<string>,
+     *     contraindicated_pain_keys: list<string>,
+     *     mobility_requirements: list<string>,
+     *     primary_domains: list<string>,
+     *     stress_vector: array<string, int>,
+     *     evidence_grade: string,
+     *     schedulable: bool
+     * }
+     */
+    private static function nodeMetadata(string $family, string $slug, string $metricType): array
+    {
+        $schedulable = ! str_starts_with($slug, 'no_');
+
+        return [
+            'type' => self::nodeType($family, $slug, $metricType),
+            'measurement_rule' => self::measurementRule($metricType),
+            'fatigue_class' => self::fatigueClass($family, $slug, $metricType),
+            'tendon_class' => self::tendonClass($family),
+            'required_equipment' => self::requiredEquipment($family, $slug),
+            'environment_capabilities' => self::environmentCapabilities($family, $slug),
+            'contraindicated_pain_keys' => self::painKeys($family, $slug),
+            'mobility_requirements' => self::mobilityRequirements($family, $slug),
+            'primary_domains' => self::primaryDomains($family, $slug),
+            'stress_vector' => $schedulable ? self::stressVector($family, $slug, $metricType) : [],
+            'evidence_grade' => self::evidenceGrade($metricType, $slug),
+            'schedulable' => $schedulable,
+        ];
+    }
+
+    private static function nodeType(string $family, string $slug, string $metricType): string
+    {
+        if ($metricType === 'load') {
+            return 'weighted_strength';
+        }
+
+        if ($metricType === 'hold_seconds') {
+            return in_array($family, ['handstand', 'human_flag'], true) || str_contains($slug, 'stand')
+                ? 'technical_skill'
+                : 'isometric_strength';
+        }
+
+        if ($metricType === 'quality') {
+            return in_array($family, ['handstand', 'back_lever'], true) ? 'mobility_capacity' : 'technical_skill';
+        }
+
+        return 'dynamic_strength';
+    }
+
+    private static function measurementRule(string $metricType): string
+    {
+        return match ($metricType) {
+            'reps' => 'max_clean_reps',
+            'hold_seconds' => 'quality_hold_seconds',
+            'load' => 'external_load',
+            default => 'quality_gate',
+        };
+    }
+
+    private static function fatigueClass(string $family, string $slug, string $metricType): string
+    {
+        if ($metricType === 'load' || str_contains($slug, 'weighted') || str_contains($slug, 'one_arm')) {
+            return 'max';
+        }
+
+        if (in_array($family, ['planche', 'front_lever', 'back_lever', 'hspu', 'muscle_up', 'human_flag'], true)) {
+            return str_contains($slug, 'full_') || str_contains($slug, 'freestanding_handstand_push_up') ? 'max' : 'high';
+        }
+
+        if (in_array($family, ['pull_up', 'dip', 'pistol_squat', 'lower_body'], true)) {
+            return 'medium';
+        }
+
+        return 'low';
+    }
+
+    private static function tendonClass(string $family): string
+    {
+        return match ($family) {
+            'pull_up', 'row', 'front_lever', 'one_arm_pull_up' => 'elbow_pull',
+            'dip', 'hspu', 'push_up' => 'elbow_push',
+            'planche', 'handstand', 'compression', 'support' => 'wrist_push',
+            'back_lever' => 'shoulder_extension',
+            'pistol_squat', 'lower_body' => 'knee_ankle',
+            'human_flag' => 'shoulder_lateral_chain',
+            'muscle_up' => 'elbow_pull_push',
+            default => 'general',
+        };
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function requiredEquipment(string $family, string $slug): array
+    {
+        $equipment = match ($family) {
+            'pull_up', 'front_lever', 'one_arm_pull_up' => ['pull_up_bar'],
+            'row' => ['low_bar_or_rings'],
+            'dip' => ['dip_bars'],
+            'support' => ['parallel_bars'],
+            'muscle_up' => ['pull_up_bar', 'straight_bar'],
+            'back_lever' => ['rings_or_pull_up_bar'],
+            'human_flag' => ['vertical_pole_or_ladder'],
+            'lower_body' => str_contains($slug, 'barbell') || str_contains($slug, 'loaded') ? ['barbell'] : [],
+            default => [],
+        };
+
+        if (str_contains($slug, 'ring_')) {
+            $equipment = ['rings'];
+        }
+
+        if (str_contains($slug, 'weighted')) {
+            $equipment[] = 'external_load';
+        }
+
+        if (str_contains($slug, 'goblet')) {
+            $equipment[] = 'kettlebell_or_dumbbell';
+        }
+
+        return array_values(array_unique($equipment));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function environmentCapabilities(string $family, string $slug): array
+    {
+        $capabilities = ['floor_space'];
+
+        if (str_contains($slug, 'wall_') || str_contains($slug, 'wall') || str_contains($slug, 'chest_to_wall')) {
+            $capabilities[] = 'vertical_surface';
+        }
+
+        if (in_array($family, ['pull_up', 'muscle_up', 'front_lever', 'back_lever', 'one_arm_pull_up'], true)) {
+            $capabilities[] = 'overhead_hanging_clearance';
+        }
+
+        if ($family === 'human_flag') {
+            $capabilities[] = 'stable_vertical_object';
+        }
+
+        if (in_array($family, ['lower_body', 'pistol_squat'], true)) {
+            $capabilities[] = 'squat_depth_space';
+        }
+
+        return array_values(array_unique($capabilities));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function painKeys(string $family, string $slug): array
+    {
+        $keys = match ($family) {
+            'push_up', 'dip', 'hspu', 'handstand', 'planche', 'support', 'compression' => ['wrist', 'elbow', 'shoulder'],
+            'pull_up', 'row', 'muscle_up', 'front_lever', 'one_arm_pull_up' => ['elbow', 'shoulder'],
+            'back_lever' => ['elbow', 'shoulder'],
+            'lower_body', 'pistol_squat' => ['knee', 'ankle', 'low_back'],
+            'human_flag' => ['wrist', 'elbow', 'shoulder', 'low_back'],
+            default => ['shoulder'],
+        };
+
+        if (str_contains($slug, 'deep')) {
+            $keys[] = 'shoulder';
+        }
+
+        return array_values(array_unique($keys));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function mobilityRequirements(string $family, string $slug): array
+    {
+        $requirements = match ($family) {
+            'handstand', 'hspu' => ['wrist_extension', 'shoulder_flexion'],
+            'planche' => ['wrist_extension', 'shoulder_protraction'],
+            'compression' => ['pancake_compression', 'active_hip_flexion'],
+            'back_lever' => ['shoulder_extension'],
+            'pistol_squat', 'lower_body' => ['ankle_dorsiflexion'],
+            'human_flag' => ['shoulder_flexion', 'lateral_chain_control'],
+            default => [],
+        };
+
+        if (str_contains($slug, 'deep')) {
+            $requirements[] = 'overhead_range';
+        }
+
+        return array_values(array_unique($requirements));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function primaryDomains(string $family, string $slug): array
+    {
+        $domains = match ($family) {
+            'push_up', 'dip' => ['bent_arm_push', 'trunk_rigidity'],
+            'pull_up' => ['bent_arm_pull', 'grip_hang'],
+            'row' => ['horizontal_pull', 'scapular_control'],
+            'bodyline' => ['trunk_rigidity'],
+            'support' => ['support_strength', 'tissue_tolerance'],
+            'lower_body' => ['lower_body_squat'],
+            'compression' => ['compression', 'support_strength'],
+            'handstand' => ['inversion_balance', 'shoulder_flexion'],
+            'hspu' => ['vertical_push', 'inversion_balance'],
+            'muscle_up' => ['explosive_pull', 'transition_strength', 'bent_arm_push'],
+            'front_lever' => ['straight_arm_pull', 'trunk_rigidity'],
+            'back_lever' => ['straight_arm_pull', 'shoulder_extension'],
+            'planche' => ['straight_arm_push', 'wrist_loaded_extension'],
+            'one_arm_pull_up' => ['bent_arm_pull', 'grip_hang'],
+            'pistol_squat' => ['unilateral_leg', 'ankle_dorsiflexion'],
+            'human_flag' => ['lateral_chain', 'straight_arm_pull', 'straight_arm_push'],
+            default => ['general_strength'],
+        };
+
+        if (str_contains($slug, 'weighted')) {
+            $domains[] = 'max_strength';
+        }
+
+        return array_values(array_unique($domains));
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private static function stressVector(string $family, string $slug, string $metricType): array
+    {
+        $base = match ($family) {
+            'push_up' => ['bent_arm_push' => 2, 'elbow_push_tendon' => 1, 'trunk_rigidity' => 1],
+            'pull_up' => ['bent_arm_pull' => 2, 'elbow_pull_tendon' => 1, 'grip_hang' => 1],
+            'dip' => ['bent_arm_push' => 3, 'elbow_push_tendon' => 2, 'shoulder_extension' => 2],
+            'row' => ['bent_arm_pull' => 1, 'horizontal_pull' => 2, 'scapular_control' => 1],
+            'bodyline' => ['trunk_rigidity' => 2],
+            'support' => ['wrist_extension' => 1, 'elbow_push_tendon' => 1, 'shoulder_extension' => 1],
+            'lower_body' => ['lower_body' => 2, 'ankle_knee' => 1],
+            'compression' => ['compression' => 2, 'wrist_extension' => 1, 'trunk_rigidity' => 1],
+            'handstand' => ['inversion_balance' => 2, 'wrist_extension' => 2, 'shoulder_flexion' => 1],
+            'hspu' => ['overhead_push' => 3, 'wrist_extension' => 2, 'shoulder_flexion' => 2, 'elbow_push_tendon' => 2],
+            'muscle_up' => ['explosive_pull' => 3, 'bent_arm_pull' => 2, 'bent_arm_push' => 2, 'elbow_pull_tendon' => 2],
+            'front_lever' => ['straight_arm_pull' => 3, 'elbow_pull_tendon' => 2, 'trunk_rigidity' => 2],
+            'back_lever' => ['straight_arm_pull' => 2, 'shoulder_extension' => 3, 'elbow_pull_tendon' => 2],
+            'planche' => ['straight_arm_push' => 3, 'wrist_extension' => 3, 'elbow_push_tendon' => 2],
+            'one_arm_pull_up' => ['bent_arm_pull' => 4, 'elbow_pull_tendon' => 3, 'grip_hang' => 2],
+            'pistol_squat' => ['lower_body' => 3, 'ankle_knee' => 2],
+            'human_flag' => ['straight_arm_pull' => 2, 'straight_arm_push' => 2, 'lateral_chain' => 3, 'shoulder_flexion' => 1],
+            default => ['systemic_fatigue' => 1],
+        };
+
+        if ($metricType === 'load' || str_contains($slug, 'weighted')) {
+            $base['systemic_fatigue'] = max($base['systemic_fatigue'] ?? 0, 3);
+        }
+
+        if (str_contains($slug, 'full_') || str_contains($slug, 'one_arm')) {
+            $base['systemic_fatigue'] = max($base['systemic_fatigue'] ?? 0, 2);
+        }
+
+        return $base;
+    }
+
+    private static function evidenceGrade(string $metricType, string $slug): string
+    {
+        if (str_starts_with($slug, 'no_')) {
+            return 'supporting';
+        }
+
+        return match ($metricType) {
+            'reps', 'hold_seconds', 'load' => 'direct',
+            default => 'inferred',
+        };
+    }
+
+    /**
+     * @param  list<ProgressionGraphNode>  $nodes
+     * @return list<ProgressionGraphEdge>
+     */
+    private static function edges(array $nodes): array
+    {
+        $edges = [];
+
+        foreach ($nodes as $index => $target) {
+            $source = $nodes[$index - 1] ?? null;
+
+            if ($source === null) {
+                continue;
+            }
+
+            $edges[] = new ProgressionGraphEdge(
+                sourceSlug: $source->slug,
+                targetSlug: $target->slug,
+                sourceNodeId: $source->nodeId,
+                targetNodeId: $target->nodeId,
+                p25Weeks: $target->minEdgeWeeks,
+                p50Weeks: (int) round(($target->minEdgeWeeks + $target->maxEdgeWeeks) / 2),
+                p80Weeks: $target->maxEdgeWeeks,
+                minimumDomainScores: self::minimumDomainScores($target),
+                previousOwnershipRequirements: [
+                    $source->nodeId => "Own {$source->label} with repeatable control.",
+                ],
+                progressionType: self::progressionType($source, $target),
+                riskLevel: $target->fatigueClass,
+                notes: $target->unlock,
+            );
+        }
+
+        return $edges;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private static function minimumDomainScores(ProgressionGraphNode $target): array
+    {
+        $minimum = match ($target->fatigueClass) {
+            'max' => 75,
+            'high' => 65,
+            'medium' => 50,
+            default => 35,
+        };
+
+        return array_fill_keys($target->primaryDomains, $minimum);
+    }
+
+    private static function progressionType(ProgressionGraphNode $source, ProgressionGraphNode $target): string
+    {
+        if ($target->metricType === 'load' || str_contains($target->slug, 'weighted')) {
+            return 'load';
+        }
+
+        if (str_contains($target->slug, 'assisted') || str_contains($source->slug, 'assisted')) {
+            return 'assistance_reduction';
+        }
+
+        if (str_contains($target->slug, 'deep') || str_contains($target->slug, 'partial')) {
+            return 'range_of_motion';
+        }
+
+        if (in_array($target->family, ['planche', 'front_lever', 'back_lever', 'human_flag'], true)) {
+            return 'leverage';
+        }
+
+        if (in_array($target->family, ['muscle_up', 'handstand', 'hspu'], true)) {
+            return 'skill_integration';
+        }
+
+        return 'linear';
     }
 
     /**
@@ -279,6 +715,7 @@ final class ProgressionGraphRegistry
                     ['full_wall_hspu', 'Full wall HSPU', 'reps', 6, 18, 'Can press through full wall-supported range.'],
                     ['deep_handstand_push_up', 'Deep handstand push-up', 'reps', 8, 24, 'Can use deficit range while preserving shoulder position.'],
                     ['freestanding_handstand_push_up', 'Freestanding handstand push-up', 'reps', 12, 36, 'Can press while balancing without wall support.'],
+                    ['deep_freestanding_handstand_push_up', 'Deep freestanding handstand push-up', 'reps', 16, 48, 'Can press through deficit range while balancing without wall support.'],
                 ],
             ],
             'hspu' => [
@@ -291,6 +728,7 @@ final class ProgressionGraphRegistry
                     ['full_wall_hspu', 'Full wall HSPU', 'reps', 6, 18, 'Can complete wall-supported reps through full range.'],
                     ['deep_handstand_push_up', 'Deep handstand push-up', 'reps', 8, 24, 'Can use deficit range with shoulder control.'],
                     ['freestanding_handstand_push_up', 'Freestanding handstand push-up', 'reps', 12, 36, 'Can combine balance and vertical pressing strength.'],
+                    ['deep_freestanding_handstand_push_up', 'Deep freestanding handstand push-up', 'reps', 16, 48, 'Can combine balance with deficit handstand push-up strength.'],
                 ],
             ],
             'muscle_up' => [
@@ -300,6 +738,9 @@ final class ProgressionGraphRegistry
                     ['explosive_pull_up', 'Explosive pull-up', 'reps', 4, 10, 'Can accelerate above a normal pull-up height.'],
                     ['chest_to_bar_pull_up', 'Chest-to-bar pull-up', 'reps', 5, 12, 'Can pull high enough for transition preparation.'],
                     ['high_pull_up', 'High pull-up', 'reps', 5, 14, 'Can pull toward lower chest or upper stomach.'],
+                    ['straight_bar_dip', 'Straight-bar dip', 'reps', 4, 10, 'Can press out above a straight bar with stable shoulders.'],
+                    ['transition_drill', 'Transition drill', 'quality', 3, 8, 'Can rotate around the bar path with controlled shoulders and elbows.'],
+                    ['assisted_muscle_up', 'Assisted muscle-up', 'reps', 4, 12, 'Can practice the full pull, transition, and dip with measured assistance.'],
                     ['band_assisted_muscle_up', 'Band-assisted muscle-up', 'reps', 4, 12, 'Can practice the full transition with assistance.'],
                     ['negative_muscle_up', 'Negative muscle-up', 'reps', 4, 12, 'Can lower through the transition under control.'],
                     ['strict_muscle_up', 'Muscle-up', 'reps', 8, 24, 'Can pull, transition, and dip without momentum reliance.'],
