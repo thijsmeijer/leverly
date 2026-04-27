@@ -145,6 +145,25 @@ describe('OnboardingPage', () => {
     }
   })
 
+  it('labels the support baseline as a dip support hold', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(onboardingResponse())),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Baseline'))
+      ?.trigger('click')
+
+    expect(wrapper.find('label[for="onboarding-top-support"]').text()).toContain('Dip support hold')
+    expect(wrapper.text()).not.toContain('Top support hold')
+  })
+
   it('shows the Roadmap V2 review and completes onboarding from the review step', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
