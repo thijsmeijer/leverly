@@ -121,6 +121,9 @@ final readonly class RoadmapPortfolioResult
         $weeklySchedule = $input === null
             ? RoadmapWeeklyScheduler::empty()
             : RoadmapWeeklyScheduler::fromModules($input, $activeTracks, $foundationModules, $stressBudget);
+        $phasePlan = $input === null
+            ? RoadmapPhasePlan::empty()
+            : RoadmapPhasePlan::fromPortfolio($input, $activeTracks, $foundationModules, $weeklySchedule);
 
         $pendingTests = $input === null
             ? []
@@ -146,6 +149,7 @@ final readonly class RoadmapPortfolioResult
                 'stress_budget' => $stressBudget->toArray(),
                 'module_compatibility' => self::moduleCompatibility($activeTracks, $stressBudget),
                 'optimizer' => $optimizer,
+                'phase_plan' => $phasePlan,
                 'time_ledger' => self::timeLedger($input, $maxSessions, $estimatedMinutes),
                 'explanation' => self::portfolioExplanation($suggestions, $developmentTracks, $futureQueue, $blockedTracks),
             ],
