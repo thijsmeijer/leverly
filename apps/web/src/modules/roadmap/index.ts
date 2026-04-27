@@ -1,4 +1,5 @@
 export { roadmapRoutes } from './routes'
+export { default as RoadmapPortfolioPreview } from './components/RoadmapPortfolioPreview.vue'
 export {
   defaultGoalModules,
   isGoalModuleTested,
@@ -27,6 +28,8 @@ export type {
   RoadmapNode,
   RoadmapActiveSkillPortfolio,
   RoadmapPortfolio,
+  RoadmapPortfolioScheduledDay,
+  RoadmapPortfolioStressAxis,
   RoadmapPortfolioTrack,
   RoadmapSuggestions,
   RoadmapTrack,

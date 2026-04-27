@@ -35,7 +35,9 @@ describe('settingsService', () => {
       fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(profileResponse())),
     })
 
-    await expect(fetchProfileSettings()).resolves.toMatchObject({
+    const state = await fetchProfileSettings()
+
+    expect(state).toMatchObject({
       form: {
         availableEquipment: ['pull_up_bar', 'rings'],
         baseFocusAreas: ['pull_capacity', 'core_bodyline'],
@@ -81,13 +83,23 @@ describe('settingsService', () => {
             label: '8-16 weeks',
           },
           primaryGoal: {
-            skill: 'handstand',
+            skill: 'front_lever',
           },
-          version: 'roadmap.v2',
+          version: 'roadmap.portfolio.v3',
         },
       },
       profileId: '01kb0b6h4az3er8g7vnh9k5m1a',
     })
+
+    expect(state.form.roadmapPortfolio.version).toBe('roadmap.portfolio.v3')
+    expect(state.form.roadmapPortfolio.activeSkillPortfolio.developmentTracks[0]?.skillTrackId).toBe('front_lever')
+    expect(state.form.roadmapPortfolio.activeSkillPortfolio.stressLedger.axes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ axis: 'straight_arm_pull', status: 'watch' })]),
+    )
+    expect(state.form.roadmapPortfolio.activeSkillPortfolio.weeklySchedule.days[0]?.modules[0]?.title).toBe(
+      'Skill primer',
+    )
+    expect(state.form.roadmapPortfolio.notRecommendedNow[0]?.skillTrackId).toBe('one_arm_pull_up')
   })
 
   it('serializes form state to the PATCH profile endpoint', async () => {
@@ -305,64 +317,7 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       progression_pace: 'balanced',
-      roadmap_suggestions: {
-        version: 'roadmap.v2',
-        base_focus_areas: ['pull_capacity', 'core_bodyline'],
-        body_context: { notes: [] },
-        blockers: [],
-        bridge_tracks: [],
-        compatibility_tags: ['overhead', 'wrist_extension'],
-        compatible_secondary_goal: null,
-        confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete.'] },
-        current_progression_node: { id: 'handstand.current', label: 'Wall line and entry work' },
-        deferred_goals: [],
-        deferred_tracks: [],
-        eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
-        explanation: {
-          summary: 'Handstand is the clearest first roadmap priority from the current assessment.',
-          why_this_goal: ['Handstand pairs with the current base.'],
-          watch_out_for: ['Keep wrist loading progressive.'],
-          fallback: 'Keep handstand as line practice if wrists feel irritated.',
-        },
-        foundation_lane: {
-          slug: 'foundation_strength',
-          label: 'Foundation strength',
-          focus_areas: ['pull_capacity', 'core_bodyline'],
-          current_progression_node: { id: 'foundation.current', label: 'Measured foundation' },
-          next_node: { id: 'foundation.next', label: 'Build repeatable base volume' },
-          next_milestone: { id: 'foundation.milestone', label: 'Stable weekly base' },
-        },
-        intermediate: {
-          compatibility_costs: [],
-          domain_scores: {},
-          domain_uncertainty: {},
-          eta_modifiers: [],
-          hard_gate_results: [],
-          progression_graph_placement: {},
-          readiness_scores: [],
-        },
-        level: 'intermediate',
-        long_term_tracks: [],
-        next_milestone: { id: 'handstand.milestone', label: '30-second wall line' },
-        next_node: { id: 'handstand.next', label: 'Build wall line consistency' },
-        primary_goal: {
-          skill: 'handstand',
-          label: 'Handstand',
-          lane: 'primary',
-          current_progression_node: { id: 'handstand.current', label: 'Wall line and entry work' },
-          next_node: { id: 'handstand.next', label: 'Build wall line consistency' },
-          next_milestone: { id: 'handstand.milestone', label: '30-second wall line' },
-          eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
-          confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete.'] },
-          blockers: [],
-          unlock_conditions: [],
-          compatibility_tags: ['overhead', 'wrist_extension'],
-          explanation: 'Handstand is the clearest first roadmap priority from the current assessment.',
-        },
-        summary: 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
-        unlock_conditions: [],
-        unlocked_tracks: [],
-      },
+      roadmap_suggestions: roadmapPortfolioResponse(),
       secondary_goals: ['strength'],
       secondary_target_skills: ['strict_pull_up'],
       session_structure_preferences: ['skill_first'],
@@ -387,5 +342,210 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       weekly_session_goal: 3,
       ...overrides,
     },
+  }
+}
+
+function roadmapPortfolioResponse(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    version: 'roadmap.portfolio.v3',
+    source_version: 'roadmap.v3',
+    summary: 'Front lever is loaded as the main development track beside low-fatigue support work.',
+    base_focus_areas: ['pull_capacity', 'core_bodyline'],
+    body_context: { notes: [] },
+    blockers: [],
+    bridge_tracks: [],
+    compatibility_tags: ['straight_arm_pull', 'trunk_compression'],
+    compatible_secondary_goal: null,
+    confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete.'] },
+    current_block_focus: {
+      label: 'Front lever development block',
+      focus_areas: ['straight_arm_pull', 'core_bodyline'],
+      lanes: ['development', 'foundation'],
+      retest_cadence: ['Retest lever holds in 4 weeks.'],
+      should_improve: ['Lever line strength'],
+      eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+    },
+    current_progression_node: { id: 'front_lever.tuck', label: 'Tuck front lever' },
+    deferred_goals: [],
+    deferred_tracks: [],
+    eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+    explanation: {
+      summary: 'Front lever is loaded as the main development track.',
+      why_this_goal: ['Pulling strength and bodyline evidence make this a realistic focus.'],
+      watch_out_for: ['Keep elbow and lat volume inside the weekly cap.'],
+      fallback: 'Use easier lever holds when pulling quality drops.',
+    },
+    foundation_lane: {
+      slug: 'pulling_foundation',
+      label: 'Pulling foundation',
+      focus_areas: ['pull_capacity', 'core_bodyline'],
+      current_progression_node: { id: 'foundation.current', label: 'Measured pulling base' },
+      next_node: { id: 'foundation.next', label: 'Build repeatable pulling volume' },
+      next_milestone: { id: 'foundation.milestone', label: 'Stable weekly pulling base' },
+    },
+    goal_candidates: {
+      accessories: [],
+      foundation: [],
+      future: [],
+      primary: [],
+      secondary: [],
+    },
+    intermediate: {
+      compatibility_costs: [],
+      domain_scores: {},
+      domain_uncertainty: {},
+      eta_modifiers: [],
+      hard_gate_results: [],
+      progression_graph_placement: {},
+      readiness_scores: [],
+    },
+    level: 'intermediate',
+    long_term_tracks: [],
+    next_milestone: { id: 'front_lever.advanced_tuck', label: 'Advanced tuck front lever' },
+    next_node: { id: 'front_lever.advanced_tuck', label: 'Advanced tuck front lever' },
+    primary_goal: {
+      skill: 'front_lever',
+      label: 'Front lever',
+      lane: 'development',
+      current_progression_node: { id: 'front_lever.tuck', label: 'Tuck front lever' },
+      next_node: { id: 'front_lever.advanced_tuck', label: 'Advanced tuck front lever' },
+      next_milestone: { id: 'front_lever.advanced_tuck', label: 'Advanced tuck front lever' },
+      eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+      confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete.'] },
+      blockers: [],
+      unlock_conditions: [],
+      compatibility_tags: ['straight_arm_pull', 'trunk_compression'],
+      explanation: 'Pulling strength and bodyline evidence make this a realistic focus.',
+    },
+    unlock_conditions: [],
+    unlocked_tracks: [],
+    active_skill_portfolio: {
+      development_tracks: [portfolioTrack('front_lever', 'Front lever', 'development')],
+      technical_practice_tracks: [portfolioTrack('handstand', 'Handstand', 'technical_practice')],
+      accessory_tracks: [portfolioTrack('l_sit', 'L-sit', 'accessory')],
+      foundation_tracks: [portfolioTrack('pulling_base', 'Pulling base', 'foundation')],
+      maintenance_tracks: [portfolioTrack('pull_up', 'Pull-up', 'maintenance')],
+      future_queue: [portfolioTrack('planche', 'Planche', 'future_queue')],
+      explanation: {
+        summary: 'Front lever leads the block while handstand and L-sit stay low fatigue.',
+        why_this_mix: ['It balances pulling stress with low-fatigue practice.'],
+        watch_out_for: ['Elbows should feel fresh before high-pull work.'],
+        fallback: 'Move front lever work to easier holds when fatigue is high.',
+      },
+      phase_plan: {
+        phase_id: 'phase_1',
+        duration_weeks: { min: 6, target: 8, max: 12 },
+        duration_reason: 'A first portfolio block needs enough time to observe skill progress.',
+        weekly_emphasis: ['Straight-arm pulling', 'Core compression'],
+        roles: {},
+        foundation_layer: [],
+        retest_timing: {},
+        deload_guidance: {},
+        progression_rules: [],
+        safety_notes: ['Do not increase hold difficulty and total volume in the same week.'],
+      },
+      stress_ledger: {
+        axes: [
+          { axis: 'straight_arm_pull', load: 8, budget: 10, status: 'watch' },
+          { axis: 'wrist_extension', load: 3, budget: 8, status: 'ok' },
+          { axis: 'knee', load: 2, budget: 8, status: 'ok' },
+          { axis: 'trunk_compression', load: 5, budget: 8, status: 'ok' },
+        ],
+        notes: ['Straight-arm pulling is close to the weekly cap.'],
+      },
+      time_ledger: {
+        estimated_minutes_per_week: 168,
+        max_sessions_per_week: 3,
+        remaining_minutes_per_week: 12,
+        notes: ['Three sessions fit the current max schedule.'],
+      },
+      weekly_schedule: {
+        days: [
+          {
+            day_index: 1,
+            label: 'Monday',
+            day_type: 'skill_strength',
+            modules: [
+              {
+                module_id: 'front-lever-primer',
+                skill_track_id: 'front_lever',
+                title: 'Skill primer',
+                purpose: 'development',
+                pattern: 'isometric_skill',
+                intensity_tier: 'high',
+                source_mode: 'development',
+                slot: 'skill',
+                slot_rank: 1,
+                order: 1,
+                exposure_index: 1,
+                estimated_minutes: 16,
+                stress_vector: { straight_arm_pull: 4, trunk_compression: 2 },
+              },
+            ],
+            stress_ledger: {
+              axes: [{ axis: 'straight_arm_pull', load: 4, budget: 5, status: 'watch' }],
+              warnings: ['Pulling stress is near the daily cap.'],
+            },
+            time_ledger: { estimated_minutes: 56, budget_minutes: 60, overflow_minutes: 0, status: 'yellow' },
+            warnings: ['Keep lever work before pulling volume.'],
+          },
+        ],
+        rest_days: [{ day_index: 2, label: 'Tuesday', day_type: 'rest' }],
+        stress_ledger: {
+          axes: [{ axis: 'straight_arm_pull', load: 8, budget: 10, status: 'watch' }],
+          warnings: ['Weekly pull stress needs monitoring.'],
+        },
+        template: { sessions_per_week: 3, day_types: ['skill_strength'], slot_order: ['skill', 'strength'] },
+        time_ledger: { estimated_minutes_per_week: 168, budget_minutes_per_week: 180, overflow_minutes_per_week: 0 },
+        warnings: ['One high pull day needs a rest gap.'],
+      },
+    },
+    foundation_layer: {
+      summary: 'Pulling base and hollow-body strength stay in the week.',
+      tracks: [portfolioTrack('pulling_base', 'Pulling base', 'foundation')],
+      focus_areas: ['pull_capacity', 'core_bodyline'],
+    },
+    long_term_aspirations: [portfolioTrack('planche', 'Planche', 'future_queue')],
+    not_recommended_now: [
+      portfolioTrack('one_arm_pull_up', 'One-arm pull-up', 'not_now', {
+        why_not_higher_priority: ['High elbow and pulling stress conflicts with the current front lever load.'],
+      }),
+    ],
+    blocked: [],
+    onboarding_goal_choices: {
+      accessories: ['l_sit'],
+      blocked: [],
+      development: ['front_lever'],
+      future: ['planche', 'one_arm_pull_up'],
+      technical_practice: ['handstand'],
+    },
+    pending_tests: [],
+    ...overrides,
+  }
+}
+
+function portfolioTrack(
+  skillTrackId: string,
+  displayName: string,
+  mode: string,
+  overrides: Partial<Record<string, unknown>> = {},
+) {
+  return {
+    skill_track_id: skillTrackId,
+    display_name: displayName,
+    current_node: { id: `${skillTrackId}.current`, label: `${displayName} current` },
+    next_node: { id: `${skillTrackId}.next`, label: `${displayName} next step` },
+    target_node: { id: `${skillTrackId}.target`, label: `${displayName} milestone` },
+    mode,
+    weekly_exposures: mode === 'future_queue' || mode === 'not_now' ? 0 : 2,
+    estimated_minutes_per_week: mode === 'future_queue' || mode === 'not_now' ? 0 : 36,
+    primary_stress_axes:
+      skillTrackId === 'front_lever' ? ['straight_arm_pull', 'trunk_compression'] : ['wrist_extension'],
+    eta_to_next_node: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+    confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete.'] },
+    modules: [{ title: 'Skill primer', intensity_tier: mode === 'development' ? 'high' : 'medium' }],
+    why_included: [`${displayName} fits the current weekly portfolio.`],
+    why_not_higher_priority: [],
+    ...overrides,
   }
 }

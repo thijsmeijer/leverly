@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RoadmapPortfolioPreview } from '@/modules/roadmap'
 
 import { baseFocusOptions, mobilityCheckOptions } from '../data/onboardingOptions'
 import { useOnboardingStore } from '../stores/onboardingStore'
-import OnboardingPortfolioPreview from './OnboardingPortfolioPreview.vue'
 
 const onboarding = useOnboardingStore()
 
@@ -44,7 +44,7 @@ const reviewBlockers = computed(() => {
 
 <template>
   <div class="space-y-6">
-    <OnboardingPortfolioPreview :portfolio="onboarding.form.roadmapPortfolio" />
+    <RoadmapPortfolioPreview :portfolio="onboarding.form.roadmapPortfolio" />
 
     <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">

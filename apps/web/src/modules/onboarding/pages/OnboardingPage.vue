@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { requiredGoalModulesForGoal } from '@/modules/roadmap'
+import { requiredGoalModulesForGoal, RoadmapPortfolioPreview } from '@/modules/roadmap'
 import type { RoadmapGoalCandidate, RoadmapPortfolioTrack } from '@/modules/roadmap'
 import { UiButton } from '@/shared/ui'
 import OnboardingChoiceGrid from '../components/OnboardingChoiceGrid.vue'
 import OnboardingModulesStep from '../components/OnboardingModulesStep.vue'
 import OnboardingNumberField from '../components/OnboardingNumberField.vue'
-import OnboardingPortfolioPreview from '../components/OnboardingPortfolioPreview.vue'
 import OnboardingProgress from '../components/OnboardingProgress.vue'
 import OnboardingRoadmapReviewStep from '../components/OnboardingRoadmapReviewStep.vue'
 import OnboardingStepPanel from '../components/OnboardingStepPanel.vue'
@@ -1075,11 +1074,7 @@ const lowerBodyVariantOptions = [
               </p>
             </section>
 
-            <OnboardingPortfolioPreview
-              v-else-if="hasPortfolioPreview"
-              :portfolio="roadmapPortfolio"
-              show-micro-tests
-            />
+            <RoadmapPortfolioPreview v-else-if="hasPortfolioPreview" :portfolio="roadmapPortfolio" show-micro-tests />
 
             <OnboardingChoiceGrid
               v-model="onboarding.form.primaryTargetSkill"

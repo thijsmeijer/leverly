@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { requiredGoalModulesForGoal } from '@/modules/roadmap'
-import type { RoadmapGoalCandidate } from '@/modules/roadmap'
+import { requiredGoalModulesForGoal, RoadmapPortfolioPreview } from '@/modules/roadmap'
+import type { RoadmapGoalCandidate, RoadmapPortfolioTrack } from '@/modules/roadmap'
 import { UiButton } from '@/shared/ui'
 import ProfileChoiceGrid from '../components/ProfileChoiceGrid.vue'
 import ProfileFormSection from '../components/ProfileFormSection.vue'
@@ -44,6 +44,17 @@ import {
 import type { ChoiceOption, ProfileFieldErrors } from '../types'
 
 type ProfileSectionId = 'basics' | 'training' | 'setup' | 'coaching' | 'limitations'
+type PortfolioDrivers = {
+  readonly availableEquipment: readonly string[]
+  readonly baseFocusAreas: readonly string[]
+  readonly longTermTargetSkills: readonly string[]
+  readonly preferredTrainingDays: readonly string[]
+  readonly primaryTargetSkill: string
+  readonly secondaryTargetSkills: readonly string[]
+  readonly targetSkills: readonly string[]
+  readonly weeklySessionGoal: string
+  readonly weightTrend: string
+}
 
 const {
   fieldErrors,
@@ -149,6 +160,51 @@ const compatibleSecondaryGoalOptions = computed(() => {
 
   return goalOptions.filter((option) => allowedGoals.includes(option.value))
 })
+const savedPortfolioDrivers = ref<PortfolioDrivers | null>(null)
+const currentPortfolioDrivers = computed<PortfolioDrivers>(() => ({
+  availableEquipment: normalizedArray(form.availableEquipment),
+  baseFocusAreas: normalizedArray(form.baseFocusAreas),
+  longTermTargetSkills: normalizedArray(form.longTermTargetSkills),
+  preferredTrainingDays: normalizedArray(form.preferredTrainingDays),
+  primaryTargetSkill: form.primaryTargetSkill,
+  secondaryTargetSkills: normalizedArray(form.secondaryTargetSkills),
+  targetSkills: normalizedArray(targetSkillValues.value),
+  weeklySessionGoal: form.weeklySessionGoal,
+  weightTrend: form.weightTrend,
+}))
+const hasPortfolioDriverChanges = computed(
+  () =>
+    savedPortfolioDrivers.value !== null &&
+    !samePortfolioDrivers(savedPortfolioDrivers.value, currentPortfolioDrivers.value),
+)
+const portfolioRecalculationStatus = computed(() =>
+  hasPortfolioDriverChanges.value ? 'Unsaved portfolio changes' : 'Portfolio matches saved profile inputs',
+)
+const portfolioRecalculationCopy = computed(() =>
+  hasPortfolioDriverChanges.value
+    ? 'Save profile to recalculate the portfolio.'
+    : 'The portfolio shown below matches the saved profile inputs.',
+)
+const portfolioConflictWarning = computed(() => {
+  const saved = savedPortfolioDrivers.value
+
+  if (!saved) {
+    return ''
+  }
+
+  const addedLongTerm = form.longTermTargetSkills.find((skill) => !saved.longTermTargetSkills.includes(skill))
+  const activeDevelopment = highStressDevelopmentTrack()
+
+  if (!addedLongTerm || !activeDevelopment || addedLongTerm === activeDevelopment.skillTrackId) {
+    return ''
+  }
+
+  if (!isHighStressGoal(addedLongTerm)) {
+    return ''
+  }
+
+  return `${skillLabel(addedLongTerm)} is better kept in the future queue while ${activeDevelopment.displayName} is loaded as high-stress development.`
+})
 
 watch(
   () => form.primaryGoal,
@@ -189,6 +245,22 @@ watch(
 
 onMounted(() => {
   void loadProfile()
+})
+
+watch(
+  [isLoading, profileId],
+  () => {
+    if (!isLoading.value && !savedPortfolioDrivers.value && (profileId.value || form.displayName)) {
+      captureSavedPortfolioDrivers()
+    }
+  },
+  { immediate: true },
+)
+
+watch(saveSuccess, (saved) => {
+  if (saved) {
+    captureSavedPortfolioDrivers()
+  }
 })
 
 async function submitProfile(): Promise<void> {
@@ -285,6 +357,66 @@ function candidateRoleLabel(candidate: RoadmapGoalCandidate): string {
   }
 
   return `${candidate.readinessScore}/100`
+}
+
+function captureSavedPortfolioDrivers(): void {
+  savedPortfolioDrivers.value = {
+    ...currentPortfolioDrivers.value,
+    availableEquipment: [...currentPortfolioDrivers.value.availableEquipment],
+    baseFocusAreas: [...currentPortfolioDrivers.value.baseFocusAreas],
+    longTermTargetSkills: [...currentPortfolioDrivers.value.longTermTargetSkills],
+    preferredTrainingDays: [...currentPortfolioDrivers.value.preferredTrainingDays],
+    secondaryTargetSkills: [...currentPortfolioDrivers.value.secondaryTargetSkills],
+    targetSkills: [...currentPortfolioDrivers.value.targetSkills],
+  }
+}
+
+function normalizedArray(values: readonly string[]): string[] {
+  return [...new Set(values.filter(Boolean))].sort()
+}
+
+function samePortfolioDrivers(left: PortfolioDrivers, right: PortfolioDrivers): boolean {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
+
+function highStressDevelopmentTrack(): RoadmapPortfolioTrack | null {
+  return (
+    form.roadmapPortfolio.activeSkillPortfolio.developmentTracks.find(
+      (track) =>
+        isHighStressGoal(track.skillTrackId) ||
+        track.primaryStressAxes.some((axis) =>
+          ['pull', 'push', 'wrist', 'elbow', 'straight_arm', 'planche', 'lever'].some((keyword) =>
+            axis.toLowerCase().includes(keyword),
+          ),
+        ),
+    ) ?? null
+  )
+}
+
+function isHighStressGoal(skill: string): boolean {
+  return [
+    'front_lever',
+    'handstand_push_up',
+    'human_flag',
+    'muscle_up',
+    'one_arm_pull_up',
+    'planche',
+    'weighted_dip',
+    'weighted_muscle_up',
+    'weighted_pull_up',
+  ].includes(skill)
+}
+
+function skillLabel(skill: string): string {
+  return targetSkillOptions.find((option) => option.value === skill)?.label ?? humanize(skill)
+}
+
+function humanize(value: string): string {
+  return value
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 function addWeightedMovement(): void {
@@ -514,6 +646,38 @@ function capitalize(value: string): string {
             name="secondary-goals"
             :options="compatibleSecondaryGoalOptions"
           />
+          <div class="border-line-subtle border-t pt-5">
+            <RoadmapPortfolioPreview :portfolio="form.roadmapPortfolio" />
+            <section
+              class="rounded-card mt-4 border p-4"
+              :class="
+                hasPortfolioDriverChanges
+                  ? 'border-status-warning/30 bg-status-warning/10'
+                  : 'border-line-subtle bg-surface-primary'
+              "
+              aria-live="polite"
+            >
+              <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p class="text-ink-primary text-sm font-semibold">{{ portfolioRecalculationStatus }}</p>
+                  <p class="text-ink-secondary mt-1 text-sm leading-6">{{ portfolioRecalculationCopy }}</p>
+                </div>
+                <span
+                  class="w-fit rounded-full px-3 py-1 text-xs font-semibold"
+                  :class="
+                    hasPortfolioDriverChanges
+                      ? 'bg-status-warning/15 text-status-warning'
+                      : 'bg-status-success/15 text-status-success'
+                  "
+                >
+                  {{ hasPortfolioDriverChanges ? 'Recalculation needed' : 'Up to date' }}
+                </span>
+              </div>
+              <p v-if="portfolioConflictWarning" class="text-status-warning mt-3 text-sm leading-6 font-semibold">
+                {{ portfolioConflictWarning }}
+              </p>
+            </section>
+          </div>
           <div class="border-line-subtle border-t pt-5">
             <div class="mb-4">
               <h3 class="text-ink-primary text-base font-semibold">Skill roadmap</h3>
