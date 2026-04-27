@@ -80,8 +80,11 @@ final readonly class RoadmapPortfolioResult
             ...$maintenanceTracks,
             ...$foundationTracks,
         ]);
+        $foundationModules = $input === null
+            ? []
+            : RoadmapTrainingModuleGenerator::foundationModules($input, self::foundationTargetSkills($goalCandidates, $input));
         $maxSessions = self::maxSessions($input);
-        $estimatedMinutes = self::estimatedMinutes($activeTracks);
+        $estimatedMinutes = self::estimatedMinutes($activeTracks) + self::estimatedModuleMinutes($foundationModules);
 
         $pendingTests = $input === null
             ? []
@@ -100,6 +103,7 @@ final readonly class RoadmapPortfolioResult
                 'accessory_tracks' => $accessoryTracks,
                 'maintenance_tracks' => $maintenanceTracks,
                 'foundation_tracks' => $foundationTracks,
+                'foundation_modules' => $foundationModules,
                 'future_queue' => $futureQueue,
                 'weekly_schedule' => self::weeklySchedule($maxSessions),
                 'stress_ledger' => self::stressLedger($activeTracks, $maxSessions),
@@ -117,6 +121,7 @@ final readonly class RoadmapPortfolioResult
                 'summary' => self::foundationSummary($foundationTracks),
                 'focus_areas' => self::stringList($suggestions['base_focus_areas'] ?? []),
                 'tracks' => $foundationTracks,
+                'modules' => $foundationModules,
             ],
             'long_term_aspirations' => $futureQueue,
             'not_recommended_now' => array_values(array_filter(
@@ -375,11 +380,14 @@ final readonly class RoadmapPortfolioResult
         }
 
         $readiness = $nodeReadiness->toArray();
+        $modules = RoadmapTrainingModuleGenerator::fromNodeReadiness($nodeReadiness, $mode);
+
         $track['current_node'] = $readiness['current_node'];
         $track['next_node'] = $readiness['next_node'];
         $track['target_node'] = $readiness['target_node'];
         $track['eta_to_next_node'] = self::etaValue($readiness['eta_to_next_node']);
         $track['confidence'] = self::confidenceValue($readiness['confidence'], $reason);
+        $track['modules'] = $modules;
         $track['node_readiness'] = $readiness;
         $track['mode_detail'] = [
             'node_status' => $readiness['status'],
@@ -387,7 +395,37 @@ final readonly class RoadmapPortfolioResult
             'confidence' => $readiness['confidence'],
         ];
 
+        if ($modules !== []) {
+            $track['weekly_exposures'] = self::moduleWeeklyExposures($modules);
+            $track['estimated_minutes_per_week'] = self::estimatedModuleMinutes($modules);
+            $track['primary_stress_axes'] = self::moduleStressAxes($modules, $stressAxes);
+        }
+
         return $track;
+    }
+
+    /**
+     * @param  array<string, list<array<string, mixed>>>  $goalCandidates
+     * @return list<string>
+     */
+    private static function foundationTargetSkills(array $goalCandidates, RoadmapInput $input): array
+    {
+        $skills = array_values(array_filter([
+            $input->selectedPrimaryGoal,
+            ...$input->secondaryInterests,
+            ...$input->longTermAspirations,
+        ]));
+
+        foreach (['primary', 'secondary', 'accessories', 'future'] as $bucket) {
+            foreach ($goalCandidates[$bucket] as $candidate) {
+                $skill = self::stringValue($candidate['skill'] ?? null, '');
+                if ($skill !== '') {
+                    $skills[] = $skill;
+                }
+            }
+        }
+
+        return array_values(array_unique($skills));
     }
 
     /**
@@ -470,6 +508,62 @@ final readonly class RoadmapPortfolioResult
             static fn (array $track): int => self::intOrNull($track['estimated_minutes_per_week'] ?? null) ?? 0,
             $tracks,
         ));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $modules
+     */
+    private static function estimatedModuleMinutes(array $modules): int
+    {
+        return array_sum(array_map(
+            static function (array $module): int {
+                $time = is_array($module['time_cost_minutes'] ?? null) ? $module['time_cost_minutes'] : [];
+                $exposures = is_array($module['exposure_targets'] ?? null) ? $module['exposure_targets'] : [];
+                $min = self::intOrNull($time['min'] ?? null) ?? 0;
+                $max = self::intOrNull($time['max'] ?? null) ?? $min;
+                $target = self::intOrNull($exposures['target_per_week'] ?? null) ?? 1;
+
+                return (int) round((($min + $max) / 2) * $target);
+            },
+            $modules,
+        ));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $modules
+     */
+    private static function moduleWeeklyExposures(array $modules): int
+    {
+        return array_sum(array_map(
+            static function (array $module): int {
+                $exposures = is_array($module['exposure_targets'] ?? null) ? $module['exposure_targets'] : [];
+
+                return self::intOrNull($exposures['target_per_week'] ?? null) ?? 1;
+            },
+            $modules,
+        ));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $modules
+     * @param  list<string>  $fallback
+     * @return list<string>
+     */
+    private static function moduleStressAxes(array $modules, array $fallback): array
+    {
+        $axes = [];
+
+        foreach ($modules as $module) {
+            $stressVector = is_array($module['stress_vector'] ?? null) ? $module['stress_vector'] : [];
+
+            foreach ($stressVector as $axis => $load) {
+                if ((self::intOrNull($load) ?? 0) > 0) {
+                    $axes[] = (string) $axis;
+                }
+            }
+        }
+
+        return self::uniqueStrings($axes === [] ? $fallback : $axes);
     }
 
     private static function maxSessions(?RoadmapInput $input): int
