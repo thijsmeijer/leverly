@@ -24,6 +24,8 @@ final class RoadmapInputMapper
                 'current_bodyweight_value' => self::numberOrNull($data['current_bodyweight_value'] ?? null),
                 'bodyweight_unit' => self::stringValue($data['bodyweight_unit'] ?? null, 'kg'),
                 'weight_trend' => self::stringValue($data['weight_trend'] ?? null, 'unknown'),
+                'resistance_training_age_months' => self::intOrNull($data['resistance_training_age_months'] ?? null),
+                'body_lever_context' => self::arrayValue($data['body_lever_context'] ?? []),
                 'primary_goal' => self::stringOrNull($data['primary_goal'] ?? null),
                 'secondary_goals' => self::stringList($data['secondary_goals'] ?? []),
                 'long_term_target_skills' => self::stringList($data['long_term_target_skills'] ?? []),

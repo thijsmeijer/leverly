@@ -549,7 +549,7 @@ paths:
                     movements:
                       type: array
                       description: ''
-                      items: { type: object, properties: { movement: { type: string, description: '', enum: [weighted_pull_up, weighted_dip, weighted_muscle_up, weighted_pistol] }, external_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 400.' }, reps: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 30.' }, rir: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 10.' } }, required: [movement] }
+                      items: { type: object, properties: { movement: { type: string, description: '', enum: [weighted_pull_up, weighted_dip, weighted_muscle_up, weighted_pistol, barbell_squat, loaded_push_up] }, external_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 400.' }, reps: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 30.' }, rir: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 10.' } }, required: [movement] }
                 readiness_rating:
                   type:
                     - integer
@@ -1119,7 +1119,7 @@ paths:
                     movements:
                       type: array
                       description: ''
-                      items: { type: object, properties: { movement: { type: string, description: '', enum: [weighted_pull_up, weighted_dip, weighted_muscle_up, weighted_pistol] }, external_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 400.' }, reps: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 30.' }, rir: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 10.' } }, required: [movement] }
+                      items: { type: object, properties: { movement: { type: string, description: '', enum: [weighted_pull_up, weighted_dip, weighted_muscle_up, weighted_pistol, barbell_squat, loaded_push_up] }, external_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 400.' }, reps: { type: [integer, 'null'], description: 'Must be at least 1. Must not be greater than 30.' }, rir: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 10.' } }, required: [movement] }
                 injury_notes:
                   type:
                     - string

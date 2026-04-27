@@ -154,6 +154,8 @@ final class CalisthenicsPlacementOptions
         'weighted_dip',
         'weighted_muscle_up',
         'weighted_pistol',
+        'barbell_squat',
+        'loaded_push_up',
     ];
 
     public const array LOAD_UNITS = ['kg', 'lb'];
