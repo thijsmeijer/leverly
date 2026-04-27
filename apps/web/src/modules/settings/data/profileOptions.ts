@@ -22,6 +22,13 @@ export const bodyweightUnitOptions: ChoiceOption[] = [
   { label: 'lb', value: 'lb' },
 ]
 
+export const weightTrendOptions: ChoiceOption[] = [
+  { label: 'Maintaining', value: 'maintaining', description: 'Bodyweight is roughly stable.' },
+  { label: 'Gaining', value: 'gaining', description: 'Use when strength goals may have more recovery support.' },
+  { label: 'Cutting', value: 'cutting', description: 'Use when high-force skills may need a slower ramp.' },
+  { label: 'Unknown', value: 'unknown', description: 'Skip the modifier when you are not tracking it.' },
+]
+
 export const heightUnitOptions: ChoiceOption[] = [
   { label: 'cm', value: 'cm' },
   { label: 'in', value: 'in' },
@@ -169,6 +176,21 @@ export const weightedMovementOptions: ChoiceOption[] = [
   { label: 'Weighted dip', value: 'weighted_dip' },
   { label: 'Weighted muscle-up', value: 'weighted_muscle_up' },
   { label: 'Weighted pistol', value: 'weighted_pistol' },
+]
+
+export const rowVariantOptions: ChoiceOption[] = [
+  { label: 'Bodyweight row', value: 'bodyweight_row' },
+  { label: 'Ring row', value: 'ring_row' },
+  { label: 'Low bar row', value: 'low_bar_row' },
+  { label: 'Suspension row', value: 'suspension_row' },
+]
+
+export const lowerBodyVariantOptions: ChoiceOption[] = [
+  { label: 'Bodyweight squat', value: 'bodyweight_squat' },
+  { label: 'Split squat', value: 'split_squat' },
+  { label: 'Pistol progression', value: 'pistol_progression' },
+  { label: 'Step-down', value: 'step_down' },
+  { label: 'Barbell squat', value: 'barbell_squat' },
 ]
 
 export const compatibleSecondaryGoals: Record<string, string[]> = {

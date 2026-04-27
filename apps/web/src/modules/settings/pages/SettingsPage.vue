@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { requiredGoalModulesForGoal } from '@/modules/roadmap'
 import { UiButton } from '@/shared/ui'
 import ProfileChoiceGrid from '../components/ProfileChoiceGrid.vue'
 import ProfileFormSection from '../components/ProfileFormSection.vue'
+import ProfileRoadmapModuleFields from '../components/ProfileRoadmapModuleFields.vue'
 import ProfileSectionTabs from '../components/ProfileSectionTabs.vue'
 import ProfileSelectField from '../components/ProfileSelectField.vue'
 import ProfileStatusBanner from '../components/ProfileStatusBanner.vue'
@@ -23,10 +25,12 @@ import {
   limitationAreaOptions,
   limitationSeverityOptions,
   limitationStatusOptions,
+  lowerBodyVariantOptions,
   mobilityCheckOptions,
   mobilityStatusOptions,
   progressionPaceOptions,
   priorSportOptions,
+  rowVariantOptions,
   sessionStructureOptions,
   targetSkillOptions,
   trainingDayOptions,
@@ -34,6 +38,7 @@ import {
   unitSystemOptions,
   weightedExperienceOptions,
   weightedMovementOptions,
+  weightTrendOptions,
 } from '../data/profileOptions'
 import type { ProfileFieldErrors } from '../types'
 
@@ -57,6 +62,9 @@ const selectedEquipmentCount = computed(() => form.availableEquipment.length)
 const selectedDaysLabel = computed(() =>
   form.preferredTrainingDays.length ? `${form.preferredTrainingDays.length} days selected` : 'No days selected yet',
 )
+const roadmapSummaryLabel = computed(() => form.roadmapSuggestions.summary || 'Save profile inputs to refresh roadmap.')
+const roadmapEtaLabel = computed(() => form.roadmapSuggestions.etaRange.label || 'ETA pending')
+const roadmapConfidenceLabel = computed(() => `${capitalize(form.roadmapSuggestions.confidence.level)} confidence`)
 const primaryGoalLabel = computed(
   () => goalOptions.find((option) => option.value === form.primaryGoal)?.label ?? 'Strength',
 )
@@ -96,6 +104,14 @@ const profileSections: Array<{ id: ProfileSectionId; label: string; summary: str
   { id: 'coaching', label: 'Coaching', summary: 'Recommendation style' },
   { id: 'limitations', label: 'Limitations', summary: 'Pain flags and notes' },
 ]
+const painFlagRegionOptions = [
+  { label: 'Wrist', value: 'wrist' },
+  { label: 'Elbow', value: 'elbow' },
+  { label: 'Shoulder', value: 'shoulder' },
+  { label: 'Low back', value: 'low_back' },
+  { label: 'Knee', value: 'knee' },
+  { label: 'Ankle', value: 'ankle' },
+] as const
 const compatibleSecondaryGoalOptions = computed(() => {
   const allowedGoals = compatibleSecondaryGoals[form.primaryGoal] ?? []
 
@@ -128,6 +144,8 @@ watch(
 watch(
   () => form.primaryTargetSkill,
   () => {
+    form.targetSkillsText = form.primaryTargetSkill
+    form.requiredGoalModules = requiredGoalModulesForGoal(form.primaryTargetSkill)
     form.secondaryTargetSkills = form.secondaryTargetSkills.filter((skill) => skill !== form.primaryTargetSkill)
   },
 )
@@ -159,6 +177,7 @@ function sectionForErrors(errors: ProfileFieldErrors): ProfileSectionId {
     errors.secondaryTargetSkills ||
     errors.baseFocusAreas ||
     errors.baselineTests ||
+    errors.goalModules ||
     errors.weightedBaselines ||
     errors.targetSkillsText
   ) {
@@ -207,6 +226,10 @@ function addWeightedMovement(): void {
 function removeWeightedMovement(index: number): void {
   form.weightedBaselines.movements = form.weightedBaselines.movements.filter((_, itemIndex) => itemIndex !== index)
 }
+
+function capitalize(value: string): string {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : 'Low'
+}
 </script>
 
 <template>
@@ -227,6 +250,20 @@ function removeWeightedMovement(index: number): void {
 
       <aside class="border-line-subtle bg-surface-muted/70 border-t p-5 sm:p-7 lg:border-t-0 lg:border-l">
         <p class="text-ink-muted text-xs font-semibold tracking-[0.18em] uppercase">Current signal</p>
+        <div class="border-line-subtle bg-surface-primary rounded-card mt-4 border p-4">
+          <p class="text-accent-primary text-xs font-semibold tracking-[0.16em] uppercase">
+            Roadmap recalculation inputs
+          </p>
+          <p class="text-ink-primary mt-2 text-sm font-semibold">{{ roadmapSummaryLabel }}</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="bg-accent-primary-soft text-ink-primary rounded-full px-3 py-1 text-xs font-semibold">
+              {{ roadmapEtaLabel }}
+            </span>
+            <span class="bg-surface-muted text-ink-secondary rounded-full px-3 py-1 text-xs font-semibold">
+              {{ roadmapConfidenceLabel }}
+            </span>
+          </div>
+        </div>
         <dl class="divide-line-subtle mt-4 grid grid-cols-2 gap-x-4 gap-y-0 divide-y sm:divide-y-0">
           <div class="py-3">
             <dt class="text-ink-muted text-xs font-semibold">Primary goal</dt>
@@ -324,7 +361,7 @@ function removeWeightedMovement(index: number): void {
         title="Experience, goals, and tools"
         description="Set the main outcome, support goals, and equipment context that shape your recommendations."
       >
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <ProfileTextField
             id="profile-age"
             v-model="form.ageYears"
@@ -367,6 +404,14 @@ function removeWeightedMovement(index: number): void {
             :error="fieldErrors.experienceLevel"
             label="Experience level"
             :options="experienceLevelOptions"
+          />
+          <ProfileChoiceGrid
+            v-model="form.weightTrend"
+            columns="compact"
+            :error="fieldErrors.weightTrend"
+            label="Weight trend"
+            name="profile-weight-trend"
+            :options="weightTrendOptions"
           />
         </div>
 
@@ -525,6 +570,28 @@ function removeWeightedMovement(index: number): void {
                 />
               </div>
               <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
+                <h4 class="text-ink-primary text-sm font-semibold">Row capacity</h4>
+                <p class="text-ink-muted mt-1 text-sm leading-5">
+                  Horizontal pulling evidence for regressions, volume, and readiness.
+                </p>
+                <div class="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_8rem]">
+                  <ProfileSelectField
+                    id="profile-row-variant"
+                    v-model="form.baselineTests.rowVariant"
+                    label="Row type"
+                    :options="rowVariantOptions"
+                  />
+                  <ProfileTextField
+                    id="profile-row-reps"
+                    v-model="form.baselineTests.rowMaxReps"
+                    input-mode="numeric"
+                    label="Best reps"
+                    placeholder="12"
+                    type="number"
+                  />
+                </div>
+              </div>
+              <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
                 <h4 class="text-ink-primary text-sm font-semibold">Dip strength</h4>
                 <p class="text-ink-muted mt-1 text-sm leading-5">Clean parallel-bar reps with controlled depth.</p>
                 <ProfileTextField
@@ -536,6 +603,30 @@ function removeWeightedMovement(index: number): void {
                   placeholder="6"
                   type="number"
                 />
+              </div>
+              <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
+                <h4 class="text-ink-primary text-sm font-semibold">Support and hang tolerance</h4>
+                <p class="text-ink-muted mt-1 text-sm leading-5">
+                  Useful for pull-up, dip, ring, and straight-arm roadmap placement.
+                </p>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <ProfileTextField
+                    id="profile-passive-hang"
+                    v-model="form.baselineTests.passiveHangSeconds"
+                    input-mode="numeric"
+                    label="Passive hang"
+                    placeholder="45"
+                    type="number"
+                  />
+                  <ProfileTextField
+                    id="profile-top-support"
+                    v-model="form.baselineTests.topSupportHoldSeconds"
+                    input-mode="numeric"
+                    label="Top support hold"
+                    placeholder="25"
+                    type="number"
+                  />
+                </div>
               </div>
               <div class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4">
                 <h4 class="text-ink-primary text-sm font-semibold">Legs and bodyline</h4>
@@ -568,9 +659,44 @@ function removeWeightedMovement(index: number): void {
                     type="number"
                   />
                 </div>
+                <div class="border-line-subtle mt-5 border-t pt-4">
+                  <h5 class="text-ink-primary text-sm font-semibold">Lower-body fallback</h5>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">
+                    Use the strongest repeatable lower-body pattern if barbell data is not available.
+                  </p>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_8rem_8rem]">
+                    <ProfileSelectField
+                      id="profile-lower-body-variant"
+                      v-model="form.baselineTests.lowerBodyVariant"
+                      label="Pattern"
+                      :options="lowerBodyVariantOptions"
+                    />
+                    <ProfileTextField
+                      id="profile-lower-body-reps"
+                      v-model="form.baselineTests.lowerBodyReps"
+                      input-mode="numeric"
+                      label="Best reps"
+                      placeholder="12"
+                      type="number"
+                    />
+                    <ProfileTextField
+                      id="profile-lower-body-load"
+                      v-model="form.baselineTests.lowerBodyLoadValue"
+                      input-mode="decimal"
+                      :label="`Load (${form.baselineTests.lowerBodyLoadUnit})`"
+                      placeholder="0"
+                      type="number"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
+            <p v-if="fieldErrors.baselineTests" class="text-status-danger mt-3 text-sm leading-5">
+              {{ fieldErrors.baselineTests }}
+            </p>
           </div>
+
+          <ProfileRoadmapModuleFields v-model:form="form" :errors="fieldErrors" />
 
           <div class="border-line-subtle border-t pt-5">
             <div class="mb-4">
@@ -779,6 +905,48 @@ function removeWeightedMovement(index: number): void {
                 :help="check.description"
                 :label="check.label"
                 :options="mobilityStatusOptions"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="border-line-subtle mb-6 border-t pt-6">
+          <div>
+            <h3 class="text-ink-primary text-base font-semibold">Pain flags by area</h3>
+            <p class="text-ink-secondary mt-1 text-sm leading-6">
+              Keep these current so higher-risk progressions can slow down, swap, or wait when a region is irritated.
+            </p>
+            <p v-if="fieldErrors.painFlags" class="text-status-danger mt-2 text-sm leading-5">
+              {{ fieldErrors.painFlags }}
+            </p>
+          </div>
+          <div class="mt-4 grid gap-4 xl:grid-cols-2">
+            <div
+              v-for="region in painFlagRegionOptions"
+              :key="region.value"
+              class="border-line-subtle bg-surface-elevated rounded-card shadow-card-soft border p-4"
+            >
+              <h4 class="text-ink-primary text-sm font-semibold">{{ region.label }}</h4>
+              <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <ProfileSelectField
+                  :id="`profile-pain-${region.value}-severity`"
+                  v-model="form.painFlags[region.value].severity"
+                  label="Severity"
+                  :options="limitationSeverityOptions"
+                />
+                <ProfileSelectField
+                  :id="`profile-pain-${region.value}-status`"
+                  v-model="form.painFlags[region.value].status"
+                  label="Status"
+                  :options="limitationStatusOptions"
+                />
+              </div>
+              <ProfileTextAreaField
+                :id="`profile-pain-${region.value}-notes`"
+                v-model="form.painFlags[region.value].notes"
+                class="mt-4"
+                label="Notes"
+                placeholder="What changes training for this area?"
               />
             </div>
           </div>

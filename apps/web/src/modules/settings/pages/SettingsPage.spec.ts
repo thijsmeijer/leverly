@@ -25,11 +25,25 @@ describe('SettingsPage', () => {
     expect(wrapper.find('label[for="profile-display-name"]').text()).toBe('Display name')
     expect(wrapper.find<HTMLInputElement>('#profile-display-name').element.value).toBe('Ada Athlete')
     expect(wrapper.text()).toContain('2 days selected')
+    expect(wrapper.text()).toContain('Roadmap recalculation inputs')
+    expect(wrapper.text()).toContain('8-16 weeks')
     expect(wrapper.text()).not.toContain('Leverly can adjust exercise options, but it is not medical software')
+
+    await wrapper.find('#profile-tab-training').trigger('click')
+
+    expect(wrapper.text()).toContain('Weight trend')
+    expect(wrapper.text()).toContain('Row capacity')
+    expect(wrapper.text()).toContain('Passive hang')
+    expect(wrapper.text()).toContain('Top support hold')
+    expect(wrapper.text()).toContain('Lower-body fallback')
+    expect(wrapper.text()).toContain('Inversion skill check')
+    expect(wrapper.find('a[href="/app/settings/equipment"]').text()).toContain('Review equipment')
 
     await wrapper.find('#profile-tab-limitations').trigger('click')
 
     expect(wrapper.text()).toContain('Leverly can adjust exercise options, but it is not medical software')
+    expect(wrapper.text()).toContain('Pain flags by area')
+    expect(wrapper.text()).toContain('Wrist')
   })
 
   it('shows local validation errors before saving', async () => {
@@ -104,6 +118,111 @@ describe('SettingsPage', () => {
     expect(String(fetcher.mock.calls[2]?.[1]?.body)).toContain('"friday"')
     expect(wrapper.text()).toContain('Profile settings saved.')
   })
+
+  it('saves roadmap-affecting inputs and displays the refreshed roadmap summary', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse(profileResponse()))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          profileResponse({
+            baseline_tests: {
+              ...profileResponse().data.baseline_tests,
+              rows: { max_reps: 15, variant: 'ring_row' },
+            },
+            goal_modules: {
+              inversion: {
+                highest_progression: 'freestanding_handstand',
+                metric_type: 'hold_seconds',
+                reps: null,
+                hold_seconds: 25,
+                load_value: null,
+                load_unit: 'kg',
+                quality: 'clean',
+                notes: null,
+              },
+            },
+            roadmap_suggestions: {
+              summary: 'Pull-up is now the clearest roadmap priority.',
+              eta_range: { min_weeks: 6, max_weeks: 12, label: '6-12 weeks' },
+              primary_goal: { skill: 'strict_pull_up', label: 'Pull-up' },
+              confidence: { level: 'high', score: 0.84, reasons: ['Updated row capacity is stronger.'] },
+              current_block_focus: {
+                label: 'Pulling base block',
+                focus_areas: ['pull_capacity', 'row_volume'],
+                lanes: ['primary'],
+                retest_cadence: ['Retest rows and pull-ups in 4 weeks.'],
+                should_improve: ['Repeatable pulling volume'],
+                eta_range: { min_weeks: 6, max_weeks: 12, label: '6-12 weeks' },
+              },
+              version: 'roadmap.v2',
+            },
+            weight_trend: 'gaining',
+          }),
+        ),
+      )
+
+    configureLeverlyApiClient({
+      fetcher,
+      getCsrfToken: () => 'csrf-token',
+    })
+
+    const { wrapper } = await mountWithApp(SettingsPage, {
+      route: '/app/settings/profile',
+    })
+    await flushPromises()
+
+    await wrapper.find('#profile-tab-training').trigger('click')
+    await wrapper.find('#profile-row-reps').setValue('15')
+    await wrapper.find('input[name="profile-weight-trend"][value="gaining"]').setValue(true)
+    await wrapper.find('#profile-goal-module-inversion-hold').setValue('25')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const body = String(fetcher.mock.calls[2]?.[1]?.body)
+
+    expect(body).toContain('"rows":{"max_reps":15,"variant":"ring_row"}')
+    expect(body).toContain('"weight_trend":"gaining"')
+    expect(body).toContain('"hold_seconds":25')
+    expect(wrapper.text()).toContain('Pull-up is now the clearest roadmap priority.')
+    expect(wrapper.text()).toContain('6-12 weeks')
+  })
+
+  it('shows server validation errors for roadmap module saves', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse(profileResponse()))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            errors: {
+              goal_modules: ['Add the tested progression for the selected primary goal.'],
+            },
+            message: 'The given data was invalid.',
+          },
+          { status: 422 },
+        ),
+      )
+
+    configureLeverlyApiClient({
+      fetcher,
+      getCsrfToken: () => 'csrf-token',
+    })
+
+    const { wrapper } = await mountWithApp(SettingsPage, {
+      route: '/app/settings/profile',
+    })
+    await flushPromises()
+
+    await wrapper.find('#profile-tab-training').trigger('click')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Check the highlighted fields before saving.')
+    expect(wrapper.text()).toContain('Add the tested progression for the selected primary goal.')
+  })
 })
 
 function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
@@ -165,6 +284,21 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       primary_goal: 'skill',
       primary_target_skill: 'handstand',
       progression_pace: 'balanced',
+      roadmap_suggestions: {
+        summary: 'Handstand is the clearest roadmap priority.',
+        eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+        primary_goal: { skill: 'handstand', label: 'Handstand' },
+        confidence: { level: 'medium', score: 0.68, reasons: ['Baseline inversion data is available.'] },
+        current_block_focus: {
+          label: 'Handstand line block',
+          focus_areas: ['handstand_line', 'core_bodyline'],
+          lanes: ['primary'],
+          retest_cadence: ['Retest handstand holds in 4 weeks.'],
+          should_improve: ['Overhead line', 'Kick-up consistency'],
+          eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+        },
+        version: 'roadmap.v2',
+      },
       secondary_goals: ['strength'],
       secondary_target_skills: ['strict_pull_up'],
       session_structure_preferences: ['skill_first'],

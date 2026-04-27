@@ -150,20 +150,22 @@ function defaultGoalModule(key: string): GoalModuleForm {
   }
 }
 
-function nullableInteger(value: string): number | null {
-  const parsed = Number(value.trim())
+function nullableInteger(value: string | number): number | null {
+  const text = String(value).trim()
+  const parsed = Number(text)
 
-  return value.trim() === '' || !Number.isFinite(parsed) ? null : Math.trunc(parsed)
+  return text === '' || !Number.isFinite(parsed) ? null : Math.trunc(parsed)
 }
 
-function nullableNumber(value: string): number | null {
-  const parsed = Number(value.trim())
+function nullableNumber(value: string | number): number | null {
+  const text = String(value).trim()
+  const parsed = Number(text)
 
-  return value.trim() === '' || !Number.isFinite(parsed) ? null : parsed
+  return text === '' || !Number.isFinite(parsed) ? null : parsed
 }
 
-function positiveNumber(value: string): boolean {
-  const parsed = Number(value.trim())
+function positiveNumber(value: string | number): boolean {
+  const parsed = Number(String(value).trim())
 
   return Number.isFinite(parsed) && parsed > 0
 }
