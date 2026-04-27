@@ -158,6 +158,35 @@ final class CalisthenicsPlacementOptions
 
     public const array LOAD_UNITS = ['kg', 'lb'];
 
+    public const array ROW_VARIANTS = [
+        'bodyweight_row',
+        'ring_row',
+        'low_bar_row',
+        'suspension_row',
+    ];
+
+    public const array PULL_UP_FALLBACK_VARIANTS = [
+        'none',
+        'passive_hang',
+        'active_hang',
+        'eccentric',
+        'assisted',
+    ];
+
+    public const array DIP_FALLBACK_VARIANTS = [
+        'none',
+        'top_support',
+        'assisted',
+    ];
+
+    public const array LOWER_BODY_TEST_VARIANTS = [
+        'barbell_squat',
+        'bodyweight_squat',
+        'split_squat',
+        'pistol_progression',
+        'step_down',
+    ];
+
     /**
      * @return array<string, mixed>
      */
@@ -169,15 +198,33 @@ final class CalisthenicsPlacementOptions
             ],
             'pull_ups' => [
                 'max_strict_reps' => null,
+                'fallback_variant' => 'none',
+                'fallback_reps' => null,
+                'fallback_seconds' => null,
             ],
             'dips' => [
                 'max_strict_reps' => null,
+                'fallback_variant' => 'none',
+                'fallback_reps' => null,
+                'fallback_seconds' => null,
             ],
             'squat' => [
                 'barbell_load_value' => null,
                 'barbell_reps' => null,
             ],
+            'rows' => [
+                'variant' => 'bodyweight_row',
+                'max_reps' => null,
+            ],
+            'lower_body' => [
+                'variant' => 'bodyweight_squat',
+                'load_value' => null,
+                'load_unit' => 'kg',
+                'reps' => null,
+            ],
             'hollow_hold_seconds' => null,
+            'passive_hang_seconds' => null,
+            'top_support_hold_seconds' => null,
         ];
     }
 
@@ -198,15 +245,33 @@ final class CalisthenicsPlacementOptions
             ],
             'pull_ups' => [
                 'max_strict_reps' => $pullUps['max_strict_reps'] ?? null,
+                'fallback_variant' => $pullUps['fallback_variant'] ?? 'none',
+                'fallback_reps' => $pullUps['fallback_reps'] ?? null,
+                'fallback_seconds' => $pullUps['fallback_seconds'] ?? null,
             ],
             'dips' => [
                 'max_strict_reps' => $dips['max_strict_reps'] ?? null,
+                'fallback_variant' => $dips['fallback_variant'] ?? 'none',
+                'fallback_reps' => $dips['fallback_reps'] ?? null,
+                'fallback_seconds' => $dips['fallback_seconds'] ?? null,
             ],
             'squat' => [
                 'barbell_load_value' => $squat['barbell_load_value'] ?? null,
                 'barbell_reps' => $squat['barbell_reps'] ?? null,
             ],
+            'rows' => [
+                'variant' => is_array($tests['rows'] ?? null) ? ($tests['rows']['variant'] ?? 'bodyweight_row') : 'bodyweight_row',
+                'max_reps' => is_array($tests['rows'] ?? null) ? ($tests['rows']['max_reps'] ?? null) : null,
+            ],
+            'lower_body' => [
+                'variant' => is_array($tests['lower_body'] ?? null) ? ($tests['lower_body']['variant'] ?? 'bodyweight_squat') : 'bodyweight_squat',
+                'load_value' => is_array($tests['lower_body'] ?? null) ? ($tests['lower_body']['load_value'] ?? null) : null,
+                'load_unit' => is_array($tests['lower_body'] ?? null) ? ($tests['lower_body']['load_unit'] ?? 'kg') : 'kg',
+                'reps' => is_array($tests['lower_body'] ?? null) ? ($tests['lower_body']['reps'] ?? null) : null,
+            ],
             'hollow_hold_seconds' => $tests['hollow_hold_seconds'] ?? null,
+            'passive_hang_seconds' => $tests['passive_hang_seconds'] ?? null,
+            'top_support_hold_seconds' => $tests['top_support_hold_seconds'] ?? null,
         ];
     }
 

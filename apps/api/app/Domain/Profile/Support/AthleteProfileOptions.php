@@ -18,6 +18,8 @@ final class AthleteProfileOptions
 
     public const array HEIGHT_UNITS = ['cm', 'in'];
 
+    public const array WEIGHT_TRENDS = ['cutting', 'maintaining', 'gaining', 'unknown'];
+
     public const array PRIOR_SPORT_BACKGROUNDS = [
         'none',
         'strength_training',
@@ -62,6 +64,8 @@ final class AthleteProfileOptions
         'rings',
         'resistance_band',
         'box_bench',
+        'barbell',
+        'squat_rack',
         'weight_vest',
         'dip_belt',
         'weighted_backpack',
@@ -102,6 +106,12 @@ final class AthleteProfileOptions
 
     public const array LIMITATION_STATUSES = ['active', 'recurring', 'past'];
 
+    public const array PAIN_REGIONS = ['wrist', 'elbow', 'shoulder', 'low_back', 'knee', 'ankle'];
+
+    public const array PAIN_SEVERITIES = ['none', 'mild', 'moderate', 'severe'];
+
+    public const array PAIN_STATUSES = ['none', 'active', 'recent', 'recurring', 'past'];
+
     public const array PROGRESSION_PACES = ['conservative', 'balanced', 'ambitious'];
 
     public const array INTENSITY_PREFERENCES = ['low', 'moderate', 'high', 'auto'];
@@ -134,6 +144,14 @@ final class AthleteProfileOptions
 
     public const array WEIGHTED_MOVEMENTS = CalisthenicsPlacementOptions::WEIGHTED_MOVEMENTS;
 
+    public const array ROW_VARIANTS = CalisthenicsPlacementOptions::ROW_VARIANTS;
+
+    public const array PULL_UP_FALLBACK_VARIANTS = CalisthenicsPlacementOptions::PULL_UP_FALLBACK_VARIANTS;
+
+    public const array DIP_FALLBACK_VARIANTS = CalisthenicsPlacementOptions::DIP_FALLBACK_VARIANTS;
+
+    public const array LOWER_BODY_TEST_VARIANTS = CalisthenicsPlacementOptions::LOWER_BODY_TEST_VARIANTS;
+
     /**
      * @return array<string, mixed>
      */
@@ -146,6 +164,7 @@ final class AthleteProfileOptions
             'age_years' => null,
             'bodyweight_unit' => 'kg',
             'height_unit' => 'cm',
+            'weight_trend' => 'unknown',
             'experience_level' => 'new',
             'prior_sport_background' => [],
             'secondary_goals' => [],
@@ -158,6 +177,7 @@ final class AthleteProfileOptions
             'available_equipment' => [],
             'training_locations' => [],
             'movement_limitations' => [],
+            'pain_flags' => self::emptyPainFlags(),
             'baseline_tests' => CalisthenicsPlacementOptions::emptyLevelTests(),
             'skill_statuses' => [],
             'mobility_checks' => CalisthenicsPlacementOptions::emptyMobilityChecks(),
@@ -198,6 +218,14 @@ final class AthleteProfileOptions
             $data['movement_limitations'] = array_values($data['movement_limitations']);
         }
 
+        if (array_key_exists('pain_flags', $data)) {
+            if (is_array($data['pain_flags'])) {
+                $data['pain_flags'] = self::normalizePainFlags($data['pain_flags']);
+            } else {
+                unset($data['pain_flags']);
+            }
+        }
+
         foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
             if (array_key_exists($key, $data) && ! is_array($data[$key])) {
                 unset($data[$key]);
@@ -225,6 +253,7 @@ final class AthleteProfileOptions
             'bodyweight_unit' => $profile->bodyweight_unit,
             'height_value' => $profile->height_value,
             'height_unit' => $profile->height_unit,
+            'weight_trend' => $profile->weight_trend,
             'prior_sport_background' => $profile->prior_sport_background ?? [],
             'primary_goal' => $profile->primary_goal,
             'secondary_goals' => $profile->secondary_goals ?? [],
@@ -237,6 +266,7 @@ final class AthleteProfileOptions
             'available_equipment' => $profile->available_equipment ?? [],
             'training_locations' => $profile->training_locations ?? [],
             'movement_limitations' => $profile->movement_limitations ?? [],
+            'pain_flags' => self::completePainFlags($profile->pain_flags ?? []),
             'baseline_tests' => $profile->baseline_tests ?? CalisthenicsPlacementOptions::emptyLevelTests(),
             'skill_statuses' => $profile->skill_statuses ?? [],
             'mobility_checks' => $profile->mobility_checks ?? CalisthenicsPlacementOptions::emptyMobilityChecks(),
@@ -262,11 +292,15 @@ final class AthleteProfileOptions
     {
         $merged = [...$base, ...$incoming];
 
-        foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
+        foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines', 'pain_flags'] as $key) {
             if (is_array($base[$key] ?? null) && is_array($incoming[$key] ?? null)) {
                 $merged[$key] = array_replace_recursive($base[$key], $incoming[$key]);
             }
         }
+
+        $merged['pain_flags'] = self::completePainFlags(
+            is_array($merged['pain_flags'] ?? null) ? $merged['pain_flags'] : [],
+        );
 
         if (is_array($merged['baseline_tests'] ?? null)) {
             $merged['baseline_tests'] = CalisthenicsPlacementOptions::normalizeLevelTests($merged['baseline_tests']);
@@ -288,5 +322,58 @@ final class AthleteProfileOptions
     private static function uniqueList(array $values): array
     {
         return array_values(array_unique($values, SORT_REGULAR));
+    }
+
+    /**
+     * @return array<string, array{severity: string, status: string, notes: string|null}>
+     */
+    public static function emptyPainFlags(): array
+    {
+        return array_fill_keys(
+            self::PAIN_REGIONS,
+            [
+                'severity' => 'none',
+                'status' => 'none',
+                'notes' => null,
+            ],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $flags
+     * @return array<string, array{severity: string, status: string, notes: string|null}>
+     */
+    public static function completePainFlags(array $flags): array
+    {
+        return array_replace_recursive(self::emptyPainFlags(), self::normalizePainFlags($flags));
+    }
+
+    /**
+     * @param  array<string, mixed>  $flags
+     * @return array<string, array{severity: string, status: string, notes: string|null}>
+     */
+    public static function normalizePainFlags(array $flags): array
+    {
+        $normalized = [];
+
+        foreach (self::PAIN_REGIONS as $region) {
+            $flag = $flags[$region] ?? null;
+
+            if (! is_array($flag)) {
+                continue;
+            }
+
+            $severity = is_string($flag['severity'] ?? null) ? $flag['severity'] : 'none';
+            $status = is_string($flag['status'] ?? null) ? $flag['status'] : 'none';
+            $notes = is_string($flag['notes'] ?? null) ? trim($flag['notes']) : null;
+
+            $normalized[$region] = [
+                'severity' => $severity,
+                'status' => $status,
+                'notes' => $notes === '' ? null : $notes,
+            ];
+        }
+
+        return $normalized;
     }
 }

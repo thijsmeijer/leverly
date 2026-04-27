@@ -28,14 +28,34 @@ describe('onboardingService', () => {
         currentBodyweightValue: '72.5',
         currentLevelTests: {
           dipMaxReps: '6',
+          dipFallbackReps: '5',
+          dipFallbackSeconds: '',
+          dipFallbackVariant: 'assisted',
           hollowHoldSeconds: '35',
+          lowerBodyLoadUnit: 'kg',
+          lowerBodyLoadValue: '',
+          lowerBodyReps: '12',
+          lowerBodyVariant: 'split_squat',
+          passiveHangSeconds: '45',
           pullUpMaxReps: '4',
+          pullUpFallbackReps: '',
+          pullUpFallbackSeconds: '6',
+          pullUpFallbackVariant: 'eccentric',
           pushUpMaxReps: '18',
+          rowMaxReps: '12',
+          rowVariant: 'ring_row',
           squatBarbellLoadValue: '100',
           squatBarbellReps: '5',
+          topSupportHoldSeconds: '25',
         },
         heightValue: '178',
         longTermTargetSkills: ['planche'],
+        painFlags: {
+          wrist: {
+            severity: 'mild',
+            status: 'recurring',
+          },
+        },
         primaryTargetSkill: 'handstand',
         roadmapSuggestions: {
           baseFocusAreas: ['pull_capacity', 'core_bodyline'],
@@ -60,6 +80,7 @@ describe('onboardingService', () => {
         },
         targetSkills: ['strict_pull_up', 'handstand'],
         trainingAgeMonths: '18',
+        weightTrend: 'maintaining',
       },
       isComplete: false,
       onboardingId: '01kb0b6h4az3er8g7vnh9k5m1a',
@@ -86,11 +107,21 @@ describe('onboardingService', () => {
       currentLevelTests: {
         ...defaultOnboardingForm().currentLevelTests,
         dipMaxReps: '6',
+        dipFallbackReps: '5',
+        dipFallbackVariant: 'assisted',
         hollowHoldSeconds: '35',
+        lowerBodyReps: '12',
+        lowerBodyVariant: 'split_squat',
+        passiveHangSeconds: '45',
         pullUpMaxReps: '4',
+        pullUpFallbackSeconds: '6',
+        pullUpFallbackVariant: 'eccentric',
         pushUpMaxReps: '18',
+        rowMaxReps: '12',
+        rowVariant: 'ring_row',
         squatBarbellLoadValue: '100',
         squatBarbellReps: '5',
+        topSupportHoldSeconds: '25',
       },
       heightValue: '178',
       longTermTargetSkills: ['planche'],
@@ -102,6 +133,7 @@ describe('onboardingService', () => {
       preferredTrainingDays: ['monday', 'wednesday', 'friday'],
       priorSportBackground: ['strength_training'],
       primaryTargetSkill: 'handstand',
+      weightTrend: 'maintaining',
       targetSkills: ['strict_pull_up', 'handstand'],
       trainingLocations: ['home'],
     }
@@ -121,7 +153,16 @@ describe('onboardingService', () => {
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"target_skills":["strict_pull_up","handstand"]')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"age_years":29')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"hollow_hold_seconds":35')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"passive_hang_seconds":45')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"top_support_hold_seconds":25')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"rows":{"max_reps":12,"variant":"ring_row"}')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"fallback_variant":"eccentric"')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain(
+      '"lower_body":{"load_unit":"kg","load_value":null,"reps":12,"variant":"split_squat"}',
+    )
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"barbell_load_value":100')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"weight_trend":"maintaining"')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"pain_flags":{"wrist"')
   })
 
   it('maps server validation errors to onboarding fields', async () => {
@@ -192,11 +233,25 @@ describe('onboardingService', () => {
           currentLevelTests: {
             ...defaultOnboardingForm().currentLevelTests,
             dipMaxReps: '',
+            dipFallbackReps: '',
+            dipFallbackSeconds: '',
+            dipFallbackVariant: 'none',
             hollowHoldSeconds: '',
+            lowerBodyLoadUnit: 'kg',
+            lowerBodyLoadValue: '',
+            lowerBodyReps: '',
+            lowerBodyVariant: 'bodyweight_squat',
+            passiveHangSeconds: '',
             pullUpMaxReps: '',
+            pullUpFallbackReps: '',
+            pullUpFallbackSeconds: '',
+            pullUpFallbackVariant: 'none',
             pushUpMaxReps: '',
+            rowMaxReps: '',
+            rowVariant: 'bodyweight_row',
             squatBarbellLoadValue: '',
             squatBarbellReps: '',
+            topSupportHoldSeconds: '',
           },
           targetSkills: [],
         },
@@ -204,11 +259,15 @@ describe('onboardingService', () => {
       ),
     ).toMatchObject({
       'currentLevelTests.dipMaxReps': 'Enter a number from 0 to 100.',
+      'currentLevelTests.lowerBodyReps': 'Enter a number from 0 to 100.',
+      'currentLevelTests.passiveHangSeconds': 'Enter a number from 0 to 600.',
       'currentLevelTests.hollowHoldSeconds': 'Enter a number from 0 to 600.',
       'currentLevelTests.pullUpMaxReps': 'Enter a number from 0 to 100.',
       'currentLevelTests.pushUpMaxReps': 'Enter a number from 0 to 200.',
+      'currentLevelTests.rowMaxReps': 'Enter a number from 0 to 100.',
       'currentLevelTests.squatBarbellLoadValue': 'Enter a number from 0 to 1000.',
       'currentLevelTests.squatBarbellReps': 'Enter a number from 0 to 30.',
+      'currentLevelTests.topSupportHoldSeconds': 'Enter a number from 0 to 600.',
     })
   })
 })
@@ -225,18 +284,36 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       current_level_tests: {
         dips: {
           max_strict_reps: 6,
+          fallback_variant: 'assisted',
+          fallback_reps: 5,
+          fallback_seconds: null,
         },
         hollow_hold_seconds: 35,
+        lower_body: {
+          load_unit: 'kg',
+          load_value: null,
+          reps: 12,
+          variant: 'split_squat',
+        },
+        passive_hang_seconds: 45,
         pull_ups: {
           max_strict_reps: 4,
+          fallback_variant: 'eccentric',
+          fallback_reps: null,
+          fallback_seconds: 6,
         },
         push_ups: {
           max_strict_reps: 18,
+        },
+        rows: {
+          max_reps: 12,
+          variant: 'ring_row',
         },
         squat: {
           barbell_load_value: 100,
           barbell_reps: 5,
         },
+        top_support_hold_seconds: 25,
       },
       experience_level: 'intermediate',
       height_unit: 'cm',
@@ -253,6 +330,14 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         wrist_extension: 'limited',
       },
       pain_areas: ['wrist'],
+      pain_flags: {
+        ankle: { severity: 'none', status: 'none', notes: null },
+        elbow: { severity: 'none', status: 'none', notes: null },
+        knee: { severity: 'none', status: 'none', notes: null },
+        low_back: { severity: 'none', status: 'none', notes: null },
+        shoulder: { severity: 'none', status: 'none', notes: null },
+        wrist: { severity: 'mild', status: 'recurring', notes: 'Wrists need warm-up.' },
+      },
       pain_level: 2,
       pain_notes: 'Wrists need warm-up.',
       preferred_session_minutes: 60,
@@ -283,6 +368,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         unit: 'kg',
       },
       weekly_session_goal: 3,
+      weight_trend: 'maintaining',
       ...overrides,
     },
   }

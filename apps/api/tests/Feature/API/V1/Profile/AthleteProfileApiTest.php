@@ -40,6 +40,7 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.training_age_months', 18)
             ->assertJsonPath('data.current_bodyweight_value', 72.5)
             ->assertJsonPath('data.height_value', 178)
+            ->assertJsonPath('data.weight_trend', 'maintaining')
             ->assertJsonPath('data.prior_sport_background.0', 'strength_training')
             ->assertJsonPath('data.primary_goal', 'skill')
             ->assertJsonPath('data.secondary_goals.0', 'strength')
@@ -57,7 +58,20 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.roadmap_suggestions.intermediate.compatibility_costs.0.skill', 'strict_pull_up')
             ->assertJsonPath('data.available_equipment.3', 'rings')
             ->assertJsonPath('data.movement_limitations.0.area', 'wrist')
+            ->assertJsonPath('data.pain_flags.wrist.severity', 'mild')
+            ->assertJsonPath('data.pain_flags.wrist.status', 'recurring')
+            ->assertJsonPath('data.pain_flags.elbow.severity', 'none')
             ->assertJsonPath('data.baseline_tests.squat.barbell_load_value', 100)
+            ->assertJsonPath('data.baseline_tests.rows.variant', 'ring_row')
+            ->assertJsonPath('data.baseline_tests.rows.max_reps', 12)
+            ->assertJsonPath('data.baseline_tests.pull_ups.fallback_variant', 'eccentric')
+            ->assertJsonPath('data.baseline_tests.pull_ups.fallback_seconds', 6)
+            ->assertJsonPath('data.baseline_tests.dips.fallback_variant', 'assisted')
+            ->assertJsonPath('data.baseline_tests.dips.fallback_reps', 5)
+            ->assertJsonPath('data.baseline_tests.lower_body.variant', 'split_squat')
+            ->assertJsonPath('data.baseline_tests.lower_body.reps', 12)
+            ->assertJsonPath('data.baseline_tests.passive_hang_seconds', 45)
+            ->assertJsonPath('data.baseline_tests.top_support_hold_seconds', 25)
             ->assertJsonPath('data.mobility_checks.wrist_extension', 'limited')
             ->assertJsonPath('data.weighted_baselines.experience', 'repetition_work')
             ->assertJsonPath('data.preferred_training_days.2', 'friday')
@@ -74,6 +88,15 @@ class AthleteProfileApiTest extends TestCase
             'display_name' => 'Ada Athlete',
             'timezone' => 'Europe/Amsterdam',
         ]);
+
+        $profile = AthleteProfile::query()->whereKey($profileId)->sole();
+
+        $this->assertSame('maintaining', $profile->weight_trend);
+        $this->assertSame('recurring', $profile->pain_flags['wrist']['status']);
+        $this->assertSame('ring_row', $profile->baseline_tests['rows']['variant']);
+        $this->assertSame(45, $profile->baseline_tests['passive_hang_seconds']);
+        $this->assertSame(25, $profile->baseline_tests['top_support_hold_seconds']);
+        $this->assertSame('split_squat', $profile->baseline_tests['lower_body']['variant']);
 
         $this->getJson('/api/v1/me/profile')
             ->assertOk()
@@ -137,10 +160,17 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.bodyweight_unit', 'kg')
             ->assertJsonPath('data.height_unit', 'cm')
             ->assertJsonPath('data.experience_level', 'new')
+            ->assertJsonPath('data.weight_trend', 'unknown')
+            ->assertJsonPath('data.pain_flags.wrist.severity', 'none')
+            ->assertJsonPath('data.pain_flags.ankle.status', 'none')
             ->assertJsonPath('data.prior_sport_background', [])
             ->assertJsonPath('data.available_equipment', [])
             ->assertJsonPath('data.base_focus_areas', [])
             ->assertJsonPath('data.long_term_target_skills', [])
+            ->assertJsonPath('data.baseline_tests.rows.max_reps', null)
+            ->assertJsonPath('data.baseline_tests.passive_hang_seconds', null)
+            ->assertJsonPath('data.baseline_tests.top_support_hold_seconds', null)
+            ->assertJsonPath('data.baseline_tests.lower_body.variant', 'bodyweight_squat')
             ->assertJsonPath('data.mobility_checks.wrist_extension', 'not_tested')
             ->assertJsonPath('data.progression_pace', 'balanced')
             ->assertJsonPath('data.intensity_preference', 'auto');
@@ -161,6 +191,7 @@ class AthleteProfileApiTest extends TestCase
             'bodyweight_unit' => 'stone',
             'height_value' => 12,
             'height_unit' => 'hands',
+            'weight_trend' => 'crashing',
             'prior_sport_background' => ['space_walking'],
             'primary_goal' => 'unsupported_goal',
             'secondary_goals' => ['strength', 'unsupported_goal', 'mobility'],
@@ -178,6 +209,38 @@ class AthleteProfileApiTest extends TestCase
                     'status' => 'forever',
                     'notes' => str_repeat('x', 501),
                 ],
+            ],
+            'pain_flags' => [
+                'wrist' => [
+                    'severity' => 'catastrophic',
+                    'status' => 'forever',
+                    'notes' => str_repeat('x', 301),
+                ],
+                'ego' => [
+                    'severity' => 'mild',
+                    'status' => 'active',
+                ],
+            ],
+            'baseline_tests' => [
+                'push_ups' => ['max_strict_reps' => -1],
+                'pull_ups' => [
+                    'max_strict_reps' => -1,
+                    'fallback_variant' => 'flying',
+                    'fallback_reps' => -1,
+                    'fallback_seconds' => -1,
+                ],
+                'dips' => [
+                    'max_strict_reps' => -1,
+                    'fallback_variant' => 'bench',
+                    'fallback_reps' => -1,
+                    'fallback_seconds' => -1,
+                ],
+                'squat' => ['barbell_load_value' => -1, 'barbell_reps' => 31],
+                'rows' => ['variant' => 'machine_row', 'max_reps' => -1],
+                'lower_body' => ['variant' => 'leg_press', 'load_value' => -1, 'reps' => 101, 'load_unit' => 'stone'],
+                'hollow_hold_seconds' => 700,
+                'passive_hang_seconds' => 700,
+                'top_support_hold_seconds' => 700,
             ],
             'mobility_checks' => ['wrist_extension' => 'random'],
             'weighted_baselines' => [
@@ -208,6 +271,7 @@ class AthleteProfileApiTest extends TestCase
                 'bodyweight_unit',
                 'height_value',
                 'height_unit',
+                'weight_trend',
                 'prior_sport_background.0',
                 'primary_goal',
                 'secondary_goals.1',
@@ -223,6 +287,30 @@ class AthleteProfileApiTest extends TestCase
                 'movement_limitations.0.severity',
                 'movement_limitations.0.status',
                 'movement_limitations.0.notes',
+                'pain_flags',
+                'pain_flags.wrist.severity',
+                'pain_flags.wrist.status',
+                'pain_flags.wrist.notes',
+                'baseline_tests.push_ups.max_strict_reps',
+                'baseline_tests.pull_ups.max_strict_reps',
+                'baseline_tests.pull_ups.fallback_variant',
+                'baseline_tests.pull_ups.fallback_reps',
+                'baseline_tests.pull_ups.fallback_seconds',
+                'baseline_tests.dips.max_strict_reps',
+                'baseline_tests.dips.fallback_variant',
+                'baseline_tests.dips.fallback_reps',
+                'baseline_tests.dips.fallback_seconds',
+                'baseline_tests.squat.barbell_load_value',
+                'baseline_tests.squat.barbell_reps',
+                'baseline_tests.rows.variant',
+                'baseline_tests.rows.max_reps',
+                'baseline_tests.lower_body.variant',
+                'baseline_tests.lower_body.load_value',
+                'baseline_tests.lower_body.reps',
+                'baseline_tests.lower_body.load_unit',
+                'baseline_tests.hollow_hold_seconds',
+                'baseline_tests.passive_hang_seconds',
+                'baseline_tests.top_support_hold_seconds',
                 'mobility_checks.wrist_extension',
                 'weighted_baselines.experience',
                 'weighted_baselines.unit',
@@ -257,6 +345,7 @@ class AthleteProfileApiTest extends TestCase
             'bodyweight_unit' => 'kg',
             'height_value' => 178,
             'height_unit' => 'cm',
+            'weight_trend' => 'maintaining',
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
@@ -275,12 +364,38 @@ class AthleteProfileApiTest extends TestCase
                     'notes' => 'Needs longer warm-up.',
                 ],
             ],
+            'pain_flags' => [
+                'wrist' => [
+                    'severity' => 'mild',
+                    'status' => 'recurring',
+                    'notes' => 'Needs longer warm-up.',
+                ],
+                'elbow' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'shoulder' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'low_back' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'knee' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'ankle' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+            ],
             'baseline_tests' => [
                 'push_ups' => ['max_strict_reps' => 18],
-                'pull_ups' => ['max_strict_reps' => 4],
-                'dips' => ['max_strict_reps' => 6],
+                'pull_ups' => [
+                    'max_strict_reps' => 4,
+                    'fallback_variant' => 'eccentric',
+                    'fallback_reps' => null,
+                    'fallback_seconds' => 6,
+                ],
+                'dips' => [
+                    'max_strict_reps' => 6,
+                    'fallback_variant' => 'assisted',
+                    'fallback_reps' => 5,
+                    'fallback_seconds' => null,
+                ],
                 'squat' => ['barbell_load_value' => 100, 'barbell_reps' => 5],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 12],
+                'lower_body' => ['variant' => 'split_squat', 'load_value' => null, 'load_unit' => 'kg', 'reps' => 12],
                 'hollow_hold_seconds' => 35,
+                'passive_hang_seconds' => 45,
+                'top_support_hold_seconds' => 25,
             ],
             'skill_statuses' => [
                 'handstand' => ['status' => 'freestanding_kick_up', 'best_hold_seconds' => 20],

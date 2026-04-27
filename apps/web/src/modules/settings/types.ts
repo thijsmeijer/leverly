@@ -20,11 +20,31 @@ export interface MovementLimitationForm {
 
 export interface ProfileBaselineTestsForm {
   dipMaxReps: string
+  dipFallbackReps: string
+  dipFallbackSeconds: string
+  dipFallbackVariant: string
   hollowHoldSeconds: string
+  lowerBodyLoadUnit: string
+  lowerBodyLoadValue: string
+  lowerBodyReps: string
+  lowerBodyVariant: string
+  passiveHangSeconds: string
   pullUpMaxReps: string
+  pullUpFallbackReps: string
+  pullUpFallbackSeconds: string
+  pullUpFallbackVariant: string
   pushUpMaxReps: string
+  rowMaxReps: string
+  rowVariant: string
   squatBarbellLoadValue: string
   squatBarbellReps: string
+  topSupportHoldSeconds: string
+}
+
+export interface PainFlagForm {
+  notes: string
+  severity: string
+  status: string
 }
 
 export interface ProfileSettingsForm {
@@ -45,6 +65,7 @@ export interface ProfileSettingsForm {
   longTermTargetSkills: string[]
   movementLimitation: MovementLimitationForm
   mobilityChecks: Record<string, string>
+  painFlags: Record<string, PainFlagForm>
   preferredSessionMinutes: string
   preferredTrainingDays: string[]
   priorSportBackground: string[]
@@ -71,6 +92,7 @@ export interface ProfileSettingsForm {
     }>
     unit: string
   }
+  weightTrend: string
   weeklySessionGoal: string
 }
 

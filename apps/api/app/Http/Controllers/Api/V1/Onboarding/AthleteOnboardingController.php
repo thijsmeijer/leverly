@@ -87,6 +87,7 @@ class AthleteOnboardingController extends Controller
             'bodyweight_unit' => 'kg',
             'height_value' => 178,
             'height_unit' => 'cm',
+            'weight_trend' => 'maintaining',
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
@@ -103,10 +104,14 @@ class AthleteOnboardingController extends Controller
             'weekly_session_goal' => 3,
             'current_level_tests' => [
                 'push_ups' => ['max_strict_reps' => 18],
-                'pull_ups' => ['max_strict_reps' => 4],
-                'dips' => ['max_strict_reps' => 6],
+                'pull_ups' => ['max_strict_reps' => 4, 'fallback_variant' => 'eccentric', 'fallback_reps' => null, 'fallback_seconds' => 6],
+                'dips' => ['max_strict_reps' => 6, 'fallback_variant' => 'assisted', 'fallback_reps' => 5, 'fallback_seconds' => null],
                 'squat' => ['barbell_load_value' => 100, 'barbell_reps' => 5],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 12],
+                'lower_body' => ['variant' => 'split_squat', 'load_value' => null, 'load_unit' => 'kg', 'reps' => 12],
                 'hollow_hold_seconds' => 35,
+                'passive_hang_seconds' => 45,
+                'top_support_hold_seconds' => 25,
             ],
             'skill_statuses' => [
                 'handstand' => ['status' => 'freestanding_kick_up', 'best_hold_seconds' => 20],
@@ -118,6 +123,14 @@ class AthleteOnboardingController extends Controller
             'soreness_level' => 2,
             'pain_level' => 1,
             'pain_areas' => [],
+            'pain_flags' => [
+                'wrist' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'elbow' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'shoulder' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'low_back' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'knee' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'ankle' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+            ],
             'pain_notes' => null,
             'starter_plan_key' => 'skill_strength_split',
             'is_complete' => false,
@@ -126,7 +139,7 @@ class AthleteOnboardingController extends Controller
         ],
     ])]
     #[ResponseField('data', 'object', 'Athlete onboarding answers.', required: true)]
-    #[ResponseField('data.current_level_tests', 'object', 'Baseline push-up, pull-up, squat, and hollow hold tests.', required: true)]
+    #[ResponseField('data.current_level_tests', 'object', 'Baseline push-up, pull-up, dip, row, lower-body, hang, support, and hollow body tests.', required: true)]
     #[ResponseField('data.missing_sections', 'string[]', 'Sections still needed before onboarding can be completed.', required: true)]
     public function show(Request $request): JsonResponse
     {
@@ -155,6 +168,7 @@ class AthleteOnboardingController extends Controller
             'bodyweight_unit' => 'kg',
             'height_value' => 178,
             'height_unit' => 'cm',
+            'weight_trend' => 'maintaining',
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
@@ -171,10 +185,14 @@ class AthleteOnboardingController extends Controller
             'weekly_session_goal' => 3,
             'current_level_tests' => [
                 'push_ups' => ['max_strict_reps' => 18],
-                'pull_ups' => ['max_strict_reps' => 4],
-                'dips' => ['max_strict_reps' => 6],
+                'pull_ups' => ['max_strict_reps' => 4, 'fallback_variant' => 'eccentric', 'fallback_reps' => null, 'fallback_seconds' => 6],
+                'dips' => ['max_strict_reps' => 6, 'fallback_variant' => 'assisted', 'fallback_reps' => 5, 'fallback_seconds' => null],
                 'squat' => ['barbell_load_value' => 100, 'barbell_reps' => 5],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 12],
+                'lower_body' => ['variant' => 'split_squat', 'load_value' => null, 'load_unit' => 'kg', 'reps' => 12],
                 'hollow_hold_seconds' => 35,
+                'passive_hang_seconds' => 45,
+                'top_support_hold_seconds' => 25,
             ],
             'skill_statuses' => [
                 'handstand' => ['status' => 'freestanding_kick_up', 'best_hold_seconds' => 20],
@@ -186,6 +204,14 @@ class AthleteOnboardingController extends Controller
             'soreness_level' => 2,
             'pain_level' => 1,
             'pain_areas' => [],
+            'pain_flags' => [
+                'wrist' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'elbow' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'shoulder' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'low_back' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'knee' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+                'ankle' => ['severity' => 'none', 'status' => 'none', 'notes' => null],
+            ],
             'pain_notes' => null,
             'starter_plan_key' => 'skill_strength_split',
             'is_complete' => true,

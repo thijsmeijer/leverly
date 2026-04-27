@@ -23,7 +23,7 @@ final class RoadmapInputMapper
                 'height_unit' => self::stringValue($data['height_unit'] ?? null, 'cm'),
                 'current_bodyweight_value' => self::numberOrNull($data['current_bodyweight_value'] ?? null),
                 'bodyweight_unit' => self::stringValue($data['bodyweight_unit'] ?? null, 'kg'),
-                'weight_trend' => self::stringValue($data['weight_trend'] ?? null, 'maintain'),
+                'weight_trend' => self::stringValue($data['weight_trend'] ?? null, 'unknown'),
                 'primary_goal' => self::stringOrNull($data['primary_goal'] ?? null),
                 'secondary_goals' => self::stringList($data['secondary_goals'] ?? []),
                 'long_term_target_skills' => self::stringList($data['long_term_target_skills'] ?? []),
@@ -43,8 +43,11 @@ final class RoadmapInputMapper
             painFlags: [
                 'level' => self::intOrNull($data['pain_level'] ?? null),
                 'areas' => self::painAreas($data),
-                'notes_present' => is_string($data['pain_notes'] ?? $data['injury_notes'] ?? null)
-                    && trim((string) ($data['pain_notes'] ?? $data['injury_notes'])) !== '',
+                'regions' => self::arrayValue($data['pain_flags'] ?? []),
+                'notes_present' => (
+                    is_string($data['pain_notes'] ?? $data['injury_notes'] ?? null)
+                    && trim((string) ($data['pain_notes'] ?? $data['injury_notes'])) !== ''
+                ) || self::painFlagsHaveNotes($data['pain_flags'] ?? []),
                 'movement_limitations' => self::arrayValue($data['movement_limitations'] ?? []),
             ],
             baselineTests: $baselineTests,
@@ -74,7 +77,28 @@ final class RoadmapInputMapper
             }
         }
 
+        foreach (self::arrayValue($data['pain_flags'] ?? []) as $region => $flag) {
+            if (! is_string($region) || ! is_array($flag)) {
+                continue;
+            }
+
+            if (($flag['severity'] ?? 'none') !== 'none' || ($flag['status'] ?? 'none') !== 'none') {
+                $areas[] = $region;
+            }
+        }
+
         return array_values(array_unique($areas));
+    }
+
+    private static function painFlagsHaveNotes(mixed $painFlags): bool
+    {
+        foreach (self::arrayValue($painFlags) as $flag) {
+            if (is_array($flag) && is_string($flag['notes'] ?? null) && trim($flag['notes']) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

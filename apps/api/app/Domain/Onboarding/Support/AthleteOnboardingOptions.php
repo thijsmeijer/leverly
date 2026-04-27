@@ -29,6 +29,8 @@ final class AthleteOnboardingOptions
 
     public const array WEIGHTED_MOVEMENTS = CalisthenicsPlacementOptions::WEIGHTED_MOVEMENTS;
 
+    public const array LOWER_BODY_TEST_VARIANTS = CalisthenicsPlacementOptions::LOWER_BODY_TEST_VARIANTS;
+
     public const array STARTER_PLANS = [
         'full_body_3_day',
         'upper_lower_4_day',
@@ -50,6 +52,7 @@ final class AthleteOnboardingOptions
             'bodyweight_unit' => 'kg',
             'height_value' => null,
             'height_unit' => 'cm',
+            'weight_trend' => 'unknown',
             'prior_sport_background' => [],
             'primary_goal' => null,
             'secondary_goals' => [],
@@ -73,6 +76,7 @@ final class AthleteOnboardingOptions
             'soreness_level' => null,
             'pain_level' => null,
             'pain_areas' => [],
+            'pain_flags' => AthleteProfileOptions::emptyPainFlags(),
             'pain_notes' => null,
             'starter_plan_key' => null,
         ];
@@ -127,6 +131,14 @@ final class AthleteOnboardingOptions
             }
         }
 
+        if (array_key_exists('pain_flags', $data)) {
+            if (is_array($data['pain_flags'])) {
+                $data['pain_flags'] = AthleteProfileOptions::normalizePainFlags($data['pain_flags']);
+            } else {
+                unset($data['pain_flags']);
+            }
+        }
+
         unset($data['roadmap_suggestions']);
 
         return $data;
@@ -141,11 +153,15 @@ final class AthleteOnboardingOptions
     {
         $merged = [...$base, ...$incoming];
 
-        foreach (['current_level_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
+        foreach (['current_level_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines', 'pain_flags'] as $key) {
             if (is_array($base[$key] ?? null) && is_array($incoming[$key] ?? null)) {
                 $merged[$key] = array_replace_recursive($base[$key], $incoming[$key]);
             }
         }
+
+        $merged['pain_flags'] = AthleteProfileOptions::completePainFlags(
+            is_array($merged['pain_flags'] ?? null) ? $merged['pain_flags'] : [],
+        );
 
         if (is_array($merged['current_level_tests'] ?? null)) {
             $merged['current_level_tests'] = CalisthenicsPlacementOptions::normalizeLevelTests($merged['current_level_tests']);
@@ -223,6 +239,8 @@ final class AthleteOnboardingOptions
         $pullUps = is_array($levelTests['pull_ups'] ?? null) ? $levelTests['pull_ups'] : [];
         $dips = is_array($levelTests['dips'] ?? null) ? $levelTests['dips'] : [];
         $squat = is_array($levelTests['squat'] ?? null) ? $levelTests['squat'] : [];
+        $rows = is_array($levelTests['rows'] ?? null) ? $levelTests['rows'] : [];
+        $lowerBody = is_array($levelTests['lower_body'] ?? null) ? $levelTests['lower_body'] : [];
 
         if (! is_int($pushUps['max_strict_reps'] ?? null)) {
             $missing[] = 'push_up_test';
@@ -232,16 +250,40 @@ final class AthleteOnboardingOptions
             $missing[] = 'pull_up_test';
         }
 
+        if (($pullUps['max_strict_reps'] ?? null) === 0 && ! self::hasPullUpFallback($levelTests)) {
+            $missing[] = 'pull_up_fallback';
+        }
+
         if (! is_int($dips['max_strict_reps'] ?? null)) {
             $missing[] = 'dip_test';
         }
 
-        if (! is_numeric($squat['barbell_load_value'] ?? null) || ! is_int($squat['barbell_reps'] ?? null)) {
+        if (($dips['max_strict_reps'] ?? null) === 0 && ! self::hasDipFallback($levelTests)) {
+            $missing[] = 'dip_fallback';
+        }
+
+        if (! is_int($rows['max_reps'] ?? null)) {
+            $missing[] = 'row_test';
+        }
+
+        if (self::needsBarbellSquatTest($candidate) && (! is_numeric($squat['barbell_load_value'] ?? null) || ! is_int($squat['barbell_reps'] ?? null))) {
             $missing[] = 'barbell_squat_test';
+        }
+
+        if (! self::needsBarbellSquatTest($candidate) && ! self::hasLowerBodyFallback($lowerBody)) {
+            $missing[] = 'lower_body_test';
         }
 
         if (! is_int($levelTests['hollow_hold_seconds'] ?? null)) {
             $missing[] = 'hollow_hold_test';
+        }
+
+        if (! is_int($levelTests['passive_hang_seconds'] ?? null)) {
+            $missing[] = 'passive_hang_test';
+        }
+
+        if (! is_int($levelTests['top_support_hold_seconds'] ?? null)) {
+            $missing[] = 'top_support_test';
         }
 
         $mobilityChecks = is_array($candidate['mobility_checks'] ?? null) ? $candidate['mobility_checks'] : [];
@@ -302,6 +344,7 @@ final class AthleteOnboardingOptions
             'bodyweight_unit' => $onboarding->bodyweight_unit,
             'height_value' => $onboarding->height_value,
             'height_unit' => $onboarding->height_unit,
+            'weight_trend' => $onboarding->weight_trend,
             'prior_sport_background' => $onboarding->prior_sport_background ?? [],
             'primary_goal' => $onboarding->primary_goal,
             'secondary_goals' => $onboarding->secondary_goals ?? [],
@@ -325,6 +368,7 @@ final class AthleteOnboardingOptions
             'soreness_level' => $onboarding->soreness_level,
             'pain_level' => $onboarding->pain_level,
             'pain_areas' => $onboarding->pain_areas ?? [],
+            'pain_flags' => AthleteProfileOptions::completePainFlags($onboarding->pain_flags ?? []),
             'pain_notes' => $onboarding->pain_notes,
             'starter_plan_key' => $onboarding->starter_plan_key,
         ];
@@ -353,6 +397,7 @@ final class AthleteOnboardingOptions
             'bodyweight_unit',
             'height_value',
             'height_unit',
+            'weight_trend',
             'prior_sport_background',
             'available_equipment',
             'training_locations',
@@ -374,6 +419,10 @@ final class AthleteOnboardingOptions
             if (array_key_exists($key, $data)) {
                 $profileData[$key] = $data[$key];
             }
+        }
+
+        if (array_key_exists('pain_flags', $data)) {
+            $profileData['pain_flags'] = $data['pain_flags'];
         }
 
         if (array_key_exists('pain_notes', $data)) {
@@ -398,6 +447,56 @@ final class AthleteOnboardingOptions
         ]);
 
         return count(array_intersect($targets, self::WEIGHTED_MOVEMENTS)) > 0;
+    }
+
+    /**
+     * @param  array<string, mixed>  $candidate
+     */
+    private static function needsBarbellSquatTest(array $candidate): bool
+    {
+        $equipment = is_array($candidate['available_equipment'] ?? null) ? $candidate['available_equipment'] : [];
+        $locations = is_array($candidate['training_locations'] ?? null) ? $candidate['training_locations'] : [];
+
+        return in_array('barbell', $equipment, true) || in_array('squat_rack', $equipment, true) || in_array('gym', $locations, true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $levelTests
+     */
+    private static function hasPullUpFallback(array $levelTests): bool
+    {
+        $pullUps = is_array($levelTests['pull_ups'] ?? null) ? $levelTests['pull_ups'] : [];
+        $variant = $pullUps['fallback_variant'] ?? 'none';
+
+        return is_string($variant)
+            && $variant !== 'none'
+            && (is_int($pullUps['fallback_reps'] ?? null) || is_int($pullUps['fallback_seconds'] ?? null) || is_int($levelTests['passive_hang_seconds'] ?? null));
+    }
+
+    /**
+     * @param  array<string, mixed>  $levelTests
+     */
+    private static function hasDipFallback(array $levelTests): bool
+    {
+        $dips = is_array($levelTests['dips'] ?? null) ? $levelTests['dips'] : [];
+        $variant = $dips['fallback_variant'] ?? 'none';
+
+        return is_string($variant)
+            && $variant !== 'none'
+            && (is_int($dips['fallback_reps'] ?? null) || is_int($dips['fallback_seconds'] ?? null) || is_int($levelTests['top_support_hold_seconds'] ?? null));
+    }
+
+    /**
+     * @param  array<string, mixed>  $lowerBody
+     */
+    private static function hasLowerBodyFallback(array $lowerBody): bool
+    {
+        $variant = $lowerBody['variant'] ?? null;
+
+        return is_string($variant)
+            && $variant !== 'barbell_squat'
+            && in_array($variant, self::LOWER_BODY_TEST_VARIANTS, true)
+            && is_int($lowerBody['reps'] ?? null);
     }
 
     /**

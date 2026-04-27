@@ -4,6 +4,8 @@ import { emptyRoadmapSuggestions, mapRoadmapSuggestions } from '@/modules/roadma
 import { compatibleSecondaryGoals, equipmentOptions, mobilityCheckOptions } from '../data/profileOptions'
 import type { ProfileFieldErrors, ProfileSettingsForm, ProfileSettingsState } from '../types'
 
+const painRegions = ['wrist', 'elbow', 'shoulder', 'low_back', 'knee', 'ankle'] as const
+
 type ServerValidationBody = {
   readonly errors?: Record<string, string[]>
   readonly message?: string
@@ -35,6 +37,7 @@ type ProfileUpdateBody = {
     readonly status: string
   }>
   readonly mobility_checks: Record<string, string>
+  readonly pain_flags: Record<string, { notes: string | null; severity: string; status: string }>
   readonly preferred_session_minutes: number | null
   readonly preferred_training_days: string[]
   readonly prior_sport_background: string[]
@@ -60,6 +63,7 @@ type ProfileUpdateBody = {
     }>
     readonly unit: string
   }
+  readonly weight_trend: string
   readonly weekly_session_goal: number | null
 }
 
@@ -80,11 +84,25 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     baseFocusAreas: [],
     baselineTests: {
       dipMaxReps: '',
+      dipFallbackReps: '',
+      dipFallbackSeconds: '',
+      dipFallbackVariant: 'none',
       hollowHoldSeconds: '',
+      lowerBodyLoadUnit: 'kg',
+      lowerBodyLoadValue: '',
+      lowerBodyReps: '',
+      lowerBodyVariant: 'bodyweight_squat',
+      passiveHangSeconds: '',
       pullUpMaxReps: '',
+      pullUpFallbackReps: '',
+      pullUpFallbackSeconds: '',
+      pullUpFallbackVariant: 'none',
       pushUpMaxReps: '',
+      rowMaxReps: '',
+      rowVariant: 'bodyweight_row',
       squatBarbellLoadValue: '',
       squatBarbellReps: '',
+      topSupportHoldSeconds: '',
     },
     bodyweightUnit: 'kg',
     currentBodyweightValue: '',
@@ -104,6 +122,7 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
       status: 'past',
     },
     mobilityChecks: Object.fromEntries(mobilityCheckOptions.map((option) => [option.value, 'not_tested'])),
+    painFlags: emptyPainFlags(),
     preferredSessionMinutes: '45',
     preferredTrainingDays: [],
     priorSportBackground: [],
@@ -125,6 +144,7 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
       movements: [],
       unit: 'kg',
     },
+    weightTrend: 'unknown',
     weeklySessionGoal: '3',
   }
 }
@@ -286,6 +306,16 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     ageYears: profile.age_years === null || profile.age_years === undefined ? '' : String(profile.age_years),
     baseFocusAreas: [...profile.base_focus_areas],
     baselineTests: {
+      dipFallbackReps:
+        profile.baseline_tests.dips?.fallback_reps === null || profile.baseline_tests.dips?.fallback_reps === undefined
+          ? ''
+          : String(profile.baseline_tests.dips.fallback_reps),
+      dipFallbackSeconds:
+        profile.baseline_tests.dips?.fallback_seconds === null ||
+        profile.baseline_tests.dips?.fallback_seconds === undefined
+          ? ''
+          : String(profile.baseline_tests.dips.fallback_seconds),
+      dipFallbackVariant: profile.baseline_tests.dips?.fallback_variant ?? 'none',
       dipMaxReps:
         profile.baseline_tests.dips?.max_strict_reps === null ||
         profile.baseline_tests.dips?.max_strict_reps === undefined
@@ -295,6 +325,33 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
         profile.baseline_tests.hollow_hold_seconds === null || profile.baseline_tests.hollow_hold_seconds === undefined
           ? ''
           : String(profile.baseline_tests.hollow_hold_seconds),
+      lowerBodyLoadUnit: profile.baseline_tests.lower_body?.load_unit ?? 'kg',
+      lowerBodyLoadValue:
+        profile.baseline_tests.lower_body?.load_value === null ||
+        profile.baseline_tests.lower_body?.load_value === undefined
+          ? ''
+          : String(profile.baseline_tests.lower_body.load_value),
+      lowerBodyReps:
+        profile.baseline_tests.lower_body?.reps === null || profile.baseline_tests.lower_body?.reps === undefined
+          ? ''
+          : String(profile.baseline_tests.lower_body.reps),
+      lowerBodyVariant: profile.baseline_tests.lower_body?.variant ?? 'bodyweight_squat',
+      passiveHangSeconds:
+        profile.baseline_tests.passive_hang_seconds === null ||
+        profile.baseline_tests.passive_hang_seconds === undefined
+          ? ''
+          : String(profile.baseline_tests.passive_hang_seconds),
+      pullUpFallbackReps:
+        profile.baseline_tests.pull_ups?.fallback_reps === null ||
+        profile.baseline_tests.pull_ups?.fallback_reps === undefined
+          ? ''
+          : String(profile.baseline_tests.pull_ups.fallback_reps),
+      pullUpFallbackSeconds:
+        profile.baseline_tests.pull_ups?.fallback_seconds === null ||
+        profile.baseline_tests.pull_ups?.fallback_seconds === undefined
+          ? ''
+          : String(profile.baseline_tests.pull_ups.fallback_seconds),
+      pullUpFallbackVariant: profile.baseline_tests.pull_ups?.fallback_variant ?? 'none',
       pullUpMaxReps:
         profile.baseline_tests.pull_ups?.max_strict_reps === null ||
         profile.baseline_tests.pull_ups?.max_strict_reps === undefined
@@ -305,6 +362,11 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
         profile.baseline_tests.push_ups?.max_strict_reps === undefined
           ? ''
           : String(profile.baseline_tests.push_ups.max_strict_reps),
+      rowMaxReps:
+        profile.baseline_tests.rows?.max_reps === null || profile.baseline_tests.rows?.max_reps === undefined
+          ? ''
+          : String(profile.baseline_tests.rows.max_reps),
+      rowVariant: profile.baseline_tests.rows?.variant ?? 'bodyweight_row',
       squatBarbellLoadValue:
         profile.baseline_tests.squat?.barbell_load_value === null ||
         profile.baseline_tests.squat?.barbell_load_value === undefined
@@ -314,6 +376,11 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
         profile.baseline_tests.squat?.barbell_reps === null || profile.baseline_tests.squat?.barbell_reps === undefined
           ? ''
           : String(profile.baseline_tests.squat.barbell_reps),
+      topSupportHoldSeconds:
+        profile.baseline_tests.top_support_hold_seconds === null ||
+        profile.baseline_tests.top_support_hold_seconds === undefined
+          ? ''
+          : String(profile.baseline_tests.top_support_hold_seconds),
     },
     bodyweightUnit: profile.bodyweight_unit === 'lb' ? 'lb' : 'kg',
     currentBodyweightValue: profile.current_bodyweight_value === null ? '' : String(profile.current_bodyweight_value),
@@ -334,6 +401,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
       status: limitation?.status ?? 'past',
     },
     mobilityChecks: { ...defaultProfileSettingsForm().mobilityChecks, ...profile.mobility_checks },
+    painFlags: mapPainFlags(profile.pain_flags),
     preferredSessionMinutes:
       profile.preferred_session_minutes === null ? '' : String(profile.preferred_session_minutes),
     preferredTrainingDays: [...profile.preferred_training_days],
@@ -380,6 +448,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
       })),
       unit: profile.weighted_baselines.unit,
     },
+    weightTrend: profile.weight_trend ?? 'unknown',
     weeklySessionGoal: profile.weekly_session_goal === null ? '' : String(profile.weekly_session_goal),
   }
 }
@@ -404,19 +473,37 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     base_focus_areas: [...form.baseFocusAreas],
     baseline_tests: {
       dips: {
+        fallback_reps: nullableNumber(form.baselineTests.dipFallbackReps),
+        fallback_seconds: nullableNumber(form.baselineTests.dipFallbackSeconds),
+        fallback_variant: form.baselineTests.dipFallbackVariant,
         max_strict_reps: nullableNumber(form.baselineTests.dipMaxReps),
       },
       hollow_hold_seconds: nullableNumber(form.baselineTests.hollowHoldSeconds),
+      lower_body: {
+        load_unit: form.baselineTests.lowerBodyLoadUnit,
+        load_value: nullableNumber(form.baselineTests.lowerBodyLoadValue),
+        reps: nullableNumber(form.baselineTests.lowerBodyReps),
+        variant: form.baselineTests.lowerBodyVariant,
+      },
+      passive_hang_seconds: nullableNumber(form.baselineTests.passiveHangSeconds),
       pull_ups: {
+        fallback_reps: nullableNumber(form.baselineTests.pullUpFallbackReps),
+        fallback_seconds: nullableNumber(form.baselineTests.pullUpFallbackSeconds),
+        fallback_variant: form.baselineTests.pullUpFallbackVariant,
         max_strict_reps: nullableNumber(form.baselineTests.pullUpMaxReps),
       },
       push_ups: {
         max_strict_reps: nullableNumber(form.baselineTests.pushUpMaxReps),
       },
+      rows: {
+        max_reps: nullableNumber(form.baselineTests.rowMaxReps),
+        variant: form.baselineTests.rowVariant,
+      },
       squat: {
         barbell_load_value: nullableNumber(form.baselineTests.squatBarbellLoadValue),
         barbell_reps: nullableNumber(form.baselineTests.squatBarbellReps),
       },
+      top_support_hold_seconds: nullableNumber(form.baselineTests.topSupportHoldSeconds),
     },
     bodyweight_unit: form.bodyweightUnit,
     current_bodyweight_value: nullableNumber(form.currentBodyweightValue),
@@ -431,6 +518,7 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     long_term_target_skills: [...form.longTermTargetSkills],
     movement_limitations: movementLimitations,
     mobility_checks: { ...form.mobilityChecks },
+    pain_flags: serializePainFlags(form.painFlags),
     preferred_session_minutes: nullableNumber(form.preferredSessionMinutes),
     preferred_training_days: form.preferredTrainingDays,
     prior_sport_background: [...form.priorSportBackground],
@@ -460,6 +548,7 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
         })),
       unit: form.weightedBaselines.unit,
     },
+    weight_trend: form.weightTrend,
     weekly_session_goal: nullableNumber(form.weeklySessionGoal),
   }
 }
@@ -502,6 +591,53 @@ function isSupportedEquipment(value: string): boolean {
   return equipmentOptions.some((option) => option.value === value)
 }
 
+function emptyPainFlags(): Record<string, { notes: string; severity: string; status: string }> {
+  return Object.fromEntries(
+    painRegions.map((region) => [
+      region,
+      {
+        notes: '',
+        severity: 'none',
+        status: 'none',
+      },
+    ]),
+  )
+}
+
+function mapPainFlags(flags: Record<string, { notes: string | null; severity: string; status: string }>) {
+  return Object.fromEntries(
+    painRegions.map((region) => {
+      const flag = flags[region]
+
+      return [
+        region,
+        {
+          notes: flag?.notes ?? '',
+          severity: flag?.severity ?? 'none',
+          status: flag?.status ?? 'none',
+        },
+      ]
+    }),
+  )
+}
+
+function serializePainFlags(flags: Record<string, { notes: string; severity: string; status: string }>) {
+  return Object.fromEntries(
+    painRegions.map((region) => {
+      const flag = flags[region] ?? { notes: '', severity: 'none', status: 'none' }
+
+      return [
+        region,
+        {
+          notes: flag.notes.trim() || null,
+          severity: flag.severity,
+          status: flag.status,
+        },
+      ]
+    }),
+  )
+}
+
 function mapServerValidationErrors(body: unknown): ProfileFieldErrors {
   if (!isServerValidationBody(body) || !body.errors) {
     return {}
@@ -538,6 +674,7 @@ function mapServerField(field: string): keyof ProfileSettingsForm | null {
     long_term_target_skills: 'longTermTargetSkills',
     movement_limitations: 'movementLimitation',
     mobility_checks: 'mobilityChecks',
+    pain_flags: 'painFlags',
     preferred_session_minutes: 'preferredSessionMinutes',
     preferred_training_days: 'preferredTrainingDays',
     prior_sport_background: 'priorSportBackground',
@@ -554,6 +691,7 @@ function mapServerField(field: string): keyof ProfileSettingsForm | null {
     training_locations: 'trainingLocations',
     unit_system: 'unitSystem',
     weighted_baselines: 'weightedBaselines',
+    weight_trend: 'weightTrend',
     weekly_session_goal: 'weeklySessionGoal',
   }
 

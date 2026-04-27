@@ -57,6 +57,8 @@ export function findContractProblems(openApiSource) {
     ['athlete profile unit system property', 'unit_system:'],
     ['athlete profile age property', 'age_years:'],
     ['athlete profile height property', 'height_value:'],
+    ['athlete profile weight trend property', 'weight_trend:'],
+    ['athlete profile pain flags property', 'pain_flags:'],
     ['athlete profile roadmap suggestions property', 'roadmap_suggestions:'],
     ['athlete profile roadmap version property', 'version:'],
     ['athlete profile roadmap primary goal property', 'primary_goal:'],
@@ -71,6 +73,8 @@ export function findContractProblems(openApiSource) {
     ['athlete onboarding update operation ID', 'operationId: updateOnboardingState'],
     ['athlete onboarding age property', 'age_years:'],
     ['athlete onboarding height property', 'height_value:'],
+    ['athlete onboarding weight trend property', 'weight_trend:'],
+    ['athlete onboarding pain flags property', 'pain_flags:'],
     ['athlete onboarding roadmap suggestions property', 'roadmap_suggestions:'],
     ['athlete onboarding roadmap version property', 'version:'],
     ['athlete onboarding roadmap intermediate property', 'intermediate:'],
@@ -128,21 +132,47 @@ export interface MovementLimitation {
   readonly notes: string | null
 }
 
+export interface PainFlag {
+  readonly severity: string
+  readonly status: string
+  readonly notes: string | null
+}
+
+export type PainFlags = Readonly<Record<string, PainFlag>>
+
 export interface PlacementLevelTests {
   readonly push_ups: {
     readonly max_strict_reps: number | null
   }
   readonly pull_ups: {
     readonly max_strict_reps: number | null
+    readonly fallback_variant: string
+    readonly fallback_reps: number | null
+    readonly fallback_seconds: number | null
   }
   readonly dips: {
     readonly max_strict_reps: number | null
+    readonly fallback_variant: string
+    readonly fallback_reps: number | null
+    readonly fallback_seconds: number | null
   }
   readonly squat: {
     readonly barbell_load_value: number | null
     readonly barbell_reps: number | null
   }
+  readonly rows: {
+    readonly variant: string
+    readonly max_reps: number | null
+  }
+  readonly lower_body: {
+    readonly variant: string
+    readonly load_value: number | null
+    readonly load_unit: string
+    readonly reps: number | null
+  }
   readonly hollow_hold_seconds: number | null
+  readonly passive_hang_seconds: number | null
+  readonly top_support_hold_seconds: number | null
 }
 
 export interface SkillStatus {
@@ -286,6 +316,7 @@ export interface AthleteProfile {
   readonly bodyweight_unit: string
   readonly height_value: number | null
   readonly height_unit: string
+  readonly weight_trend: string
   readonly prior_sport_background: readonly string[]
   readonly primary_goal: string | null
   readonly secondary_goals: readonly string[]
@@ -298,6 +329,7 @@ export interface AthleteProfile {
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
   readonly movement_limitations: readonly MovementLimitation[]
+  readonly pain_flags: PainFlags
   readonly baseline_tests: PlacementLevelTests
   readonly skill_statuses: Readonly<Record<string, SkillStatus>>
   readonly mobility_checks: Readonly<Record<string, string>>
@@ -323,15 +355,33 @@ export interface OnboardingLevelTests {
   }
   readonly pull_ups: {
     readonly max_strict_reps: number | null
+    readonly fallback_variant: string
+    readonly fallback_reps: number | null
+    readonly fallback_seconds: number | null
   }
   readonly dips: {
     readonly max_strict_reps: number | null
+    readonly fallback_variant: string
+    readonly fallback_reps: number | null
+    readonly fallback_seconds: number | null
   }
   readonly squat: {
     readonly barbell_load_value: number | null
     readonly barbell_reps: number | null
   }
+  readonly rows: {
+    readonly variant: string
+    readonly max_reps: number | null
+  }
+  readonly lower_body: {
+    readonly variant: string
+    readonly load_value: number | null
+    readonly load_unit: string
+    readonly reps: number | null
+  }
   readonly hollow_hold_seconds: number | null
+  readonly passive_hang_seconds: number | null
+  readonly top_support_hold_seconds: number | null
 }
 
 export interface OnboardingSkillStatus {
@@ -351,6 +401,7 @@ export interface AthleteOnboarding {
   readonly bodyweight_unit: string
   readonly height_value: number | null
   readonly height_unit: string
+  readonly weight_trend: string
   readonly prior_sport_background: readonly string[]
   readonly primary_goal: string | null
   readonly secondary_goals: readonly string[]
@@ -374,6 +425,7 @@ export interface AthleteOnboarding {
   readonly soreness_level: number | null
   readonly pain_level: number | null
   readonly pain_areas: readonly string[]
+  readonly pain_flags: PainFlags
   readonly pain_notes: string | null
   readonly starter_plan_key: string | null
   readonly is_complete: boolean

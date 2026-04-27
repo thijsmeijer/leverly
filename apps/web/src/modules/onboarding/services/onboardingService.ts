@@ -10,6 +10,7 @@ import {
 import type { OnboardingFieldErrors, OnboardingForm, OnboardingRoadmapSuggestions, OnboardingState } from '../types'
 
 const onboardingSkillStatusKeys = new Set<string>(skillStatusKeys)
+const painRegions = ['wrist', 'elbow', 'shoulder', 'low_back', 'knee', 'ankle'] as const
 
 type ServerValidationBody = {
   readonly errors?: Record<string, string[]>
@@ -28,19 +29,37 @@ type OnboardingUpdateBody = {
   readonly current_bodyweight_value: number | null
   readonly current_level_tests: {
     readonly dips: {
+      readonly fallback_reps: number | null
+      readonly fallback_seconds: number | null
+      readonly fallback_variant: string
       readonly max_strict_reps: number | null
     }
     readonly hollow_hold_seconds: number | null
+    readonly lower_body: {
+      readonly load_unit: string
+      readonly load_value: number | null
+      readonly reps: number | null
+      readonly variant: string
+    }
+    readonly passive_hang_seconds: number | null
     readonly pull_ups: {
+      readonly fallback_reps: number | null
+      readonly fallback_seconds: number | null
+      readonly fallback_variant: string
       readonly max_strict_reps: number | null
     }
     readonly push_ups: {
       readonly max_strict_reps: number | null
     }
+    readonly rows: {
+      readonly max_reps: number | null
+      readonly variant: string
+    }
     readonly squat: {
       readonly barbell_load_value: number | null
       readonly barbell_reps: number | null
     }
+    readonly top_support_hold_seconds: number | null
   }
   readonly experience_level: string
   readonly height_unit: string
@@ -48,6 +67,7 @@ type OnboardingUpdateBody = {
   readonly long_term_target_skills: string[]
   readonly mobility_checks: Record<string, string>
   readonly pain_areas: string[]
+  readonly pain_flags: Record<string, { notes: string | null; severity: string; status: string }>
   readonly pain_level: number | null
   readonly pain_notes: string | null
   readonly preferred_session_minutes: number | null
@@ -73,6 +93,7 @@ type OnboardingUpdateBody = {
   readonly target_skills: string[]
   readonly training_age_months: number | null
   readonly training_locations: string[]
+  readonly weight_trend: string
   readonly weighted_baselines: {
     readonly experience: string
     readonly movements: Array<{
@@ -105,11 +126,25 @@ export function defaultOnboardingForm(): OnboardingForm {
     currentBodyweightValue: '',
     currentLevelTests: {
       dipMaxReps: '',
+      dipFallbackReps: '',
+      dipFallbackSeconds: '',
+      dipFallbackVariant: 'none',
       hollowHoldSeconds: '',
+      lowerBodyLoadUnit: 'kg',
+      lowerBodyLoadValue: '',
+      lowerBodyReps: '',
+      lowerBodyVariant: 'bodyweight_squat',
+      passiveHangSeconds: '',
       pullUpMaxReps: '',
+      pullUpFallbackReps: '',
+      pullUpFallbackSeconds: '',
+      pullUpFallbackVariant: 'none',
       pushUpMaxReps: '',
+      rowMaxReps: '',
+      rowVariant: 'bodyweight_row',
       squatBarbellLoadValue: '',
       squatBarbellReps: '',
+      topSupportHoldSeconds: '',
     },
     experienceLevel: 'new',
     heightUnit: 'cm',
@@ -117,6 +152,7 @@ export function defaultOnboardingForm(): OnboardingForm {
     longTermTargetSkills: [],
     mobilityChecks: Object.fromEntries(mobilityCheckOptions.map((option) => [option.value, 'not_tested'])),
     painAreas: [],
+    painFlags: emptyPainFlags(),
     painLevel: '0',
     painNotes: '',
     preferredSessionMinutes: '45',
@@ -145,6 +181,7 @@ export function defaultOnboardingForm(): OnboardingForm {
     targetSkills: [],
     trainingAgeMonths: '',
     trainingLocations: [],
+    weightTrend: 'unknown',
     weightedBaselines: {
       experience: 'none',
       movements: [],
@@ -256,6 +293,15 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     addNumberError(errors, 'currentLevelTests.pushUpMaxReps', form.currentLevelTests.pushUpMaxReps, 0, 200)
     addNumberError(errors, 'currentLevelTests.pullUpMaxReps', form.currentLevelTests.pullUpMaxReps, 0, 100)
     addNumberError(errors, 'currentLevelTests.dipMaxReps', form.currentLevelTests.dipMaxReps, 0, 100)
+    addNumberError(errors, 'currentLevelTests.rowMaxReps', form.currentLevelTests.rowMaxReps, 0, 100)
+    addNumberError(errors, 'currentLevelTests.lowerBodyReps', form.currentLevelTests.lowerBodyReps, 0, 100)
+    addOptionalNumberError(
+      errors,
+      'currentLevelTests.lowerBodyLoadValue',
+      form.currentLevelTests.lowerBodyLoadValue,
+      0,
+      1000,
+    )
     addNumberError(
       errors,
       'currentLevelTests.squatBarbellLoadValue',
@@ -265,6 +311,14 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     )
     addNumberError(errors, 'currentLevelTests.squatBarbellReps', form.currentLevelTests.squatBarbellReps, 0, 30)
     addNumberError(errors, 'currentLevelTests.hollowHoldSeconds', form.currentLevelTests.hollowHoldSeconds, 0, 600)
+    addNumberError(errors, 'currentLevelTests.passiveHangSeconds', form.currentLevelTests.passiveHangSeconds, 0, 600)
+    addNumberError(
+      errors,
+      'currentLevelTests.topSupportHoldSeconds',
+      form.currentLevelTests.topSupportHoldSeconds,
+      0,
+      600,
+    )
   }
 
   if (step === 'mobility') {
@@ -318,6 +372,18 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     currentBodyweightValue:
       onboarding.current_bodyweight_value === null ? '' : String(onboarding.current_bodyweight_value),
     currentLevelTests: {
+      dipFallbackReps:
+        onboarding.current_level_tests.dips.fallback_reps === null ||
+        onboarding.current_level_tests.dips.fallback_reps === undefined
+          ? ''
+          : String(onboarding.current_level_tests.dips.fallback_reps),
+      dipFallbackSeconds:
+        onboarding.current_level_tests.dips.fallback_seconds === null ||
+        onboarding.current_level_tests.dips.fallback_seconds === undefined
+          ? ''
+          : String(onboarding.current_level_tests.dips.fallback_seconds),
+      dipFallbackVariant:
+        onboarding.current_level_tests.dips.fallback_variant ?? defaults.currentLevelTests.dipFallbackVariant,
       dipMaxReps:
         onboarding.current_level_tests.dips.max_strict_reps === null
           ? ''
@@ -326,6 +392,37 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
         onboarding.current_level_tests.hollow_hold_seconds === null
           ? ''
           : String(onboarding.current_level_tests.hollow_hold_seconds),
+      lowerBodyLoadUnit:
+        onboarding.current_level_tests.lower_body?.load_unit ?? defaults.currentLevelTests.lowerBodyLoadUnit,
+      lowerBodyLoadValue:
+        onboarding.current_level_tests.lower_body?.load_value === null ||
+        onboarding.current_level_tests.lower_body?.load_value === undefined
+          ? ''
+          : String(onboarding.current_level_tests.lower_body.load_value),
+      lowerBodyReps:
+        onboarding.current_level_tests.lower_body?.reps === null ||
+        onboarding.current_level_tests.lower_body?.reps === undefined
+          ? ''
+          : String(onboarding.current_level_tests.lower_body.reps),
+      lowerBodyVariant:
+        onboarding.current_level_tests.lower_body?.variant ?? defaults.currentLevelTests.lowerBodyVariant,
+      passiveHangSeconds:
+        onboarding.current_level_tests.passive_hang_seconds === null ||
+        onboarding.current_level_tests.passive_hang_seconds === undefined
+          ? ''
+          : String(onboarding.current_level_tests.passive_hang_seconds),
+      pullUpFallbackReps:
+        onboarding.current_level_tests.pull_ups.fallback_reps === null ||
+        onboarding.current_level_tests.pull_ups.fallback_reps === undefined
+          ? ''
+          : String(onboarding.current_level_tests.pull_ups.fallback_reps),
+      pullUpFallbackSeconds:
+        onboarding.current_level_tests.pull_ups.fallback_seconds === null ||
+        onboarding.current_level_tests.pull_ups.fallback_seconds === undefined
+          ? ''
+          : String(onboarding.current_level_tests.pull_ups.fallback_seconds),
+      pullUpFallbackVariant:
+        onboarding.current_level_tests.pull_ups.fallback_variant ?? defaults.currentLevelTests.pullUpFallbackVariant,
       pullUpMaxReps:
         onboarding.current_level_tests.pull_ups.max_strict_reps === null
           ? ''
@@ -334,6 +431,12 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
         onboarding.current_level_tests.push_ups.max_strict_reps === null
           ? ''
           : String(onboarding.current_level_tests.push_ups.max_strict_reps),
+      rowMaxReps:
+        onboarding.current_level_tests.rows?.max_reps === null ||
+        onboarding.current_level_tests.rows?.max_reps === undefined
+          ? ''
+          : String(onboarding.current_level_tests.rows.max_reps),
+      rowVariant: onboarding.current_level_tests.rows?.variant ?? defaults.currentLevelTests.rowVariant,
       squatBarbellLoadValue:
         onboarding.current_level_tests.squat.barbell_load_value === null
           ? ''
@@ -342,6 +445,11 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
         onboarding.current_level_tests.squat.barbell_reps === null
           ? ''
           : String(onboarding.current_level_tests.squat.barbell_reps),
+      topSupportHoldSeconds:
+        onboarding.current_level_tests.top_support_hold_seconds === null ||
+        onboarding.current_level_tests.top_support_hold_seconds === undefined
+          ? ''
+          : String(onboarding.current_level_tests.top_support_hold_seconds),
     },
     experienceLevel: onboarding.experience_level,
     heightUnit: onboarding.height_unit,
@@ -349,6 +457,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     longTermTargetSkills: [...onboarding.long_term_target_skills],
     mobilityChecks: { ...defaults.mobilityChecks, ...onboarding.mobility_checks },
     painAreas: [...onboarding.pain_areas],
+    painFlags: mapPainFlags(onboarding.pain_flags),
     painLevel: onboarding.pain_level === null ? defaults.painLevel : String(onboarding.pain_level),
     painNotes: onboarding.pain_notes ?? '',
     preferredSessionMinutes:
@@ -392,6 +501,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     targetSkills: [...onboarding.target_skills],
     trainingAgeMonths: onboarding.training_age_months === null ? '' : String(onboarding.training_age_months),
     trainingLocations: [...onboarding.training_locations],
+    weightTrend: onboarding.weight_trend ?? defaults.weightTrend,
     weightedBaselines: {
       experience: onboarding.weighted_baselines.experience,
       movements: onboarding.weighted_baselines.movements.map((movement) => ({
@@ -419,19 +529,37 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     current_bodyweight_value: nullableNumber(form.currentBodyweightValue),
     current_level_tests: {
       dips: {
+        fallback_reps: nullableInteger(form.currentLevelTests.dipFallbackReps),
+        fallback_seconds: nullableInteger(form.currentLevelTests.dipFallbackSeconds),
+        fallback_variant: form.currentLevelTests.dipFallbackVariant,
         max_strict_reps: nullableInteger(form.currentLevelTests.dipMaxReps),
       },
       hollow_hold_seconds: nullableInteger(form.currentLevelTests.hollowHoldSeconds),
+      lower_body: {
+        load_unit: form.currentLevelTests.lowerBodyLoadUnit,
+        load_value: nullableNumber(form.currentLevelTests.lowerBodyLoadValue),
+        reps: nullableInteger(form.currentLevelTests.lowerBodyReps),
+        variant: form.currentLevelTests.lowerBodyVariant,
+      },
+      passive_hang_seconds: nullableInteger(form.currentLevelTests.passiveHangSeconds),
       pull_ups: {
+        fallback_reps: nullableInteger(form.currentLevelTests.pullUpFallbackReps),
+        fallback_seconds: nullableInteger(form.currentLevelTests.pullUpFallbackSeconds),
+        fallback_variant: form.currentLevelTests.pullUpFallbackVariant,
         max_strict_reps: nullableInteger(form.currentLevelTests.pullUpMaxReps),
       },
       push_ups: {
         max_strict_reps: nullableInteger(form.currentLevelTests.pushUpMaxReps),
       },
+      rows: {
+        max_reps: nullableInteger(form.currentLevelTests.rowMaxReps),
+        variant: form.currentLevelTests.rowVariant,
+      },
       squat: {
         barbell_load_value: nullableNumber(form.currentLevelTests.squatBarbellLoadValue),
         barbell_reps: nullableInteger(form.currentLevelTests.squatBarbellReps),
       },
+      top_support_hold_seconds: nullableInteger(form.currentLevelTests.topSupportHoldSeconds),
     },
     experience_level: form.experienceLevel,
     height_unit: form.heightUnit,
@@ -439,6 +567,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     long_term_target_skills: [...form.longTermTargetSkills],
     mobility_checks: { ...form.mobilityChecks },
     pain_areas: [...form.painAreas],
+    pain_flags: serializePainFlags(form.painFlags),
     pain_level: nullableInteger(form.painLevel),
     pain_notes: form.painNotes.trim() || null,
     preferred_session_minutes: nullableInteger(form.preferredSessionMinutes),
@@ -472,6 +601,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     target_skills: [...form.targetSkills],
     training_age_months: nullableInteger(form.trainingAgeMonths),
     training_locations: [...form.trainingLocations],
+    weight_trend: form.weightTrend,
     weighted_baselines: {
       experience: form.weightedBaselines.experience,
       movements: form.weightedBaselines.movements
@@ -540,8 +670,75 @@ function addNumberError(
   }
 }
 
+function addOptionalNumberError(
+  errors: OnboardingFieldErrors,
+  key: string,
+  value: number | string,
+  min: number,
+  max: number,
+): void {
+  const text = textValue(value)
+
+  if (!text) {
+    return
+  }
+
+  const parsed = Number(text)
+
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    errors[key] = `Enter a number from ${min} to ${max}.`
+  }
+}
+
 function textValue(value: number | string | null | undefined): string {
   return String(value ?? '').trim()
+}
+
+function emptyPainFlags(): Record<string, { notes: string; severity: string; status: string }> {
+  return Object.fromEntries(
+    painRegions.map((region) => [
+      region,
+      {
+        notes: '',
+        severity: 'none',
+        status: 'none',
+      },
+    ]),
+  )
+}
+
+function mapPainFlags(flags: Record<string, { notes: string | null; severity: string; status: string }>) {
+  return Object.fromEntries(
+    painRegions.map((region) => {
+      const flag = flags[region]
+
+      return [
+        region,
+        {
+          notes: flag?.notes ?? '',
+          severity: flag?.severity ?? 'none',
+          status: flag?.status ?? 'none',
+        },
+      ]
+    }),
+  )
+}
+
+function serializePainFlags(flags: Record<string, { notes: string; severity: string; status: string }>) {
+  return Object.fromEntries(
+    painRegions.map((region) => {
+      const flag = flags[region] ?? { notes: '', severity: 'none', status: 'none' }
+
+      return [
+        region,
+        {
+          notes: flag.notes.trim() || null,
+          severity: flag.severity,
+          status: flag.status,
+        },
+      ]
+    }),
+  )
 }
 
 function normalizeSkillStatus(key: string, status: string): string {
@@ -577,6 +774,7 @@ function serverKeyToField(key: string): string {
     long_term_target_skills: 'longTermTargetSkills',
     mobility_checks: 'mobilityChecks',
     pain_areas: 'painAreas',
+    pain_flags: 'painFlags',
     pain_level: 'painLevel',
     pain_notes: 'painNotes',
     preferred_session_minutes: 'preferredSessionMinutes',
@@ -594,6 +792,7 @@ function serverKeyToField(key: string): string {
     training_age_months: 'trainingAgeMonths',
     training_locations: 'trainingLocations',
     weighted_baselines: 'weightedBaselines',
+    weight_trend: 'weightTrend',
     weekly_session_goal: 'weeklySessionGoal',
   }
 
@@ -605,10 +804,24 @@ function serverKeyToField(key: string): string {
     .replace('current_level_tests.', 'currentLevelTests.')
     .replace('push_ups.max_strict_reps', 'pushUpMaxReps')
     .replace('dips.max_strict_reps', 'dipMaxReps')
+    .replace('dips.fallback_variant', 'dipFallbackVariant')
+    .replace('dips.fallback_reps', 'dipFallbackReps')
+    .replace('dips.fallback_seconds', 'dipFallbackSeconds')
     .replace('pull_ups.max_strict_reps', 'pullUpMaxReps')
+    .replace('pull_ups.fallback_variant', 'pullUpFallbackVariant')
+    .replace('pull_ups.fallback_reps', 'pullUpFallbackReps')
+    .replace('pull_ups.fallback_seconds', 'pullUpFallbackSeconds')
+    .replace('rows.variant', 'rowVariant')
+    .replace('rows.max_reps', 'rowMaxReps')
+    .replace('lower_body.variant', 'lowerBodyVariant')
+    .replace('lower_body.load_value', 'lowerBodyLoadValue')
+    .replace('lower_body.load_unit', 'lowerBodyLoadUnit')
+    .replace('lower_body.reps', 'lowerBodyReps')
     .replace('squat.barbell_load_value', 'squatBarbellLoadValue')
     .replace('squat.barbell_reps', 'squatBarbellReps')
     .replace('hollow_hold_seconds', 'hollowHoldSeconds')
+    .replace('passive_hang_seconds', 'passiveHangSeconds')
+    .replace('top_support_hold_seconds', 'topSupportHoldSeconds')
 }
 
 function isServerValidationBody(body: unknown): body is ServerValidationBody {

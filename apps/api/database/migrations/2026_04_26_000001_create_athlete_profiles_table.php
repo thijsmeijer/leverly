@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('bodyweight_unit', 8)->default('kg');
             $table->decimal('height_value', 6, 2)->nullable();
             $table->string('height_unit', 8)->default('cm');
+            $table->string('weight_trend', 32)->default('unknown');
             $table->json('prior_sport_background');
             $table->string('primary_goal', 64)->nullable();
             $table->json('secondary_goals');
@@ -36,6 +37,7 @@ return new class extends Migration
             $table->json('available_equipment');
             $table->json('training_locations');
             $table->json('movement_limitations');
+            $table->json('pain_flags');
             $table->json('baseline_tests');
             $table->json('skill_statuses');
             $table->json('mobility_checks');

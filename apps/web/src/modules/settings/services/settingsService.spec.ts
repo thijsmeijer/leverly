@@ -40,7 +40,10 @@ describe('settingsService', () => {
         availableEquipment: ['pull_up_bar', 'rings'],
         baseFocusAreas: ['pull_capacity', 'core_bodyline'],
         baselineTests: {
+          passiveHangSeconds: '45',
+          rowMaxReps: '12',
           squatBarbellLoadValue: '100',
+          topSupportHoldSeconds: '25',
         },
         currentBodyweightValue: '72.5',
         displayName: 'Ada Athlete',
@@ -50,9 +53,16 @@ describe('settingsService', () => {
           severity: 'mild',
           status: 'recurring',
         },
+        painFlags: {
+          wrist: {
+            severity: 'mild',
+            status: 'recurring',
+          },
+        },
         primaryTargetSkill: 'handstand',
         preferredTrainingDays: ['monday', 'wednesday'],
         targetSkillsText: 'handstand\nstrict_pull_up',
+        weightTrend: 'maintaining',
         roadmapSuggestions: {
           confidence: {
             level: 'medium',
@@ -86,11 +96,20 @@ describe('settingsService', () => {
       availableEquipment: ['pull_up_bar', 'rings'],
       displayName: 'Ada Bars',
       injuryNotes: 'No diagnosis here.',
+      painFlags: {
+        ...defaultProfileSettingsForm().painFlags,
+        wrist: {
+          notes: 'Needs warm-up.',
+          severity: 'mild',
+          status: 'recurring',
+        },
+      },
       primaryTargetSkill: 'handstand',
       preferredSessionMinutes: '60',
       preferredTrainingDays: ['monday', 'friday'],
       targetSkillsText: 'handstand, strict_pull_up',
       trainingAgeMonths: '18',
+      weightTrend: 'maintaining',
     }
 
     await expect(saveProfileSettings(form)).resolves.toMatchObject({
@@ -108,6 +127,8 @@ describe('settingsService', () => {
         method: 'PATCH',
       }),
     )
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"weight_trend":"maintaining"')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"pain_flags":{"wrist"')
   })
 
   it('can save equipment without requiring the whole editable profile form', async () => {
@@ -198,11 +219,15 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       available_equipment: ['pull_up_bar', 'rings'],
       base_focus_areas: ['pull_capacity', 'core_bodyline'],
       baseline_tests: {
-        dips: { max_strict_reps: 6 },
+        dips: { max_strict_reps: 6, fallback_variant: 'assisted', fallback_reps: 5, fallback_seconds: null },
         hollow_hold_seconds: 35,
-        pull_ups: { max_strict_reps: 4 },
+        lower_body: { variant: 'split_squat', load_value: null, load_unit: 'kg', reps: 12 },
+        passive_hang_seconds: 45,
+        pull_ups: { max_strict_reps: 4, fallback_variant: 'eccentric', fallback_reps: null, fallback_seconds: 6 },
         push_ups: { max_strict_reps: 18 },
+        rows: { variant: 'ring_row', max_reps: 12 },
         squat: { barbell_load_value: 100, barbell_reps: 5 },
+        top_support_hold_seconds: 25,
       },
       bodyweight_unit: 'kg',
       current_bodyweight_value: 72.5,
@@ -221,6 +246,14 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
           status: 'recurring',
         },
       ],
+      pain_flags: {
+        ankle: { severity: 'none', status: 'none', notes: null },
+        elbow: { severity: 'none', status: 'none', notes: null },
+        knee: { severity: 'none', status: 'none', notes: null },
+        low_back: { severity: 'none', status: 'none', notes: null },
+        shoulder: { severity: 'none', status: 'none', notes: null },
+        wrist: { severity: 'mild', status: 'recurring', notes: 'Needs warm-up.' },
+      },
       mobility_checks: {
         ankle_dorsiflexion: 'limited',
         pancake_compression: 'not_tested',
@@ -311,6 +344,7 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
         movements: [{ external_load_value: 10, movement: 'weighted_pull_up', reps: 5, rir: 2 }],
         unit: 'kg',
       },
+      weight_trend: 'maintaining',
       weekly_session_goal: 3,
       ...overrides,
     },

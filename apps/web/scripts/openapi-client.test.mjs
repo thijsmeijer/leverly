@@ -75,6 +75,10 @@ paths:
                         type: integer
                       height_value:
                         type: number
+                      weight_trend:
+                        type: string
+                      pain_flags:
+                        type: object
                       roadmap_suggestions:
                         type: object
                         properties:
@@ -119,6 +123,10 @@ paths:
                         type: integer
                       height_value:
                         type: number
+                      weight_trend:
+                        type: string
+                      pain_flags:
+                        type: object
                       roadmap_suggestions:
                         type: object
                         properties:
@@ -160,6 +168,10 @@ paths:
                         type: integer
                       height_value:
                         type: number
+                      weight_trend:
+                        type: string
+                      pain_flags:
+                        type: object
                       roadmap_suggestions:
                         type: object
                         properties:
@@ -200,6 +212,10 @@ paths:
                         type: integer
                       height_value:
                         type: number
+                      weight_trend:
+                        type: string
+                      pain_flags:
+                        type: object
                       roadmap_suggestions:
                         type: object
                         properties:
@@ -244,6 +260,13 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('export interface CurrentUserResponse')
     expect(generated).toContain('export interface AthleteProfileResponse')
     expect(generated).toContain('export interface AthleteOnboardingResponse')
+    expect(generated).toContain('export interface PainFlag')
+    expect(generated).toContain('readonly weight_trend: string')
+    expect(generated).toContain('readonly pain_flags: PainFlags')
+    expect(generated).toContain('readonly rows:')
+    expect(generated).toContain('readonly lower_body:')
+    expect(generated).toContain('readonly passive_hang_seconds: number | null')
+    expect(generated).toContain('readonly top_support_hold_seconds: number | null')
     expect(generated).toContain('readonly version: string')
     expect(generated).toContain('readonly eta_range: RoadmapEtaRange')
     expect(generated).toContain("readonly '/me'")

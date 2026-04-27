@@ -112,19 +112,37 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       current_bodyweight_value: 72.5,
       current_level_tests: {
         dips: {
+          fallback_reps: 5,
+          fallback_seconds: null,
+          fallback_variant: 'assisted',
           max_strict_reps: 6,
         },
         hollow_hold_seconds: 35,
+        lower_body: {
+          load_unit: 'kg',
+          load_value: null,
+          reps: 12,
+          variant: 'split_squat',
+        },
+        passive_hang_seconds: 45,
         pull_ups: {
+          fallback_reps: null,
+          fallback_seconds: 6,
+          fallback_variant: 'eccentric',
           max_strict_reps: 4,
         },
         push_ups: {
           max_strict_reps: 18,
         },
+        rows: {
+          max_reps: 12,
+          variant: 'ring_row',
+        },
         squat: {
           barbell_load_value: 100,
           barbell_reps: 5,
         },
+        top_support_hold_seconds: 25,
       },
       experience_level: 'intermediate',
       height_unit: 'cm',
@@ -141,6 +159,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         wrist_extension: 'limited',
       },
       pain_areas: ['wrist'],
+      pain_flags: painFlags(),
       pain_level: 2,
       pain_notes: 'Wrists need warm-up.',
       preferred_session_minutes: 60,
@@ -171,8 +190,20 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         unit: 'kg',
       },
       weekly_session_goal: 3,
+      weight_trend: 'maintaining',
       ...overrides,
     },
+  }
+}
+
+function painFlags() {
+  return {
+    ankle: { notes: null, severity: 'none', status: 'none' },
+    elbow: { notes: null, severity: 'none', status: 'none' },
+    knee: { notes: null, severity: 'none', status: 'none' },
+    low_back: { notes: null, severity: 'none', status: 'none' },
+    shoulder: { notes: null, severity: 'none', status: 'none' },
+    wrist: { notes: 'Wrists need warm-up.', severity: 'mild', status: 'recurring' },
   }
 }
 

@@ -75,6 +75,7 @@ paths:
                       bodyweight_unit: { type: string }
                       height_value: { type: integer }
                       height_unit: { type: string }
+                      weight_trend: { type: string }
                       prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
@@ -89,7 +90,7 @@ paths:
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
-                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, hollow_hold_seconds: { type: integer } }, description: 'Baseline push-up, pull-up, squat, and hollow hold tests.' }
+                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: [string, 'null'] }, fallback_seconds: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: integer }, fallback_seconds: { type: [string, 'null'] } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, rows: { type: object, properties: { variant: { type: string }, max_reps: { type: integer } } }, lower_body: { type: object, properties: { variant: { type: string }, load_value: { type: [string, 'null'] }, load_unit: { type: string }, reps: { type: integer } } }, hollow_hold_seconds: { type: integer }, passive_hang_seconds: { type: integer }, top_support_hold_seconds: { type: integer } }, description: 'Baseline push-up, pull-up, dip, row, lower-body, hang, support, and hollow body tests.' }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
                       mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
                       weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
@@ -98,6 +99,7 @@ paths:
                       soreness_level: { type: integer }
                       pain_level: { type: integer }
                       pain_areas: { type: array }
+                      pain_flags: { type: object, properties: { wrist: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, elbow: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, shoulder: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, low_back: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, knee: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, ankle: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } } } }
                       pain_notes: { type: [string, 'null'] }
                       starter_plan_key: { type: string }
                       is_complete: { type: boolean }
@@ -136,6 +138,7 @@ paths:
                       bodyweight_unit: { type: string }
                       height_value: { type: integer }
                       height_unit: { type: string }
+                      weight_trend: { type: string }
                       prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
@@ -150,7 +153,7 @@ paths:
                       preferred_training_days: { type: array, items: { type: string } }
                       preferred_session_minutes: { type: integer }
                       weekly_session_goal: { type: integer }
-                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, hollow_hold_seconds: { type: integer } } }
+                      current_level_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: [string, 'null'] }, fallback_seconds: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: integer }, fallback_seconds: { type: [string, 'null'] } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, rows: { type: object, properties: { variant: { type: string }, max_reps: { type: integer } } }, lower_body: { type: object, properties: { variant: { type: string }, load_value: { type: [string, 'null'] }, load_unit: { type: string }, reps: { type: integer } } }, hollow_hold_seconds: { type: integer }, passive_hang_seconds: { type: integer }, top_support_hold_seconds: { type: integer } } }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
                       mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
                       weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
@@ -159,6 +162,7 @@ paths:
                       soreness_level: { type: integer }
                       pain_level: { type: integer }
                       pain_areas: { type: array }
+                      pain_flags: { type: object, properties: { wrist: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, elbow: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, shoulder: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, low_back: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, knee: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, ankle: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } } } }
                       pain_notes: { type: [string, 'null'] }
                       starter_plan_key: { type: string }
                       is_complete: { type: boolean }
@@ -217,6 +221,14 @@ paths:
                   enum:
                     - cm
                     - in
+                weight_trend:
+                  type: string
+                  description: 'Current bodyweight direction.'
+                  enum:
+                    - cutting
+                    - maintaining
+                    - gaining
+                    - unknown
                 prior_sport_background:
                   type: array
                   description: ''
@@ -399,6 +411,8 @@ paths:
                       - rings
                       - resistance_band
                       - box_bench
+                      - barbell
+                      - squat_rack
                       - weight_vest
                       - dip_belt
                       - weighted_backpack
@@ -450,16 +464,30 @@ paths:
                     pull_ups:
                       type: object
                       description: ''
-                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_variant: { type: string, description: '', enum: [none, passive_hang, active_hang, eccentric, assisted] }, fallback_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' } }
                     dips:
                       type: object
                       description: ''
-                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_variant: { type: string, description: '', enum: [none, top_support, assisted] }, fallback_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' } }
                     squat:
                       type: object
                       description: ''
                       properties: { barbell_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 1000.' }, barbell_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 30.' } }
+                    rows:
+                      type: object
+                      description: ''
+                      properties: { variant: { type: string, description: '', enum: [bodyweight_row, ring_row, low_bar_row, suspension_row] }, max_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
+                    lower_body:
+                      type: object
+                      description: ''
+                      properties: { variant: { type: string, description: '', enum: [barbell_squat, bodyweight_squat, split_squat, pistol_progression, step_down] }, load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 1000.' }, load_unit: { type: string, description: '', enum: [kg, lb] }, reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
                     hollow_hold_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    passive_hang_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    top_support_hold_seconds:
                       type: [integer, 'null']
                       description: 'Must be at least 0. Must not be greater than 600.'
                 skill_statuses:
@@ -537,6 +565,18 @@ paths:
                       - ankle
                       - general
                       - other
+                pain_flags:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      severity: { type: string, description: '', enum: [none, mild, moderate, severe] }
+                      status: { type: string, description: '', enum: [none, active, recent, recurring, past] }
+                      notes: { type: [string, 'null'], description: 'Must not be greater than 300 characters.' }
+                    required:
+                      - severity
+                      - status
                 pain_notes:
                   type:
                     - string
@@ -582,6 +622,7 @@ paths:
                       bodyweight_unit: { type: string }
                       height_value: { type: integer }
                       height_unit: { type: string }
+                      weight_trend: { type: string }
                       prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
@@ -594,7 +635,8 @@ paths:
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
-                      baseline_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, hollow_hold_seconds: { type: integer } } }
+                      pain_flags: { type: object, properties: { wrist: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: string } } }, elbow: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, shoulder: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, low_back: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, knee: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, ankle: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } } } }
+                      baseline_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: [string, 'null'] }, fallback_seconds: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: integer }, fallback_seconds: { type: [string, 'null'] } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, rows: { type: object, properties: { variant: { type: string }, max_reps: { type: integer } } }, lower_body: { type: object, properties: { variant: { type: string }, load_value: { type: [string, 'null'] }, load_unit: { type: string }, reps: { type: integer } } }, hollow_hold_seconds: { type: integer }, passive_hang_seconds: { type: integer }, top_support_hold_seconds: { type: integer } } }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
                       mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
                       weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
@@ -644,6 +686,7 @@ paths:
                       bodyweight_unit: { type: string }
                       height_value: { type: integer }
                       height_unit: { type: string }
+                      weight_trend: { type: string }
                       prior_sport_background: { type: array, items: { type: string } }
                       primary_goal: { type: string }
                       secondary_goals: { type: array, items: { type: string } }
@@ -656,7 +699,8 @@ paths:
                       available_equipment: { type: array, items: { type: string } }
                       training_locations: { type: array, items: { type: string } }
                       movement_limitations: { type: array, items: { type: object, properties: { area: { type: string }, severity: { type: string }, status: { type: string }, notes: { type: string } } } }
-                      baseline_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, hollow_hold_seconds: { type: integer } } }
+                      pain_flags: { type: object, properties: { wrist: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: string } } }, elbow: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, shoulder: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, low_back: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, knee: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } }, ankle: { type: object, properties: { severity: { type: string }, status: { type: string }, notes: { type: [string, 'null'] } } } } }
+                      baseline_tests: { type: object, properties: { push_ups: { type: object, properties: { max_strict_reps: { type: integer } } }, pull_ups: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: [string, 'null'] }, fallback_seconds: { type: integer } } }, dips: { type: object, properties: { max_strict_reps: { type: integer }, fallback_variant: { type: string }, fallback_reps: { type: integer }, fallback_seconds: { type: [string, 'null'] } } }, squat: { type: object, properties: { barbell_load_value: { type: integer }, barbell_reps: { type: integer } } }, rows: { type: object, properties: { variant: { type: string }, max_reps: { type: integer } } }, lower_body: { type: object, properties: { variant: { type: string }, load_value: { type: [string, 'null'] }, load_unit: { type: string }, reps: { type: integer } } }, hollow_hold_seconds: { type: integer }, passive_hang_seconds: { type: integer }, top_support_hold_seconds: { type: integer } } }
                       skill_statuses: { type: object, properties: { handstand: { type: object, properties: { status: { type: string }, best_hold_seconds: { type: integer } } } } }
                       mobility_checks: { type: object, properties: { wrist_extension: { type: string }, shoulder_flexion: { type: string } } }
                       weighted_baselines: { type: object, properties: { experience: { type: string }, unit: { type: string }, movements: { type: array } } }
@@ -731,6 +775,14 @@ paths:
                   enum:
                     - cm
                     - in
+                weight_trend:
+                  type: string
+                  description: 'Current bodyweight direction.'
+                  enum:
+                    - cutting
+                    - maintaining
+                    - gaining
+                    - unknown
                 prior_sport_background:
                   type: array
                   description: ''
@@ -913,6 +965,8 @@ paths:
                       - rings
                       - resistance_band
                       - box_bench
+                      - barbell
+                      - squat_rack
                       - weight_vest
                       - dip_belt
                       - weighted_backpack
@@ -944,6 +998,18 @@ paths:
                       - area
                       - severity
                       - status
+                pain_flags:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      severity: { type: string, description: '', enum: [none, mild, moderate, severe] }
+                      status: { type: string, description: '', enum: [none, active, recent, recurring, past] }
+                      notes: { type: [string, 'null'], description: 'Must not be greater than 300 characters.' }
+                    required:
+                      - severity
+                      - status
                 baseline_tests:
                   type: object
                   description: 'Durable baseline tests for progression placement.'
@@ -955,16 +1021,30 @@ paths:
                     pull_ups:
                       type: object
                       description: ''
-                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_variant: { type: string, description: '', enum: [none, passive_hang, active_hang, eccentric, assisted] }, fallback_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' } }
                     dips:
                       type: object
                       description: ''
-                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
+                      properties: { max_strict_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_variant: { type: string, description: '', enum: [none, top_support, assisted] }, fallback_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' }, fallback_seconds: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 600.' } }
                     squat:
                       type: object
                       description: ''
                       properties: { barbell_load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 1000.' }, barbell_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 30.' } }
+                    rows:
+                      type: object
+                      description: ''
+                      properties: { variant: { type: string, description: '', enum: [bodyweight_row, ring_row, low_bar_row, suspension_row] }, max_reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
+                    lower_body:
+                      type: object
+                      description: ''
+                      properties: { variant: { type: string, description: '', enum: [barbell_squat, bodyweight_squat, split_squat, pistol_progression, step_down] }, load_value: { type: [number, 'null'], description: 'Must be at least 0. Must not be greater than 1000.' }, load_unit: { type: string, description: '', enum: [kg, lb] }, reps: { type: [integer, 'null'], description: 'Must be at least 0. Must not be greater than 100.' } }
                     hollow_hold_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    passive_hang_seconds:
+                      type: [integer, 'null']
+                      description: 'Must be at least 0. Must not be greater than 600.'
+                    top_support_hold_seconds:
                       type: [integer, 'null']
                       description: 'Must be at least 0. Must not be greater than 600.'
                 skill_statuses:

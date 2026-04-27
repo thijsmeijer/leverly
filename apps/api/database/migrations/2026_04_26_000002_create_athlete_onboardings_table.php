@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('bodyweight_unit', 8)->default('kg');
             $table->decimal('height_value', 6, 2)->nullable();
             $table->string('height_unit', 8)->default('cm');
+            $table->string('weight_trend', 32)->default('unknown');
             $table->json('prior_sport_background');
             $table->string('primary_goal', 64)->nullable();
             $table->json('secondary_goals');
@@ -44,6 +45,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('soreness_level')->nullable();
             $table->unsignedTinyInteger('pain_level')->nullable();
             $table->json('pain_areas');
+            $table->json('pain_flags');
             $table->text('pain_notes')->nullable();
             $table->string('starter_plan_key', 64)->nullable();
             $table->timestamp('completed_at')->nullable();

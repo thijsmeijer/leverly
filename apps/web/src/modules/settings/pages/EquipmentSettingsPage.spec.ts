@@ -78,11 +78,15 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       available_equipment: ['pull_up_bar', 'rings'],
       base_focus_areas: ['pull_capacity', 'core_bodyline'],
       baseline_tests: {
-        dips: { max_strict_reps: 6 },
+        dips: { fallback_reps: 5, fallback_seconds: null, fallback_variant: 'assisted', max_strict_reps: 6 },
         hollow_hold_seconds: 35,
-        pull_ups: { max_strict_reps: 4 },
+        lower_body: { load_unit: 'kg', load_value: null, reps: 12, variant: 'split_squat' },
+        passive_hang_seconds: 45,
+        pull_ups: { fallback_reps: null, fallback_seconds: 6, fallback_variant: 'eccentric', max_strict_reps: 4 },
         push_ups: { max_strict_reps: 18 },
+        rows: { max_reps: 12, variant: 'ring_row' },
         squat: { barbell_load_value: 100, barbell_reps: 5 },
+        top_support_hold_seconds: 25,
       },
       bodyweight_unit: 'kg',
       current_bodyweight_value: 72.5,
@@ -101,6 +105,7 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
         shoulder_flexion: 'clear',
         wrist_extension: 'limited',
       },
+      pain_flags: painFlags(),
       preferred_session_minutes: 60,
       preferred_training_days: ['monday', 'wednesday'],
       primary_goal: 'skill',
@@ -126,8 +131,20 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
         movements: [{ external_load_value: 10, movement: 'weighted_pull_up', reps: 5, rir: 2 }],
         unit: 'kg',
       },
+      weight_trend: 'maintaining',
       weekly_session_goal: 3,
       ...overrides,
     },
+  }
+}
+
+function painFlags() {
+  return {
+    ankle: { notes: null, severity: 'none', status: 'none' },
+    elbow: { notes: null, severity: 'none', status: 'none' },
+    knee: { notes: null, severity: 'none', status: 'none' },
+    low_back: { notes: null, severity: 'none', status: 'none' },
+    shoulder: { notes: null, severity: 'none', status: 'none' },
+    wrist: { notes: null, severity: 'none', status: 'none' },
   }
 }

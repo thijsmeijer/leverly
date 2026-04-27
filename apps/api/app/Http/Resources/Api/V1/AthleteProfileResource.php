@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Domain\Profile\Support\AthleteProfileOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteProfile;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class AthleteProfileResource extends JsonResource
             'bodyweight_unit' => $this->bodyweight_unit,
             'height_value' => $this->height_value,
             'height_unit' => $this->height_unit,
+            'weight_trend' => $this->weight_trend,
             'prior_sport_background' => $this->prior_sport_background ?? [],
             'primary_goal' => $this->primary_goal,
             'secondary_goals' => $this->secondary_goals ?? [],
@@ -42,6 +44,7 @@ class AthleteProfileResource extends JsonResource
             'available_equipment' => $this->available_equipment ?? [],
             'training_locations' => $this->training_locations ?? [],
             'movement_limitations' => $this->movement_limitations ?? [],
+            'pain_flags' => AthleteProfileOptions::completePainFlags($this->pain_flags ?? []),
             'baseline_tests' => $this->baseline_tests ?? [],
             'skill_statuses' => $this->skill_statuses ?? [],
             'mobility_checks' => $this->mobility_checks ?? [],

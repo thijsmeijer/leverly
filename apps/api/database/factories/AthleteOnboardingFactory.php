@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
+use App\Domain\Profile\Support\AthleteProfileOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use App\Models\User;
@@ -31,6 +32,7 @@ class AthleteOnboardingFactory extends Factory
             'bodyweight_unit' => 'kg',
             'height_value' => 178,
             'height_unit' => 'cm',
+            'weight_trend' => 'maintaining',
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
@@ -47,10 +49,14 @@ class AthleteOnboardingFactory extends Factory
             'weekly_session_goal' => 3,
             'current_level_tests' => [
                 'push_ups' => ['max_strict_reps' => 18],
-                'pull_ups' => ['max_strict_reps' => 4],
-                'dips' => ['max_strict_reps' => 6],
+                'pull_ups' => ['max_strict_reps' => 4, 'fallback_variant' => 'none', 'fallback_reps' => null, 'fallback_seconds' => null],
+                'dips' => ['max_strict_reps' => 6, 'fallback_variant' => 'none', 'fallback_reps' => null, 'fallback_seconds' => null],
                 'squat' => ['barbell_load_value' => 100, 'barbell_reps' => 5],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 12],
+                'lower_body' => ['variant' => 'split_squat', 'load_value' => null, 'load_unit' => 'kg', 'reps' => 12],
                 'hollow_hold_seconds' => 35,
+                'passive_hang_seconds' => 45,
+                'top_support_hold_seconds' => 25,
             ],
             'skill_statuses' => [
                 'handstand' => ['status' => 'freestanding_kick_up', 'best_hold_seconds' => 20],
@@ -72,6 +78,7 @@ class AthleteOnboardingFactory extends Factory
             'soreness_level' => 2,
             'pain_level' => 1,
             'pain_areas' => [],
+            'pain_flags' => AthleteProfileOptions::emptyPainFlags(),
             'pain_notes' => null,
             'starter_plan_key' => fake()->randomElement(AthleteOnboardingOptions::STARTER_PLANS),
             'completed_at' => null,

@@ -14,17 +14,37 @@ export type OnboardingFieldErrors = Partial<Record<keyof OnboardingForm | string
 
 export interface OnboardingLevelTestsForm {
   dipMaxReps: string
+  dipFallbackReps: string
+  dipFallbackSeconds: string
+  dipFallbackVariant: string
   hollowHoldSeconds: string
+  lowerBodyLoadUnit: string
+  lowerBodyLoadValue: string
+  lowerBodyReps: string
+  lowerBodyVariant: string
+  passiveHangSeconds: string
   pullUpMaxReps: string
+  pullUpFallbackReps: string
+  pullUpFallbackSeconds: string
+  pullUpFallbackVariant: string
   pushUpMaxReps: string
+  rowMaxReps: string
+  rowVariant: string
   squatBarbellLoadValue: string
   squatBarbellReps: string
+  topSupportHoldSeconds: string
 }
 
 export interface OnboardingSkillStatusForm {
   bestHoldSeconds: string
   maxReps: string
   notes: string
+  status: string
+}
+
+export interface PainFlagForm {
+  notes: string
+  severity: string
   status: string
 }
 
@@ -41,6 +61,7 @@ export interface OnboardingForm {
   longTermTargetSkills: string[]
   mobilityChecks: Record<string, string>
   painAreas: string[]
+  painFlags: Record<string, PainFlagForm>
   painLevel: string
   painNotes: string
   preferredSessionMinutes: string
@@ -59,6 +80,7 @@ export interface OnboardingForm {
   targetSkills: string[]
   trainingAgeMonths: string
   trainingLocations: string[]
+  weightTrend: string
   weightedBaselines: {
     experience: string
     movements: Array<{
