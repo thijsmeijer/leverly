@@ -15,6 +15,8 @@ export type {
   RoadmapExplanation,
   RoadmapFoundationLane,
   RoadmapGoal,
+  RoadmapGoalCandidate,
+  RoadmapGoalCandidates,
   RoadmapIntermediate,
   RoadmapNode,
   RoadmapSuggestions,

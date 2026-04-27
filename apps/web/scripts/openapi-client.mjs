@@ -61,6 +61,7 @@ export function findContractProblems(openApiSource) {
     ['athlete profile pain flags property', 'pain_flags:'],
     ['athlete profile roadmap suggestions property', 'roadmap_suggestions:'],
     ['athlete profile roadmap version property', 'version:'],
+    ['athlete profile roadmap goal candidates property', 'goal_candidates:'],
     ['athlete profile roadmap primary goal property', 'primary_goal:'],
     ['athlete profile roadmap eta range property', 'eta_range:'],
     ['athlete profile roadmap domain bottlenecks property', 'domain_bottlenecks:'],
@@ -81,6 +82,7 @@ export function findContractProblems(openApiSource) {
     ['athlete onboarding pain flags property', 'pain_flags:'],
     ['athlete onboarding roadmap suggestions property', 'roadmap_suggestions:'],
     ['athlete onboarding roadmap version property', 'version:'],
+    ['athlete onboarding roadmap goal candidates property', 'goal_candidates:'],
     ['athlete onboarding roadmap domain bottlenecks property', 'domain_bottlenecks:'],
     ['athlete onboarding roadmap current block focus property', 'current_block_focus:'],
     ['athlete onboarding level tests property', 'current_level_tests:'],
@@ -325,10 +327,37 @@ export interface RoadmapIntermediate {
   readonly eta_modifiers: readonly Readonly<Record<string, unknown>>[]
 }
 
+export interface RoadmapGoalCandidate {
+  readonly skill: string
+  readonly label: string
+  readonly role: string
+  readonly status: string
+  readonly readiness_score: number
+  readonly confidence: number | null
+  readonly stress_class: string
+  readonly stress_tags: readonly string[]
+  readonly reason: string
+  readonly blockers: readonly string[]
+  readonly unlock_conditions: readonly string[]
+  readonly base_focus_areas: readonly string[]
+  readonly next_gate: string
+  readonly compatible_with_primary: boolean | null
+  readonly compatibility_reason: string
+}
+
+export interface RoadmapGoalCandidates {
+  readonly primary: readonly RoadmapGoalCandidate[]
+  readonly secondary: readonly RoadmapGoalCandidate[]
+  readonly accessories: readonly RoadmapGoalCandidate[]
+  readonly future: readonly RoadmapGoalCandidate[]
+  readonly foundation: readonly RoadmapGoalCandidate[]
+}
+
 export interface RoadmapSuggestions {
   readonly version: string
   readonly level: string
   readonly summary: string
+  readonly goal_candidates: RoadmapGoalCandidates
   readonly primary_goal: RoadmapGoal | null
   readonly compatible_secondary_goal: RoadmapGoal | null
   readonly foundation_lane: RoadmapFoundationLane

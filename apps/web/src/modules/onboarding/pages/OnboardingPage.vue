@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { requiredGoalModulesForGoal } from '@/modules/roadmap'
+import type { RoadmapGoalCandidate } from '@/modules/roadmap'
 import { UiButton } from '@/shared/ui'
 import OnboardingChoiceGrid from '../components/OnboardingChoiceGrid.vue'
 import OnboardingModulesStep from '../components/OnboardingModulesStep.vue'
@@ -13,10 +14,8 @@ import { useOnboardingSteps } from '../composables/useOnboardingSteps'
 import {
   baseFocusOptions,
   bodyweightUnitOptions,
-  compatibleSecondaryGoals,
   equipmentCategories,
   experienceLevelOptions,
-  goalOptions,
   heightUnitOptions,
   mobilityCheckOptions,
   mobilityStatusOptions,
@@ -32,7 +31,7 @@ import {
 } from '../data/onboardingOptions'
 import { hasCompleteBarbellSquatData, validateOnboardingStep } from '../services/onboardingService'
 import { useOnboardingStore } from '../stores/onboardingStore'
-import type { OnboardingFieldErrors, OnboardingStepId } from '../types'
+import type { ChoiceOption, OnboardingFieldErrors, OnboardingStepId } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -47,11 +46,6 @@ const activeStepTop = ref<StepScrollTarget | null>(null)
 const clientErrors = ref<OnboardingFieldErrors>({})
 const { activeIndex, canContinue, canGoBack, progressPercent, steps } = useOnboardingSteps(activeStep)
 const currentErrors = computed(() => ({ ...clientErrors.value, ...onboarding.fieldErrors }))
-const compatibleSecondaryGoalOptions = computed(() => {
-  const allowedGoals = compatibleSecondaryGoals[onboarding.form.primaryGoal] ?? []
-
-  return goalOptions.filter((option) => allowedGoals.includes(option.value))
-})
 const chosenSkills = computed(() =>
   targetSkillOptions
     .filter(
@@ -65,7 +59,6 @@ const activeRoadmapTracks = computed(() => [
   ...onboarding.form.roadmapSuggestions.unlockedTracks,
   ...onboarding.form.roadmapSuggestions.bridgeTracks,
 ])
-const activeRoadmapSkillValues = computed(() => activeRoadmapTracks.value.map((track) => track.skill))
 const activeRoadmapOptions = computed(() =>
   activeRoadmapTracks.value.map((track) => ({
     description: `${track.reason} Next gate: ${track.nextGate}`,
@@ -76,27 +69,71 @@ const activeRoadmapOptions = computed(() =>
     value: track.skill,
   })),
 )
+const candidateGroups = computed(() => onboarding.form.roadmapSuggestions.goalCandidates)
+const hasGoalCandidates = computed(() =>
+  [
+    candidateGroups.value.primary,
+    candidateGroups.value.secondary,
+    candidateGroups.value.accessories,
+    candidateGroups.value.future,
+    candidateGroups.value.foundation,
+  ].some((group) => group.length > 0),
+)
 const primaryRoadmapOptions = computed(() =>
-  activeRoadmapOptions.value.length ? activeRoadmapOptions.value : targetSkillOptions,
+  candidateGroups.value.primary.length
+    ? candidateGroups.value.primary.map(candidateToOption)
+    : activeRoadmapOptions.value.length
+      ? activeRoadmapOptions.value
+      : targetSkillOptions,
+)
+const activeRoadmapSkillValues = computed(() => primaryRoadmapOptions.value.map((option) => option.value))
+const secondaryRoadmapCandidates = computed(() => [
+  ...candidateGroups.value.secondary,
+  ...candidateGroups.value.accessories,
+  ...candidateGroups.value.foundation.filter((candidate) => candidate.role === 'foundation_bridge'),
+])
+const secondaryRoadmapOptions = computed(() =>
+  secondaryRoadmapCandidates.value
+    .filter((candidate) => candidate.skill !== onboarding.form.primaryTargetSkill)
+    .map(candidateToOption),
 )
 const longTermRoadmapOptions = computed(() =>
-  targetSkillOptions
-    .filter((option) => !onboarding.form.targetSkills.includes(option.value))
-    .map((option) => {
-      const suggested = [
-        ...onboarding.form.roadmapSuggestions.longTermTracks,
-        ...onboarding.form.roadmapSuggestions.deferredTracks,
-      ].find((track) => track.skill === option.value)
+  candidateGroups.value.future.length
+    ? candidateGroups.value.future
+        .filter((candidate) => !onboarding.form.targetSkills.includes(candidate.skill))
+        .map(candidateToOption)
+    : targetSkillOptions
+        .filter((option) => !onboarding.form.targetSkills.includes(option.value))
+        .map((option) => {
+          const suggested = [
+            ...onboarding.form.roadmapSuggestions.longTermTracks,
+            ...onboarding.form.roadmapSuggestions.deferredTracks,
+          ].find((track) => track.skill === option.value)
 
-      return suggested
-        ? {
-            description: `${suggested.reason} ${suggested.nextGate}`,
-            label: suggested.label,
-            meta: 'Later',
-            value: suggested.skill,
-          }
-        : option
-    }),
+          return suggested
+            ? {
+                description: `${suggested.reason} ${suggested.nextGate}`,
+                label: suggested.label,
+                meta: 'Later',
+                value: suggested.skill,
+              }
+            : option
+        }),
+)
+const foundationCandidates = computed(() => candidateGroups.value.foundation)
+const recommendedPrimaryCandidate = computed(
+  () =>
+    candidateGroups.value.primary.find((candidate) => candidate.skill === onboarding.form.primaryTargetSkill) ??
+    candidateGroups.value.primary[0] ??
+    null,
+)
+const recommendedSecondaryCandidate = computed(
+  () =>
+    secondaryRoadmapCandidates.value.find((candidate) =>
+      onboarding.form.secondaryTargetSkills.includes(candidate.skill),
+    ) ??
+    secondaryRoadmapCandidates.value[0] ??
+    null,
 )
 const suggestedBaseFocusOptions = computed(() => {
   const suggested = onboarding.form.roadmapSuggestions.baseFocusAreas
@@ -130,16 +167,64 @@ const redirectPath = computed(() =>
     : '/app/dashboard',
 )
 
-watch(
-  () => onboarding.form.primaryGoal,
-  () => {
-    const allowedGoals = compatibleSecondaryGoals[onboarding.form.primaryGoal] ?? []
+function candidateToOption(candidate: RoadmapGoalCandidate): ChoiceOption {
+  const descriptionParts = [candidate.reason]
 
-    onboarding.form.secondaryGoals = onboarding.form.secondaryGoals
-      .filter((goal) => allowedGoals.includes(goal))
-      .slice(0, 2)
-  },
-)
+  if (candidate.nextGate) {
+    descriptionParts.push(`Next gate: ${candidate.nextGate}`)
+  }
+
+  return {
+    description: descriptionParts.filter(Boolean).join(' '),
+    label: candidate.label,
+    meta: `${candidateRoleLabel(candidate)} · ${candidate.readinessScore}/100`,
+    value: candidate.skill,
+  }
+}
+
+function candidateRoleLabel(candidate: RoadmapGoalCandidate): string {
+  if (candidate.role === 'owned_foundation') {
+    return 'Foundation owned'
+  }
+
+  if (candidate.role === 'foundation_bridge') {
+    return 'Foundation bridge'
+  }
+
+  if (candidate.role === 'low_fatigue_accessory') {
+    return 'Low-fatigue support'
+  }
+
+  if (candidate.role === 'secondary_candidate') {
+    return 'Compatible support'
+  }
+
+  if (candidate.role === 'primary_candidate') {
+    return candidate.stressClass === 'high' ? 'Main skill' : 'Ready target'
+  }
+
+  if (candidate.role === 'blocked') {
+    return 'Blocked for now'
+  }
+
+  return 'Future target'
+}
+
+function candidateBadgeClass(candidate: RoadmapGoalCandidate): string {
+  if (candidate.role === 'owned_foundation') {
+    return 'bg-status-success/10 text-status-success'
+  }
+
+  if (candidate.role === 'foundation_bridge') {
+    return 'bg-accent-secondary-soft text-accent-secondary'
+  }
+
+  if (candidate.role === 'blocked') {
+    return 'bg-status-danger/10 text-status-danger'
+  }
+
+  return 'bg-accent-primary-soft text-ink-primary'
+}
 
 watch(
   () => onboarding.form.targetSkills,
@@ -153,7 +238,7 @@ watch(
         (skill) =>
           skill !== onboarding.form.primaryTargetSkill && !onboarding.form.longTermTargetSkills.includes(skill),
       )
-      .slice(0, 2)
+      .slice(0, 3)
   },
   { deep: true },
 )
@@ -165,9 +250,25 @@ watch(
       activeRoadmapSkillValues.value.includes(skill),
     )
 
-    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter(
-      (skill) => skill !== onboarding.form.primaryTargetSkill,
-    )
+    if (
+      onboarding.form.primaryTargetSkill &&
+      !activeRoadmapSkillValues.value.includes(onboarding.form.primaryTargetSkill)
+    ) {
+      onboarding.form.primaryTargetSkill = primaryRoadmapOptions.value[0]?.value ?? ''
+    }
+
+    if (!onboarding.form.primaryTargetSkill && primaryRoadmapOptions.value[0]?.value) {
+      onboarding.form.primaryTargetSkill = primaryRoadmapOptions.value[0].value
+    }
+
+    const allowedSecondarySkills = secondaryRoadmapOptions.value.map((option) => option.value)
+    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills
+      .filter(
+        (skill) =>
+          skill !== onboarding.form.primaryTargetSkill &&
+          (allowedSecondarySkills.length === 0 || allowedSecondarySkills.includes(skill)),
+      )
+      .slice(0, 3)
 
     if (onboarding.form.baseFocusAreas.length === 0 && onboarding.form.roadmapSuggestions.baseFocusAreas.length) {
       onboarding.form.baseFocusAreas = [...onboarding.form.roadmapSuggestions.baseFocusAreas].slice(0, 4)
@@ -181,9 +282,14 @@ watch(
   () => {
     onboarding.form.targetSkills = onboarding.form.primaryTargetSkill ? [onboarding.form.primaryTargetSkill] : []
     onboarding.form.requiredGoalModules = requiredGoalModulesForGoal(onboarding.form.primaryTargetSkill)
-    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter(
-      (skill) => skill !== onboarding.form.primaryTargetSkill,
-    )
+    const allowedSecondarySkills = secondaryRoadmapOptions.value.map((option) => option.value)
+    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills
+      .filter(
+        (skill) =>
+          skill !== onboarding.form.primaryTargetSkill &&
+          (allowedSecondarySkills.length === 0 || allowedSecondarySkills.includes(skill)),
+      )
+      .slice(0, 3)
   },
 )
 
@@ -853,11 +959,11 @@ const lowerBodyVariantOptions = [
         <OnboardingStepPanel
           v-if="activeStep === 'goal'"
           eyebrow="Step 5"
-          title="Choose the first roadmap priority."
-          description="Pick one main skill for the first block. Supporting lanes can stay light, and bigger skills can wait without disappearing."
+          title="Choose the roadmap mix Leverly should build around."
+          description="Pick the main emphasis, add compatible side goals, and keep future skills visible without forcing them into the first block."
         >
           <div class="space-y-6">
-            <div class="border-line-subtle bg-surface-primary rounded-card border p-5">
+            <section class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-5">
               <div class="flex flex-wrap items-center gap-3">
                 <span class="bg-accent-primary-soft text-ink-primary rounded-full px-3 py-1 text-xs font-semibold">
                   {{ onboarding.form.roadmapSuggestions.level }}
@@ -874,53 +980,116 @@ const lowerBodyVariantOptions = [
                   {{ note }}
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.primaryGoal"
-              :error="errorFor('primaryGoal')"
-              label="Primary goal"
-              name="onboarding-primary-goal"
-              :options="goalOptions"
-            />
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.secondaryGoals"
-              :error="errorFor('secondaryGoals')"
-              help="Choose up to two supporting goals that fit the main outcome."
-              label="Supporting goals"
-              :max-selections="2"
-              multiple
-              name="onboarding-secondary-goals"
-              :options="compatibleSecondaryGoalOptions"
-            />
+            <section
+              v-if="hasGoalCandidates"
+              class="border-line-subtle from-surface-elevated to-surface-primary rounded-card shadow-card-soft border bg-linear-to-br p-5"
+            >
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="text-accent-primary text-xs font-semibold tracking-[0.16em] uppercase">Recommended mix</p>
+                  <h3 class="text-ink-primary mt-2 text-xl font-semibold">A first block with one clear priority.</h3>
+                </div>
+                <p class="text-ink-muted max-w-xl text-sm leading-6">
+                  The mix is based on your tests, equipment, recovery budget, and skill overlap.
+                </p>
+              </div>
+
+              <div class="mt-5 grid gap-3 lg:grid-cols-3">
+                <article class="border-line-subtle bg-surface-primary rounded-card border p-4">
+                  <p class="text-ink-muted text-xs font-semibold tracking-[0.14em] uppercase">Main emphasis</p>
+                  <h4 class="text-ink-primary mt-2 text-lg font-semibold">
+                    {{ recommendedPrimaryCandidate?.label ?? 'Choose a target' }}
+                  </h4>
+                  <p class="text-ink-secondary mt-2 text-sm leading-6">
+                    {{
+                      recommendedPrimaryCandidate?.reason ??
+                      'The best main roadmap appears after the baseline is saved.'
+                    }}
+                  </p>
+                </article>
+                <article class="border-line-subtle bg-surface-primary rounded-card border p-4">
+                  <p class="text-ink-muted text-xs font-semibold tracking-[0.14em] uppercase">Side work</p>
+                  <h4 class="text-ink-primary mt-2 text-lg font-semibold">
+                    {{ recommendedSecondaryCandidate?.label ?? 'Optional' }}
+                  </h4>
+                  <p class="text-ink-secondary mt-2 text-sm leading-6">
+                    {{
+                      recommendedSecondaryCandidate?.reason ??
+                      'Choose side goals that do not compete with the main priority.'
+                    }}
+                  </p>
+                </article>
+                <article class="border-line-subtle bg-surface-primary rounded-card border p-4">
+                  <p class="text-ink-muted text-xs font-semibold tracking-[0.14em] uppercase">Foundation</p>
+                  <h4 class="text-ink-primary mt-2 text-lg font-semibold">
+                    {{ onboarding.form.roadmapSuggestions.foundationLane.label }}
+                  </h4>
+                  <p class="text-ink-secondary mt-2 text-sm leading-6">
+                    Base work stays in the plan so progressions do not outrun strength, positions, or tolerance.
+                  </p>
+                </article>
+              </div>
+            </section>
+
             <OnboardingChoiceGrid
               v-model="onboarding.form.primaryTargetSkill"
               :error="errorFor('primaryTargetSkill')"
-              help="Choose the one skill Leverly should prioritize first."
-              label="Primary roadmap"
+              help="Choose one target. This drives exercise selection, progression gates, and the first block structure."
+              label="Main emphasis"
               name="onboarding-primary-target-skill"
               :options="primaryRoadmapOptions"
             />
             <OnboardingChoiceGrid
+              v-if="secondaryRoadmapOptions.length"
               v-model="onboarding.form.secondaryTargetSkills"
               :error="errorFor('secondaryTargetSkills')"
-              help="Choose up to two lighter exposures that should not compete with the main roadmap."
-              label="Secondary exposure"
-              :max-selections="2"
+              help="Choose up to three side goals that fit the main emphasis and recovery budget."
+              label="Compatible side goals"
+              :max-selections="3"
               multiple
               name="onboarding-secondary-target-skills"
-              :options="primaryRoadmapOptions.filter((option) => option.value !== onboarding.form.primaryTargetSkill)"
+              :options="secondaryRoadmapOptions"
             />
             <OnboardingChoiceGrid
               v-model="onboarding.form.longTermTargetSkills"
               :error="errorFor('longTermTargetSkills')"
-              help="Keep big skills visible here without making them the first block's main target."
-              label="Long-term aspirations"
+              help="Keep bigger skills visible here without making them drive the first block yet."
+              label="Future roadmap targets"
               :max-selections="8"
               multiple
               name="onboarding-long-term-targets"
               :options="longTermRoadmapOptions"
             />
+            <section v-if="foundationCandidates.length" class="space-y-3">
+              <div>
+                <h3 class="text-ink-primary text-base font-semibold">Foundation kept in every plan</h3>
+                <p class="text-ink-secondary mt-1 text-sm leading-6">
+                  These basics stay as maintenance, warm-up, or bridge work depending on your current level.
+                </p>
+              </div>
+              <div class="grid gap-3 md:grid-cols-3">
+                <article
+                  v-for="candidate in foundationCandidates"
+                  :key="candidate.skill"
+                  class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 class="text-ink-primary text-sm font-semibold">{{ candidate.label }}</h4>
+                      <p class="text-ink-muted mt-1 text-xs leading-5">{{ candidate.reason }}</p>
+                    </div>
+                    <span
+                      class="shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold"
+                      :class="candidateBadgeClass(candidate)"
+                    >
+                      {{ candidateRoleLabel(candidate) }}
+                    </span>
+                  </div>
+                </article>
+              </div>
+            </section>
             <OnboardingChoiceGrid
               v-model="onboarding.form.baseFocusAreas"
               :error="errorFor('baseFocusAreas')"

@@ -7,6 +7,8 @@ import type {
   RoadmapExplanation,
   RoadmapFoundationLane,
   RoadmapGoal,
+  RoadmapGoalCandidate,
+  RoadmapGoalCandidates,
   RoadmapIntermediate,
   RoadmapNode,
   RoadmapSuggestions,
@@ -45,6 +47,7 @@ export function mapRoadmapSuggestions(value: unknown): RoadmapSuggestions {
     etaRange: mapEtaRange(source.eta_range ?? source.etaRange),
     explanation: mapExplanation(source.explanation),
     foundationLane: mapFoundationLane(source.foundation_lane ?? source.foundationLane),
+    goalCandidates: mapGoalCandidates(source.goal_candidates ?? source.goalCandidates),
     intermediate: mapIntermediate(source.intermediate),
     level: stringValue(source.level, 'foundation'),
     longTermTracks: recordArray(source.long_term_tracks ?? source.longTermTracks).map(mapTrack),
@@ -55,6 +58,38 @@ export function mapRoadmapSuggestions(value: unknown): RoadmapSuggestions {
     unlockConditions: recordArray(source.unlock_conditions ?? source.unlockConditions).map(mapUnlockCondition),
     unlockedTracks: recordArray(source.unlocked_tracks ?? source.unlockedTracks).map(mapTrack),
     version: stringValue(source.version, 'roadmap.v2'),
+  }
+}
+
+function mapGoalCandidates(value: unknown): RoadmapGoalCandidates {
+  const source = recordValue(value)
+
+  return {
+    accessories: recordArray(source.accessories).map(mapGoalCandidate),
+    foundation: recordArray(source.foundation).map(mapGoalCandidate),
+    future: recordArray(source.future).map(mapGoalCandidate),
+    primary: recordArray(source.primary).map(mapGoalCandidate),
+    secondary: recordArray(source.secondary).map(mapGoalCandidate),
+  }
+}
+
+function mapGoalCandidate(value: UnknownRecord): RoadmapGoalCandidate {
+  return {
+    baseFocusAreas: stringArray(value.base_focus_areas ?? value.baseFocusAreas),
+    blockers: stringArray(value.blockers),
+    compatibilityReason: stringValue(value.compatibility_reason ?? value.compatibilityReason, ''),
+    compatibleWithPrimary: nullableBoolean(value.compatible_with_primary ?? value.compatibleWithPrimary),
+    confidence: nullableNumber(value.confidence),
+    label: stringValue(value.label, stringValue(value.skill, 'Roadmap target')),
+    nextGate: stringValue(value.next_gate ?? value.nextGate, ''),
+    readinessScore: numberValue(value.readiness_score ?? value.readinessScore, 0),
+    reason: stringValue(value.reason, ''),
+    role: stringValue(value.role, 'long_term'),
+    skill: stringValue(value.skill, ''),
+    status: stringValue(value.status, 'deferred'),
+    stressClass: stringValue(value.stress_class ?? value.stressClass, 'moderate'),
+    stressTags: stringArray(value.stress_tags ?? value.stressTags),
+    unlockConditions: stringArray(value.unlock_conditions ?? value.unlockConditions),
   }
 }
 
@@ -253,4 +288,14 @@ function nullableNumber(value: unknown): number | null {
   const parsed = Number(value)
 
   return Number.isFinite(parsed) ? parsed : null
+}
+
+function numberValue(value: unknown, fallback: number): number {
+  const parsed = nullableNumber(value)
+
+  return parsed === null ? fallback : parsed
+}
+
+function nullableBoolean(value: unknown): boolean | null {
+  return typeof value === 'boolean' ? value : null
 }

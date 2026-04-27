@@ -119,6 +119,49 @@ describe('SettingsPage', () => {
     expect(wrapper.text()).toContain('Profile settings saved.')
   })
 
+  it('uses roadmap candidates for profile goal editing when available', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(
+        jsonResponse(
+          profileResponse({
+            primary_target_skill: 'front_lever',
+            roadmap_suggestions: {
+              ...profileResponse().data.roadmap_suggestions,
+              goal_candidates: {
+                accessories: [goalCandidate('l_sit', 'L-sit', 'low_fatigue_accessory')],
+                foundation: [goalCandidate('strict_pull_up', 'Pull-up', 'owned_foundation')],
+                future: [goalCandidate('one_arm_pull_up', 'One-arm pull-up', 'long_term')],
+                primary: [
+                  goalCandidate('front_lever', 'Front lever', 'primary_candidate'),
+                  goalCandidate('planche', 'Planche', 'primary_candidate'),
+                ],
+                secondary: [goalCandidate('handstand', 'Handstand', 'secondary_candidate')],
+              },
+            },
+            target_skills: ['front_lever'],
+          }),
+        ),
+      ),
+    })
+
+    const { wrapper } = await mountWithApp(SettingsPage, {
+      route: '/app/settings/profile',
+    })
+    await flushPromises()
+
+    await wrapper.find('#profile-tab-training').trigger('click')
+
+    const primaryValues = wrapper
+      .findAll('input[name="profile-primary-target"]')
+      .map((input) => (input.element as HTMLInputElement).value)
+
+    expect(wrapper.text()).toContain('Candidate roadmap mix')
+    expect(wrapper.text()).toContain('Foundation kept in every plan')
+    expect(primaryValues).toContain('front_lever')
+    expect(primaryValues).toContain('planche')
+    expect(primaryValues).not.toContain('strict_pull_up')
+  })
+
   it('saves roadmap-affecting inputs and displays the refreshed roadmap summary', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
@@ -334,5 +377,25 @@ function painFlags() {
     low_back: { notes: null, severity: 'none', status: 'none' },
     shoulder: { notes: null, severity: 'none', status: 'none' },
     wrist: { notes: 'Needs warm-up.', severity: 'mild', status: 'recurring' },
+  }
+}
+
+function goalCandidate(skill: string, label: string, role: string) {
+  return {
+    base_focus_areas: [],
+    blockers: [],
+    compatibility_reason: '',
+    compatible_with_primary: role === 'secondary_candidate' || role === 'low_fatigue_accessory' ? true : null,
+    confidence: 0.72,
+    label,
+    next_gate: '',
+    readiness_score: 72,
+    reason: `${label} fits the current roadmap mix.`,
+    role,
+    skill,
+    status: 'ready',
+    stress_class: role === 'low_fatigue_accessory' ? 'low_fatigue' : 'moderate',
+    stress_tags: [],
+    unlock_conditions: [],
   }
 }

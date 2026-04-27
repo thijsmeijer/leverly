@@ -41,6 +41,32 @@ export interface RoadmapTrack {
   readonly skill: string
 }
 
+export interface RoadmapGoalCandidate {
+  readonly baseFocusAreas: readonly string[]
+  readonly blockers: readonly string[]
+  readonly compatibilityReason: string
+  readonly compatibleWithPrimary: boolean | null
+  readonly confidence: number | null
+  readonly label: string
+  readonly nextGate: string
+  readonly readinessScore: number
+  readonly reason: string
+  readonly role: string
+  readonly skill: string
+  readonly status: string
+  readonly stressClass: string
+  readonly stressTags: readonly string[]
+  readonly unlockConditions: readonly string[]
+}
+
+export interface RoadmapGoalCandidates {
+  readonly accessories: readonly RoadmapGoalCandidate[]
+  readonly foundation: readonly RoadmapGoalCandidate[]
+  readonly future: readonly RoadmapGoalCandidate[]
+  readonly primary: readonly RoadmapGoalCandidate[]
+  readonly secondary: readonly RoadmapGoalCandidate[]
+}
+
 export interface RoadmapGoal {
   readonly blockers: readonly RoadmapBlocker[]
   readonly compatibilityTags: readonly string[]
@@ -123,6 +149,7 @@ export interface RoadmapSuggestions {
   readonly etaRange: RoadmapEtaRange
   readonly explanation: RoadmapExplanation
   readonly foundationLane: RoadmapFoundationLane
+  readonly goalCandidates: RoadmapGoalCandidates
   readonly intermediate: RoadmapIntermediate
   readonly level: string
   readonly longTermTracks: readonly RoadmapTrack[]

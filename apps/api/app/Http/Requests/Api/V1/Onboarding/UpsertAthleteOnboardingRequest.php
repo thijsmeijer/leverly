@@ -44,7 +44,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'target_skills' => ['sometimes', 'array', 'max:1'],
             'target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'primary_target_skill' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
-            'secondary_target_skills' => ['sometimes', 'array', 'max:2'],
+            'secondary_target_skills' => ['sometimes', 'array', 'max:3'],
             'secondary_target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'long_term_target_skills' => ['sometimes', 'array', 'max:8'],
             'long_term_target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
@@ -161,7 +161,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'secondary_goals' => ['description' => 'Compatible secondary goals.', 'example' => ['strength']],
             'target_skills' => ['description' => 'Active primary target skill slug.', 'example' => ['handstand']],
             'primary_target_skill' => ['description' => 'The one roadmap the first plan should prioritize.', 'example' => 'handstand'],
-            'secondary_target_skills' => ['description' => 'Optional secondary interests that remain non-blocking until accepted by compatibility scoring.', 'example' => ['strict_pull_up']],
+            'secondary_target_skills' => ['description' => 'Optional compatible side skills that remain non-blocking until accepted by compatibility scoring.', 'example' => ['strict_pull_up', 'l_sit']],
             'long_term_target_skills' => ['description' => 'Later aspirations that should not drive the first block yet.', 'example' => ['planche']],
             'base_focus_areas' => ['description' => 'Base-development areas that should support the primary roadmap.', 'example' => ['pull_capacity', 'core_bodyline']],
             'goal_modules' => [

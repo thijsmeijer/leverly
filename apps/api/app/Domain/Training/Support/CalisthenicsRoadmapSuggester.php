@@ -175,6 +175,14 @@ final class CalisthenicsRoadmapSuggester
      */
     public static function activeSkillSlugs(array $suggestions): array
     {
+        $goalCandidates = is_array($suggestions['goal_candidates'] ?? null) ? $suggestions['goal_candidates'] : [];
+        $primaryCandidates = is_array($goalCandidates['primary'] ?? null) ? $goalCandidates['primary'] : [];
+        $candidateSlugs = self::trackSlugs($primaryCandidates);
+
+        if ($candidateSlugs !== []) {
+            return $candidateSlugs;
+        }
+
         return self::trackSlugs([
             ...(is_array($suggestions['unlocked_tracks'] ?? null) ? $suggestions['unlocked_tracks'] : []),
             ...(is_array($suggestions['bridge_tracks'] ?? null) ? $suggestions['bridge_tracks'] : []),

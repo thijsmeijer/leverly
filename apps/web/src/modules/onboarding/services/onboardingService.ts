@@ -285,7 +285,9 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     }
 
     if (primaryTarget && !activeSkills.includes(primaryTarget)) {
-      errors.primaryTargetSkill = 'Primary target must come from the suggested current or bridge roadmap.'
+      errors.primaryTargetSkill = hasGoalCandidates(form.roadmapSuggestions)
+        ? 'Primary target must come from the recommended roadmap candidates.'
+        : 'Primary target must come from the suggested current or bridge roadmap.'
     }
 
     if (form.targetSkills.length > 1 || (form.targetSkills.length === 1 && form.targetSkills[0] !== primaryTarget)) {
@@ -296,6 +298,11 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
       form.secondaryTargetSkills.some((skill) => skill === primaryTarget || form.longTermTargetSkills.includes(skill))
     ) {
       errors.secondaryTargetSkills = 'Secondary interests must differ from the primary and long-term targets.'
+    }
+
+    const secondarySkills = secondaryRoadmapSkills(form.roadmapSuggestions)
+    if (secondarySkills.length > 0 && form.secondaryTargetSkills.some((skill) => !secondarySkills.includes(skill))) {
+      errors.secondaryTargetSkills = 'Secondary interests must come from compatible or foundation support candidates.'
     }
 
     if (form.baseFocusAreas.length === 0) {
@@ -881,7 +888,31 @@ function isServerValidationBody(body: unknown): body is ServerValidationBody {
 }
 
 function activeRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
+  const candidateSkills = suggestions.goalCandidates.primary.map((candidate) => candidate.skill)
+
+  if (candidateSkills.length > 0) {
+    return candidateSkills
+  }
+
   return [...suggestions.unlockedTracks, ...suggestions.bridgeTracks].map((track) => track.skill)
+}
+
+function secondaryRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
+  return [
+    ...suggestions.goalCandidates.secondary,
+    ...suggestions.goalCandidates.accessories,
+    ...suggestions.goalCandidates.foundation.filter((candidate) => candidate.role === 'foundation_bridge'),
+  ].map((candidate) => candidate.skill)
+}
+
+function hasGoalCandidates(suggestions: OnboardingRoadmapSuggestions): boolean {
+  return (
+    suggestions.goalCandidates.primary.length > 0 ||
+    suggestions.goalCandidates.secondary.length > 0 ||
+    suggestions.goalCandidates.accessories.length > 0 ||
+    suggestions.goalCandidates.future.length > 0 ||
+    suggestions.goalCandidates.foundation.length > 0
+  )
 }
 
 function activeTargetSkills(form: OnboardingForm): string[] {

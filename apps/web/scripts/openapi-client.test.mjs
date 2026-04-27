@@ -84,6 +84,8 @@ paths:
                         properties:
                           version:
                             type: string
+                          goal_candidates:
+                            type: object
                           primary_goal:
                             type: object
                           eta_range:
@@ -138,6 +140,8 @@ paths:
                         properties:
                           version:
                             type: string
+                          goal_candidates:
+                            type: object
                           primary_goal:
                             type: object
                           eta_range:
@@ -189,6 +193,8 @@ paths:
                         properties:
                           version:
                             type: string
+                          goal_candidates:
+                            type: object
                           primary_goal:
                             type: object
                           eta_range:
@@ -239,6 +245,8 @@ paths:
                         properties:
                           version:
                             type: string
+                          goal_candidates:
+                            type: object
                           primary_goal:
                             type: object
                           eta_range:
@@ -295,6 +303,8 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('readonly passive_hang_seconds: number | null')
     expect(generated).toContain('readonly top_support_hold_seconds: number | null')
     expect(generated).toContain('readonly version: string')
+    expect(generated).toContain('export interface RoadmapGoalCandidate')
+    expect(generated).toContain('readonly goal_candidates: RoadmapGoalCandidates')
     expect(generated).toContain('readonly eta_range: RoadmapEtaRange')
     expect(generated).toContain('readonly domain_bottlenecks: readonly RoadmapDomainBottleneck[]')
     expect(generated).toContain('readonly current_block_focus: RoadmapCurrentBlockFocus')

@@ -404,6 +404,53 @@ describe('onboardingService', () => {
     })
   })
 
+  it('validates goal selections against level-aware roadmap candidates when present', () => {
+    const suggestions = mapRoadmapSuggestions({
+      base_focus_areas: ['pull_capacity'],
+      goal_candidates: {
+        accessories: [goalCandidate('l_sit', 'L-sit', 'low_fatigue_accessory')],
+        foundation: [goalCandidate('strict_pull_up', 'Pull-up', 'owned_foundation')],
+        future: [goalCandidate('one_arm_pull_up', 'One-arm pull-up', 'long_term')],
+        primary: [goalCandidate('front_lever', 'Front lever', 'primary_candidate')],
+        secondary: [goalCandidate('handstand', 'Handstand', 'secondary_candidate')],
+      },
+    })
+    const form = {
+      ...defaultOnboardingForm(),
+      baseFocusAreas: ['pull_capacity'],
+      primaryGoal: 'skill',
+      primaryTargetSkill: 'front_lever',
+      roadmapSuggestions: suggestions,
+      secondaryTargetSkills: ['handstand', 'l_sit'],
+      targetSkills: ['front_lever'],
+    }
+
+    expect(validateOnboardingStep(form, 'goal')).toEqual({})
+    expect(
+      validateOnboardingStep(
+        {
+          ...form,
+          primaryTargetSkill: 'strict_pull_up',
+          targetSkills: ['strict_pull_up'],
+        },
+        'goal',
+      ),
+    ).toMatchObject({
+      primaryTargetSkill: 'Primary target must come from the recommended roadmap candidates.',
+    })
+    expect(
+      validateOnboardingStep(
+        {
+          ...form,
+          secondaryTargetSkills: ['one_arm_pull_up'],
+        },
+        'goal',
+      ),
+    ).toMatchObject({
+      secondaryTargetSkills: 'Secondary interests must come from compatible or foundation support candidates.',
+    })
+  })
+
   it('validates pain flags inside the pain and mobility step', () => {
     expect(
       validateOnboardingStep(
@@ -666,5 +713,25 @@ function roadmapSuggestions() {
         skill: 'handstand',
       },
     ],
+  }
+}
+
+function goalCandidate(skill: string, label: string, role: string) {
+  return {
+    base_focus_areas: [],
+    blockers: [],
+    compatibility_reason: '',
+    compatible_with_primary: role === 'secondary_candidate' || role === 'low_fatigue_accessory' ? true : null,
+    confidence: 0.72,
+    label,
+    next_gate: '',
+    readiness_score: 72,
+    reason: `${label} candidate.`,
+    role,
+    skill,
+    status: 'ready',
+    stress_class: role === 'low_fatigue_accessory' ? 'low_fatigue' : 'moderate',
+    stress_tags: [],
+    unlock_conditions: [],
   }
 }

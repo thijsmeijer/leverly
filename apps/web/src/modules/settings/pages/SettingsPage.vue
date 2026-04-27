@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { requiredGoalModulesForGoal } from '@/modules/roadmap'
+import type { RoadmapGoalCandidate } from '@/modules/roadmap'
 import { UiButton } from '@/shared/ui'
 import ProfileChoiceGrid from '../components/ProfileChoiceGrid.vue'
 import ProfileFormSection from '../components/ProfileFormSection.vue'
@@ -40,7 +41,7 @@ import {
   weightedMovementOptions,
   weightTrendOptions,
 } from '../data/profileOptions'
-import type { ProfileFieldErrors } from '../types'
+import type { ChoiceOption, ProfileFieldErrors } from '../types'
 
 type ProfileSectionId = 'basics' | 'training' | 'setup' | 'coaching' | 'limitations'
 
@@ -77,9 +78,40 @@ const targetSkillValues = computed<string[]>({
 const selectedTargetSkillOptions = computed(() =>
   targetSkillOptions.filter((option) => targetSkillValues.value.includes(option.value)),
 )
-const secondaryTargetSkillOptions = computed(() =>
-  selectedTargetSkillOptions.value.filter((option) => option.value !== form.primaryTargetSkill),
+const candidateGroups = computed(() => form.roadmapSuggestions.goalCandidates)
+const hasGoalCandidates = computed(() =>
+  [
+    candidateGroups.value.primary,
+    candidateGroups.value.secondary,
+    candidateGroups.value.accessories,
+    candidateGroups.value.future,
+    candidateGroups.value.foundation,
+  ].some((group) => group.length > 0),
 )
+const primaryTargetOptions = computed(() =>
+  candidateGroups.value.primary.length
+    ? candidateGroups.value.primary.map(candidateToOption)
+    : selectedTargetSkillOptions.value,
+)
+const secondaryTargetSkillOptions = computed(() =>
+  hasGoalCandidates.value
+    ? [
+        ...candidateGroups.value.secondary,
+        ...candidateGroups.value.accessories,
+        ...candidateGroups.value.foundation.filter((candidate) => candidate.role === 'foundation_bridge'),
+      ]
+        .filter((candidate) => candidate.skill !== form.primaryTargetSkill)
+        .map(candidateToOption)
+    : selectedTargetSkillOptions.value.filter((option) => option.value !== form.primaryTargetSkill),
+)
+const futureTargetOptions = computed(() =>
+  candidateGroups.value.future.length
+    ? candidateGroups.value.future
+        .filter((candidate) => !targetSkillValues.value.includes(candidate.skill))
+        .map(candidateToOption)
+    : targetSkillOptions.filter((option) => !targetSkillValues.value.includes(option.value)),
+)
+const foundationCandidates = computed(() => candidateGroups.value.foundation)
 const primaryTargetLabel = computed(
   () => targetSkillOptions.find((option) => option.value === form.primaryTargetSkill)?.label ?? 'Choose a roadmap',
 )
@@ -136,7 +168,7 @@ watch(
 
     form.secondaryTargetSkills = form.secondaryTargetSkills
       .filter((skill) => skill !== form.primaryTargetSkill && skills.includes(skill))
-      .slice(0, 2)
+      .slice(0, 3)
   },
   { deep: true },
 )
@@ -146,7 +178,12 @@ watch(
   () => {
     form.targetSkillsText = form.primaryTargetSkill
     form.requiredGoalModules = requiredGoalModulesForGoal(form.primaryTargetSkill)
-    form.secondaryTargetSkills = form.secondaryTargetSkills.filter((skill) => skill !== form.primaryTargetSkill)
+    const allowedSecondary = secondaryTargetSkillOptions.value.map((option) => option.value)
+    form.secondaryTargetSkills = form.secondaryTargetSkills
+      .filter(
+        (skill) => skill !== form.primaryTargetSkill && (!allowedSecondary.length || allowedSecondary.includes(skill)),
+      )
+      .slice(0, 3)
   },
 )
 
@@ -214,6 +251,40 @@ function splitSelectedTargetSkills(value: string): string[] {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter((item, index, items) => item !== '' && supportedValues.has(item) && items.indexOf(item) === index)
+}
+
+function candidateToOption(candidate: RoadmapGoalCandidate): ChoiceOption {
+  const details = [candidate.reason]
+
+  if (candidate.nextGate) {
+    details.push(`Next gate: ${candidate.nextGate}`)
+  }
+
+  return {
+    description: details.filter(Boolean).join(' '),
+    label: candidate.label,
+    value: candidate.skill,
+  }
+}
+
+function candidateRoleLabel(candidate: RoadmapGoalCandidate): string {
+  if (candidate.role === 'owned_foundation') {
+    return 'Owned'
+  }
+
+  if (candidate.role === 'foundation_bridge') {
+    return 'Bridge'
+  }
+
+  if (candidate.role === 'low_fatigue_accessory') {
+    return 'Low fatigue'
+  }
+
+  if (candidate.role === 'blocked') {
+    return 'Blocked'
+  }
+
+  return `${candidate.readinessScore}/100`
 }
 
 function addWeightedMovement(): void {
@@ -452,7 +523,46 @@ function capitalize(value: string): string {
               </p>
             </div>
             <div class="space-y-5">
+              <section
+                v-if="hasGoalCandidates"
+                class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4"
+              >
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p class="text-accent-primary text-xs font-semibold tracking-[0.16em] uppercase">
+                      Candidate roadmap mix
+                    </p>
+                    <h4 class="text-ink-primary mt-2 text-base font-semibold">
+                      Use the calculated candidates from your current profile.
+                    </h4>
+                  </div>
+                  <p class="text-ink-muted max-w-xl text-sm leading-6">
+                    Basics that are already owned stay as support work instead of becoming the main roadmap.
+                  </p>
+                </div>
+                <div v-if="foundationCandidates.length" class="mt-4 grid gap-3 md:grid-cols-3">
+                  <article
+                    v-for="candidate in foundationCandidates"
+                    :key="candidate.skill"
+                    class="border-line-subtle bg-surface-elevated rounded-control border p-3"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-ink-primary text-sm font-semibold">{{ candidate.label }}</p>
+                        <p class="text-ink-muted mt-1 text-xs leading-5">{{ candidate.reason }}</p>
+                      </div>
+                      <span
+                        class="bg-accent-primary-soft text-ink-primary rounded-full px-2.5 py-1 text-xs font-semibold"
+                      >
+                        {{ candidateRoleLabel(candidate) }}
+                      </span>
+                    </div>
+                  </article>
+                </div>
+                <p class="text-ink-muted mt-3 text-sm font-semibold">Foundation kept in every plan</p>
+              </section>
               <ProfileChoiceGrid
+                v-else
                 v-model="targetSkillValues"
                 :error="fieldErrors.targetSkillsText"
                 help="Choose up to three active skill or strength outcomes for the current block."
@@ -465,21 +575,21 @@ function capitalize(value: string): string {
               <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
                 <div class="space-y-5">
                   <ProfileChoiceGrid
-                    v-if="selectedTargetSkillOptions.length"
+                    v-if="primaryTargetOptions.length"
                     v-model="form.primaryTargetSkill"
                     :error="fieldErrors.primaryTargetSkill"
                     help="Choose the one outcome the current block should prioritize."
                     label="Primary roadmap"
                     name="profile-primary-target"
-                    :options="selectedTargetSkillOptions"
+                    :options="primaryTargetOptions"
                   />
                   <ProfileChoiceGrid
-                    v-if="selectedTargetSkillOptions.length > 1"
+                    v-if="secondaryTargetSkillOptions.length"
                     v-model="form.secondaryTargetSkills"
                     :error="fieldErrors.secondaryTargetSkills"
-                    help="Pick up to two support targets that should not compete with the primary roadmap."
-                    label="Secondary exposure"
-                    :max-selections="2"
+                    help="Pick up to three support targets that should not compete with the primary roadmap."
+                    label="Compatible side goals"
+                    :max-selections="3"
                     multiple
                     name="profile-secondary-targets"
                     :options="secondaryTargetSkillOptions"
@@ -519,7 +629,7 @@ function capitalize(value: string): string {
                 :max-selections="8"
                 multiple
                 name="profile-long-term-targets"
-                :options="targetSkillOptions.filter((option) => !targetSkillValues.includes(option.value))"
+                :options="futureTargetOptions"
               />
               <ProfileChoiceGrid
                 v-model="form.baseFocusAreas"

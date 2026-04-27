@@ -27,6 +27,13 @@ final readonly class RoadmapResult
             'bridge_tracks' => [],
             'long_term_tracks' => [],
             'deferred_tracks' => [],
+            'goal_candidates' => [
+                'primary' => [],
+                'secondary' => [],
+                'accessories' => [],
+                'future' => [],
+                'foundation' => [],
+            ],
             'primary_goal' => null,
             'compatible_secondary_goal' => null,
             'foundation_lane' => self::foundationLane([]),
@@ -86,8 +93,18 @@ final readonly class RoadmapResult
         $readiness = SkillReadinessCalculator::fromInput($input);
         $laneSelection = GoalLaneSelector::fromInput($input);
         $layerEstimate = RoadmapLayerEstimator::fromInput($input);
-        $primaryReadiness = $laneSelection->primaryLane;
-        $secondaryReadiness = $laneSelection->secondaryLane;
+        $goalCandidates = RoadmapGoalCandidateBuilder::fromInput(
+            $input,
+            $activeTracks,
+            $longTermTracks,
+            $deferredTracks,
+            $readiness,
+        );
+        $primaryReadiness = self::readinessForCandidate($goalCandidates['primary'][0] ?? null, $readiness)
+            ?? $laneSelection->primaryLane;
+        $secondaryReadiness = self::readinessForCandidate($goalCandidates['secondary'][0] ?? null, $readiness)
+            ?? self::readinessForCandidate($goalCandidates['accessories'][0] ?? null, $readiness)
+            ?? $laneSelection->secondaryLane;
         $primaryTrack = self::trackForReadiness($primaryReadiness, $trackCatalog) ?? self::primaryTrack($input, $activeTracks);
         $secondaryTrack = self::trackForReadiness($secondaryReadiness, $trackCatalog) ?? self::secondaryTrack($input, $activeTracks, $primaryTrack);
         $baseFocusAreas = self::stringList($trackBuckets['base_focus_areas'] ?? []);
@@ -116,6 +133,7 @@ final readonly class RoadmapResult
         $payload = [
             ...$trackBuckets,
             'version' => self::VERSION,
+            'goal_candidates' => $goalCandidates,
             'primary_goal' => $primaryReadiness === null && $primaryTrack === null ? null : self::goal(
                 $primaryTrack ?? self::trackFromReadiness($primaryReadiness, $primarySkill, $primaryLabel),
                 'primary',
@@ -302,6 +320,17 @@ final readonly class RoadmapResult
     private static function trackForReadiness(?SkillReadiness $readiness, array $catalog): ?array
     {
         return $readiness === null ? null : ($catalog[$readiness->skill] ?? null);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $candidate
+     * @param  array<string, SkillReadiness>  $readiness
+     */
+    private static function readinessForCandidate(?array $candidate, array $readiness): ?SkillReadiness
+    {
+        $skill = $candidate['skill'] ?? null;
+
+        return is_string($skill) ? ($readiness[$skill] ?? null) : null;
     }
 
     /**

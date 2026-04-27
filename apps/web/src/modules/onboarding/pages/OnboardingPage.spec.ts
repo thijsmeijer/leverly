@@ -121,6 +121,58 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).not.toContain('Lower-body skill check')
   })
 
+  it('uses roadmap candidates for the goal step instead of a flat skill picker', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(
+        jsonResponse(
+          onboardingResponse({
+            primary_target_skill: 'front_lever',
+            roadmap_suggestions: {
+              ...roadmapSuggestions(),
+              goal_candidates: {
+                accessories: [goalCandidate('l_sit', 'L-sit', 'low_fatigue_accessory')],
+                foundation: [
+                  goalCandidate('strict_push_up', 'Push-up', 'owned_foundation'),
+                  goalCandidate('strict_pull_up', 'Pull-up', 'owned_foundation'),
+                  goalCandidate('strict_dip', 'Dip', 'owned_foundation'),
+                ],
+                future: [goalCandidate('one_arm_pull_up', 'One-arm pull-up', 'long_term')],
+                primary: [
+                  goalCandidate('front_lever', 'Front lever', 'primary_candidate'),
+                  goalCandidate('planche', 'Planche', 'primary_candidate'),
+                ],
+                secondary: [goalCandidate('handstand', 'Handstand', 'secondary_candidate')],
+              },
+            },
+            target_skills: ['front_lever'],
+          }),
+        ),
+      ),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Goal'))
+      ?.trigger('click')
+
+    const primaryValues = wrapper
+      .findAll('input[name="onboarding-primary-target-skill"]')
+      .map((input) => (input.element as HTMLInputElement).value)
+
+    expect(wrapper.text()).toContain('Recommended mix')
+    expect(wrapper.text()).toContain('Main emphasis')
+    expect(wrapper.text()).toContain('Compatible side goals')
+    expect(wrapper.text()).toContain('Foundation kept in every plan')
+    expect(primaryValues).toContain('front_lever')
+    expect(primaryValues).toContain('planche')
+    expect(primaryValues).not.toContain('strict_pull_up')
+  })
+
   it('uses roomy option cards for pain and recovery controls', async () => {
     configureLeverlyApiClient({
       fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(onboardingResponse())),
@@ -477,6 +529,13 @@ function roadmapSuggestions() {
         skill: 'planche',
       },
     ],
+    goal_candidates: {
+      accessories: [goalCandidate('l_sit', 'L-sit', 'low_fatigue_accessory')],
+      foundation: [goalCandidate('strict_pull_up', 'Pull-up', 'foundation_bridge')],
+      future: [goalCandidate('planche', 'Planche', 'long_term')],
+      primary: [goalCandidate('handstand', 'Handstand', 'primary_candidate')],
+      secondary: [goalCandidate('strict_pull_up', 'Pull-up', 'secondary_candidate')],
+    },
     primary_goal: {
       skill: 'handstand',
       label: 'Handstand',
@@ -502,5 +561,25 @@ function roadmapSuggestions() {
         skill: 'handstand',
       },
     ],
+  }
+}
+
+function goalCandidate(skill: string, label: string, role: string) {
+  return {
+    base_focus_areas: [],
+    blockers: [],
+    compatibility_reason: '',
+    compatible_with_primary: role === 'secondary_candidate' || role === 'low_fatigue_accessory' ? true : null,
+    confidence: 0.72,
+    label,
+    next_gate: '',
+    readiness_score: 72,
+    reason: `${label} fits the current roadmap mix.`,
+    role,
+    skill,
+    status: 'ready',
+    stress_class: role === 'low_fatigue_accessory' ? 'low_fatigue' : 'moderate',
+    stress_tags: [],
+    unlock_conditions: [],
   }
 }
