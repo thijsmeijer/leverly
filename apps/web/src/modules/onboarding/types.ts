@@ -5,10 +5,10 @@ export type OnboardingStepId =
   | 'equipment'
   | 'mobility'
   | 'level'
+  | 'goal'
+  | 'modules'
   | 'availability'
-  | 'roadmap'
-  | 'readiness'
-  | 'starter'
+  | 'review'
 
 export type OnboardingFieldErrors = Partial<Record<keyof OnboardingForm | string, string>>
 

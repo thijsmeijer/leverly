@@ -85,36 +85,38 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       completed_at: null,
       current_bodyweight_value: 72.5,
       current_level_tests: {
-        arch_hold_seconds: 25,
-        dead_hang_seconds: 30,
         dips: {
+          fallback_reps: 5,
+          fallback_seconds: null,
+          fallback_variant: 'assisted',
           max_strict_reps: 6,
-          progression: 'bar_dip',
-          support_hold_seconds: 25,
         },
         hollow_hold_seconds: 35,
-        l_sit_hold_seconds: 8,
+        lower_body: {
+          load_unit: 'kg',
+          load_value: null,
+          reps: 12,
+          variant: 'split_squat',
+        },
+        passive_hang_seconds: 45,
         pull_ups: {
-          assistance: null,
-          form_quality: 4,
+          fallback_reps: null,
+          fallback_seconds: 6,
+          fallback_variant: 'eccentric',
           max_strict_reps: 4,
-          progression: 'strict_pull_up',
         },
         push_ups: {
-          form_quality: 4,
           max_strict_reps: 18,
-          progression: 'strict_push_up',
         },
         rows: {
-          max_strict_reps: 12,
-          progression: 'inverted_row',
+          max_reps: 12,
+          variant: 'ring_row',
         },
         squat: {
-          max_reps: 20,
-          progression: 'split_squat',
+          barbell_load_value: 100,
+          barbell_reps: 5,
         },
-        support_hold_seconds: 25,
-        wall_handstand_seconds: 20,
+        top_support_hold_seconds: 25,
       },
       experience_level: 'intermediate',
       height_unit: 'cm',
@@ -144,6 +146,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         wrist_extension: 'limited',
       },
       pain_areas: ['wrist'],
+      pain_flags: painFlags(),
       pain_level: 2,
       pain_notes: 'Wrists need warm-up.',
       preferred_session_minutes: 60,
@@ -158,7 +161,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       skill_statuses: {
         handstand: {
           best_hold_seconds: 20,
-          status: 'assisted',
+          status: 'freestanding_kick_up',
         },
       },
       sleep_quality: 4,
@@ -174,8 +177,20 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
         unit: 'kg',
       },
       weekly_session_goal: 3,
+      weight_trend: 'maintaining',
       ...overrides,
     },
+  }
+}
+
+function painFlags() {
+  return {
+    ankle: { notes: null, severity: 'none', status: 'none' },
+    elbow: { notes: null, severity: 'none', status: 'none' },
+    knee: { notes: null, severity: 'none', status: 'none' },
+    low_back: { notes: null, severity: 'none', status: 'none' },
+    shoulder: { notes: null, severity: 'none', status: 'none' },
+    wrist: { notes: 'Wrists need warm-up.', severity: 'mild', status: 'recurring' },
   }
 }
 

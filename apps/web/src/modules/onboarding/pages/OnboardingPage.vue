@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { requiredGoalModulesForGoal } from '@/modules/roadmap'
 import { UiButton } from '@/shared/ui'
 import OnboardingChoiceGrid from '../components/OnboardingChoiceGrid.vue'
+import OnboardingModulesStep from '../components/OnboardingModulesStep.vue'
 import OnboardingNumberField from '../components/OnboardingNumberField.vue'
 import OnboardingProgress from '../components/OnboardingProgress.vue'
+import OnboardingRoadmapReviewStep from '../components/OnboardingRoadmapReviewStep.vue'
 import OnboardingStepPanel from '../components/OnboardingStepPanel.vue'
 import { useOnboardingSteps } from '../composables/useOnboardingSteps'
 import {
@@ -23,16 +26,9 @@ import {
   priorSportOptions,
   readinessOptions,
   sorenessOptions,
-  skillStatusKeys,
-  skillStatusLabels,
-  skillStatusMeasurements,
-  skillStatusOptions,
-  starterPlanOptions,
   targetSkillOptions,
   trainingDayOptions,
   trainingLocationOptions,
-  weightedExperienceOptions,
-  weightedMovementOptions,
 } from '../data/onboardingOptions'
 import { validateOnboardingStep } from '../services/onboardingService'
 import { useOnboardingStore } from '../stores/onboardingStore'
@@ -80,6 +76,9 @@ const activeRoadmapOptions = computed(() =>
     value: track.skill,
   })),
 )
+const primaryRoadmapOptions = computed(() =>
+  activeRoadmapOptions.value.length ? activeRoadmapOptions.value : targetSkillOptions,
+)
 const longTermRoadmapOptions = computed(() =>
   targetSkillOptions
     .filter((option) => !onboarding.form.targetSkills.includes(option.value))
@@ -108,14 +107,6 @@ const suggestedBaseFocusOptions = computed(() => {
 
   return baseFocusOptions.filter((option) => suggested.includes(option.value))
 })
-const selectedTargetSkillOptions = computed(() =>
-  activeRoadmapOptions.value.filter((option) => onboarding.form.targetSkills.includes(option.value)),
-)
-const primaryTargetLabel = computed(
-  () =>
-    targetSkillOptions.find((option) => option.value === onboarding.form.primaryTargetSkill)?.label ??
-    'No primary roadmap yet',
-)
 const chosenEquipmentCount = computed(() => onboarding.form.availableEquipment.length)
 const contextSummary = computed(() => {
   const bodyweight = onboarding.form.currentBodyweightValue
@@ -127,34 +118,11 @@ const contextSummary = computed(() => {
 
   return `${bodyweight}, ${height}`
 })
-const weightedSkillSelected = computed(() =>
-  [onboarding.form.primaryTargetSkill, ...onboarding.form.targetSkills].some((skill) => skill.startsWith('weighted_')),
-)
 const chosenSchedule = computed(() =>
   onboarding.form.preferredTrainingDays.length
-    ? `${onboarding.form.preferredTrainingDays.length} days, up to ${onboarding.form.preferredSessionMinutes || '...'} minutes`
+    ? `${onboarding.form.preferredTrainingDays.length} days, max ${onboarding.form.weeklySessionGoal || '...'} sessions`
     : 'Schedule not set',
 )
-const placementPreview = computed(() => {
-  const push = `${onboarding.form.currentLevelTests.pushUpMaxReps || 0} push-ups`
-  const pull = `${onboarding.form.currentLevelTests.pullUpMaxReps || 0} pull-ups`
-  const dip = `${onboarding.form.currentLevelTests.dipMaxReps || 0} dips`
-  const mobilityFlags = Object.entries(onboarding.form.mobilityChecks)
-    .filter(([, status]) => ['limited', 'blocked', 'painful'].includes(status))
-    .map(([key]) => mobilityCheckOptions.find((option) => option.value === key)?.label ?? key)
-
-  return {
-    focus: onboarding.form.baseFocusAreas.length
-      ? onboarding.form.baseFocusAreas
-          .map((value) => baseFocusOptions.find((option) => option.value === value)?.label ?? value)
-          .slice(0, 3)
-          .join(', ')
-      : 'Base focus not selected',
-    mobility: mobilityFlags.length ? mobilityFlags.slice(0, 3).join(', ') : 'No major position blockers marked',
-    primary: primaryTargetLabel.value,
-    tests: `${push}, ${pull}, ${dip}`,
-  }
-})
 const redirectPath = computed(() =>
   typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/app')
     ? route.query.redirect
@@ -180,7 +148,10 @@ watch(
     }
 
     onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills
-      .filter((skill) => skill !== onboarding.form.primaryTargetSkill && onboarding.form.targetSkills.includes(skill))
+      .filter(
+        (skill) =>
+          skill !== onboarding.form.primaryTargetSkill && !onboarding.form.longTermTargetSkills.includes(skill),
+      )
       .slice(0, 2)
   },
   { deep: true },
@@ -193,8 +164,8 @@ watch(
       activeRoadmapSkillValues.value.includes(skill),
     )
 
-    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter((skill) =>
-      onboarding.form.targetSkills.includes(skill),
+    onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter(
+      (skill) => skill !== onboarding.form.primaryTargetSkill,
     )
 
     if (onboarding.form.baseFocusAreas.length === 0 && onboarding.form.roadmapSuggestions.baseFocusAreas.length) {
@@ -207,6 +178,8 @@ watch(
 watch(
   () => onboarding.form.primaryTargetSkill,
   () => {
+    onboarding.form.targetSkills = onboarding.form.primaryTargetSkill ? [onboarding.form.primaryTargetSkill] : []
+    onboarding.form.requiredGoalModules = requiredGoalModulesForGoal(onboarding.form.primaryTargetSkill)
     onboarding.form.secondaryTargetSkills = onboarding.form.secondaryTargetSkills.filter(
       (skill) => skill !== onboarding.form.primaryTargetSkill,
     )
@@ -277,7 +250,7 @@ async function goNext(): Promise<void> {
   }
 
   clientErrors.value = {}
-  activeStep.value = steps[activeIndex.value + 1]?.id ?? 'starter'
+  activeStep.value = steps[activeIndex.value + 1]?.id ?? 'review'
 }
 
 async function completeOnboarding(): Promise<void> {
@@ -299,19 +272,6 @@ async function completeOnboarding(): Promise<void> {
   }
 }
 
-function addWeightedMovement(): void {
-  onboarding.form.weightedBaselines.movements = [
-    ...onboarding.form.weightedBaselines.movements,
-    { externalLoadValue: '', movement: 'weighted_pull_up', reps: '', rir: '' },
-  ].slice(0, 4)
-}
-
-function removeWeightedMovement(index: number): void {
-  onboarding.form.weightedBaselines.movements = onboarding.form.weightedBaselines.movements.filter(
-    (_, itemIndex) => itemIndex !== index,
-  )
-}
-
 function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | null {
   if (index <= 0) {
     return null
@@ -322,6 +282,21 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
     null
   )
 }
+
+const rowVariantOptions = [
+  { label: 'Bodyweight row', value: 'bodyweight_row' },
+  { label: 'Ring row', value: 'ring_row' },
+  { label: 'Low bar row', value: 'low_bar_row' },
+  { label: 'Suspension row', value: 'suspension_row' },
+]
+
+const lowerBodyVariantOptions = [
+  { label: 'Bodyweight squat', value: 'bodyweight_squat' },
+  { label: 'Split squat', value: 'split_squat' },
+  { label: 'Pistol progression', value: 'pistol_progression' },
+  { label: 'Step-down', value: 'step_down' },
+  { label: 'Barbell squat', value: 'barbell_squat' },
+]
 </script>
 
 <template>
@@ -351,7 +326,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
             <p class="text-ink-muted text-xs font-semibold tracking-[0.18em] uppercase">Current map</p>
             <dl class="mt-4 grid gap-3">
               <div class="rounded-control bg-surface-primary border-line-subtle border p-3">
-                <dt class="text-ink-muted text-xs font-semibold">Context</dt>
+                <dt class="text-ink-muted text-xs font-semibold">Personal</dt>
                 <dd class="text-ink-primary mt-1 text-sm font-semibold">
                   {{ contextSummary }}
                 </dd>
@@ -361,7 +336,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                 <dd class="text-ink-primary mt-1 text-sm font-semibold">{{ chosenEquipmentCount }} tools selected</dd>
               </div>
               <div class="rounded-control bg-surface-primary border-line-subtle border p-3">
-                <dt class="text-ink-muted text-xs font-semibold">Roadmap</dt>
+                <dt class="text-ink-muted text-xs font-semibold">Goal</dt>
                 <dd class="text-ink-primary mt-1 text-sm font-semibold">
                   {{ chosenSkills.length ? chosenSkills.slice(0, 2).join(', ') : chosenSchedule }}
                 </dd>
@@ -560,6 +535,38 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
 
               <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
                 <div class="mb-4">
+                  <h4 class="text-ink-primary text-base font-semibold">Row capacity</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">
+                    Pick the row setup you tested and enter repeatable reps with a tight bodyline.
+                  </p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
+                  <label class="block space-y-2">
+                    <span class="text-ink-primary text-sm font-semibold">Row variation</span>
+                    <select
+                      v-model="onboarding.form.currentLevelTests.rowVariant"
+                      class="border-line-subtle bg-surface-elevated text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
+                    >
+                      <option v-for="option in rowVariantOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </label>
+                  <OnboardingNumberField
+                    id="onboarding-row-reps"
+                    v-model="onboarding.form.currentLevelTests.rowMaxReps"
+                    :error="errorFor('currentLevelTests.rowMaxReps')"
+                    label="Row reps"
+                    :max="100"
+                    :min="0"
+                    placeholder="12"
+                    suffix="reps"
+                  />
+                </div>
+              </div>
+
+              <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
+                <div class="mb-4">
                   <h4 class="text-ink-primary text-base font-semibold">Dip strength</h4>
                   <p class="text-ink-muted mt-1 text-sm leading-5">Clean parallel-bar reps with controlled depth.</p>
                 </div>
@@ -579,9 +586,40 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
 
               <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
                 <div class="mb-4">
+                  <h4 class="text-ink-primary text-base font-semibold">Hang and support</h4>
+                  <p class="text-ink-muted mt-1 text-sm leading-5">
+                    These show grip, shoulder, and support tolerance before harder pulling or ring work.
+                  </p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <OnboardingNumberField
+                    id="onboarding-passive-hang"
+                    v-model="onboarding.form.currentLevelTests.passiveHangSeconds"
+                    :error="errorFor('currentLevelTests.passiveHangSeconds')"
+                    label="Passive hang"
+                    :max="600"
+                    :min="0"
+                    placeholder="45"
+                    suffix="sec"
+                  />
+                  <OnboardingNumberField
+                    id="onboarding-top-support"
+                    v-model="onboarding.form.currentLevelTests.topSupportHoldSeconds"
+                    :error="errorFor('currentLevelTests.topSupportHoldSeconds')"
+                    label="Top support hold"
+                    :max="600"
+                    :min="0"
+                    placeholder="25"
+                    suffix="sec"
+                  />
+                </div>
+              </div>
+
+              <div class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4">
+                <div class="mb-4">
                   <h4 class="text-ink-primary text-base font-semibold">Legs and bodyline</h4>
                   <p class="text-ink-muted mt-1 text-sm leading-5">
-                    Barbell squat capacity and trunk control for leg and bodyline placement.
+                    Use barbell squat if you know it, plus a bodyweight lower-body fallback and trunk control.
                   </p>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-3">
@@ -616,54 +654,37 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
                     suffix="sec"
                   />
                 </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="mt-7 space-y-4">
-            <div>
-              <h3 class="text-ink-primary text-lg font-semibold">Optional skill progressions</h3>
-              <p class="text-ink-secondary mt-1 text-sm leading-6">
-                Add only skills you have actually tested. Pick the closest progression, then add reps or hold time if
-                you know it.
-              </p>
-            </div>
-            <div class="grid gap-4 lg:grid-cols-2">
-              <div
-                v-for="skill in skillStatusKeys"
-                :key="skill"
-                class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4"
-              >
-                <label class="block space-y-2">
-                  <span class="text-ink-primary text-sm font-semibold">{{ skillStatusLabels[skill] }}</span>
-                  <select
-                    v-model="onboarding.form.skillStatuses[skill].status"
-                    class="border-line-subtle bg-surface-elevated text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
-                  >
-                    <option v-for="option in skillStatusOptions[skill]" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </label>
-                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                <div class="mt-4 grid gap-3 sm:grid-cols-[1.2fr_0.9fr_0.9fr]">
+                  <label class="block space-y-2">
+                    <span class="text-ink-primary text-sm font-semibold">Lower-body fallback</span>
+                    <select
+                      v-model="onboarding.form.currentLevelTests.lowerBodyVariant"
+                      class="border-line-subtle bg-surface-elevated text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
+                    >
+                      <option v-for="option in lowerBodyVariantOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </label>
                   <OnboardingNumberField
-                    v-if="skillStatusMeasurements[skill].reps"
-                    :id="`onboarding-${skill}-reps`"
-                    v-model="onboarding.form.skillStatuses[skill].maxReps"
-                    :label="skillStatusMeasurements[skill].reps"
+                    id="onboarding-lower-body-reps"
+                    v-model="onboarding.form.currentLevelTests.lowerBodyReps"
+                    :error="errorFor('currentLevelTests.lowerBodyReps')"
+                    label="Fallback reps"
                     :max="100"
                     :min="0"
-                    placeholder="0"
+                    placeholder="12"
+                    suffix="reps"
                   />
                   <OnboardingNumberField
-                    v-if="skillStatusMeasurements[skill].hold"
-                    :id="`onboarding-${skill}-hold`"
-                    v-model="onboarding.form.skillStatuses[skill].bestHoldSeconds"
-                    :label="skillStatusMeasurements[skill].hold"
-                    :max="600"
+                    id="onboarding-lower-body-load"
+                    v-model="onboarding.form.currentLevelTests.lowerBodyLoadValue"
+                    :error="errorFor('currentLevelTests.lowerBodyLoadValue')"
+                    label="Added load"
+                    :max="1000"
                     :min="0"
                     placeholder="0"
-                    suffix="sec"
+                    :suffix="onboarding.form.currentLevelTests.lowerBodyLoadUnit"
                   />
                 </div>
               </div>
@@ -678,6 +699,64 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
           description="Test each position and choose the status that best matches what you can do today."
         >
           <div class="space-y-6">
+            <section class="border-line-subtle bg-surface-primary rounded-card shadow-card-soft border p-4 sm:p-5">
+              <div class="mb-5">
+                <h3 class="text-ink-primary text-base font-semibold">Pain and recovery signal</h3>
+                <p class="text-ink-secondary mt-1 text-sm leading-6">
+                  Add the signal that should make the first block more conservative when needed.
+                </p>
+              </div>
+              <div class="grid gap-5 xl:grid-cols-3">
+                <OnboardingChoiceGrid
+                  v-model="onboarding.form.readinessRating"
+                  columns="compact"
+                  label="Readiness"
+                  name="onboarding-readiness"
+                  :options="readinessOptions"
+                />
+                <OnboardingChoiceGrid
+                  v-model="onboarding.form.sleepQuality"
+                  columns="compact"
+                  label="Sleep quality"
+                  name="onboarding-sleep"
+                  :options="readinessOptions"
+                />
+                <OnboardingChoiceGrid
+                  v-model="onboarding.form.sorenessLevel"
+                  columns="compact"
+                  label="Soreness"
+                  name="onboarding-soreness"
+                  :options="sorenessOptions"
+                />
+              </div>
+
+              <div class="mt-5 space-y-5">
+                <OnboardingChoiceGrid
+                  v-model="onboarding.form.painLevel"
+                  columns="compact"
+                  label="Pain right now"
+                  name="onboarding-pain"
+                  :options="painOptions"
+                />
+                <OnboardingChoiceGrid
+                  v-model="onboarding.form.painAreas"
+                  :error="errorFor('painAreas')"
+                  label="Pain or limitation areas"
+                  multiple
+                  name="onboarding-pain-areas"
+                  :options="painAreaOptions"
+                />
+                <label class="block space-y-2">
+                  <span class="text-ink-primary text-sm font-semibold">Notes for limitations</span>
+                  <textarea
+                    v-model="onboarding.form.painNotes"
+                    class="border-line-subtle bg-surface-primary text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-28 w-full resize-y border px-4 py-3 text-base transition outline-none focus:ring-4"
+                    placeholder="Example: wrists need longer warm-up before handstand or planche work."
+                  />
+                </label>
+              </div>
+            </section>
+
             <div
               v-for="check in mobilityCheckOptions"
               :key="check.value"
@@ -733,10 +812,19 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         </OnboardingStepPanel>
 
         <OnboardingStepPanel
+          v-if="activeStep === 'modules'"
+          eyebrow="Step 6"
+          title="Add the details that matter for that skill."
+          description="Leverly only asks for extra tests connected to your selected roadmap, then uses them to choose the safest next progression."
+        >
+          <OnboardingModulesStep :errors="currentErrors" />
+        </OnboardingStepPanel>
+
+        <OnboardingStepPanel
           v-if="activeStep === 'availability'"
-          eyebrow="Step 5"
+          eyebrow="Step 7"
           title="Set the schedule Leverly can actually use."
-          description="The first plan should fit your week before it tries to be ambitious. Choose training days, session ceiling, and max sessions per week."
+          description="The first plan should fit your week before it tries to be ambitious. Choose your training days and the most sessions Leverly can schedule."
         >
           <div class="space-y-6">
             <OnboardingChoiceGrid
@@ -747,17 +835,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               name="onboarding-training-days"
               :options="trainingDayOptions"
             />
-            <div class="grid gap-5 md:grid-cols-2">
-              <OnboardingNumberField
-                id="onboarding-session-minutes"
-                v-model="onboarding.form.preferredSessionMinutes"
-                :error="errorFor('preferredSessionMinutes')"
-                label="Up to minutes"
-                :max="240"
-                :min="10"
-                placeholder="45"
-                suffix="min"
-              />
+            <div class="max-w-sm">
               <OnboardingNumberField
                 id="onboarding-weekly-sessions"
                 v-model="onboarding.form.weeklySessionGoal"
@@ -772,10 +850,10 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         </OnboardingStepPanel>
 
         <OnboardingStepPanel
-          v-if="activeStep === 'roadmap'"
-          eyebrow="Step 6"
-          title="Choose from the roadmap your assessment unlocked."
-          description="Active targets are limited to skills that are ready now or make sense as a bridge. Bigger aspirations can stay visible without forcing the first plan to skip foundations."
+          v-if="activeStep === 'goal'"
+          eyebrow="Step 5"
+          title="Choose the first roadmap priority."
+          description="Pick one main skill for the first block. Supporting lanes can stay light, and bigger skills can wait without disappearing."
         >
           <div class="space-y-6">
             <div class="border-line-subtle bg-surface-primary rounded-card border p-5">
@@ -815,26 +893,14 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               :options="compatibleSecondaryGoalOptions"
             />
             <OnboardingChoiceGrid
-              v-model="onboarding.form.targetSkills"
-              :error="errorFor('targetSkills')"
-              help="Choose up to three active targets from the ready-now and bridge recommendations."
-              label="Active roadmap targets"
-              :max-selections="3"
-              multiple
-              name="onboarding-target-skills"
-              :options="activeRoadmapOptions"
-            />
-            <OnboardingChoiceGrid
-              v-if="selectedTargetSkillOptions.length"
               v-model="onboarding.form.primaryTargetSkill"
               :error="errorFor('primaryTargetSkill')"
-              help="Pick one target as the main priority for the first training block."
+              help="Choose the one skill Leverly should prioritize first."
               label="Primary roadmap"
               name="onboarding-primary-target-skill"
-              :options="selectedTargetSkillOptions"
+              :options="primaryRoadmapOptions"
             />
             <OnboardingChoiceGrid
-              v-if="selectedTargetSkillOptions.length > 1"
               v-model="onboarding.form.secondaryTargetSkills"
               :error="errorFor('secondaryTargetSkills')"
               help="Choose up to two lighter exposures that should not compete with the main roadmap."
@@ -842,9 +908,7 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
               :max-selections="2"
               multiple
               name="onboarding-secondary-target-skills"
-              :options="
-                selectedTargetSkillOptions.filter((option) => option.value !== onboarding.form.primaryTargetSkill)
-              "
+              :options="primaryRoadmapOptions.filter((option) => option.value !== onboarding.form.primaryTargetSkill)"
             />
             <OnboardingChoiceGrid
               v-model="onboarding.form.longTermTargetSkills"
@@ -870,158 +934,12 @@ function firstInvalidStepBeforeIndex(index: number): { id: OnboardingStepId } | 
         </OnboardingStepPanel>
 
         <OnboardingStepPanel
-          v-if="activeStep === 'readiness'"
-          eyebrow="Step 7"
-          title="Add today’s recovery and pain signal."
-          description="This does not diagnose anything. It only keeps the first recommendations conservative when pain, soreness, or poor readiness should change the plan."
-        >
-          <div class="space-y-6">
-            <div class="grid gap-5 xl:grid-cols-3">
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.readinessRating"
-                columns="compact"
-                label="Readiness"
-                name="onboarding-readiness"
-                :options="readinessOptions"
-              />
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.sleepQuality"
-                columns="compact"
-                label="Sleep quality"
-                name="onboarding-sleep"
-                :options="readinessOptions"
-              />
-              <OnboardingChoiceGrid
-                v-model="onboarding.form.sorenessLevel"
-                columns="compact"
-                label="Soreness"
-                name="onboarding-soreness"
-                :options="sorenessOptions"
-              />
-            </div>
-
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.painLevel"
-              columns="compact"
-              label="Pain right now"
-              name="onboarding-pain"
-              :options="painOptions"
-            />
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.painAreas"
-              :error="errorFor('painAreas')"
-              label="Pain or limitation areas"
-              multiple
-              name="onboarding-pain-areas"
-              :options="painAreaOptions"
-            />
-            <label class="block space-y-2">
-              <span class="text-ink-primary text-sm font-semibold">Notes for limitations</span>
-              <textarea
-                v-model="onboarding.form.painNotes"
-                class="border-line-subtle bg-surface-primary text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-28 w-full resize-y border px-4 py-3 text-base transition outline-none focus:ring-4"
-                placeholder="Example: wrists need longer warm-up before handstand or planche work."
-              />
-            </label>
-          </div>
-        </OnboardingStepPanel>
-
-        <OnboardingStepPanel
-          v-if="activeStep === 'starter'"
+          v-if="activeStep === 'review'"
           eyebrow="Step 8"
-          title="Review the first placement."
-          description="This is the shape Leverly can start from before the exercise catalog and progression tree are attached."
+          title="Review your first roadmap."
+          description="This is the current recommendation from your assessment. You can go back to adjust inputs before completing setup."
         >
-          <div class="mb-6 grid gap-3 lg:grid-cols-4">
-            <div class="border-line-subtle bg-surface-primary rounded-card border p-4">
-              <p class="text-ink-muted text-xs font-semibold">Primary roadmap</p>
-              <p class="text-ink-primary mt-2 text-sm font-semibold">{{ placementPreview.primary }}</p>
-            </div>
-            <div class="border-line-subtle bg-surface-primary rounded-card border p-4">
-              <p class="text-ink-muted text-xs font-semibold">Baseline signal</p>
-              <p class="text-ink-primary mt-2 text-sm font-semibold">{{ placementPreview.tests }}</p>
-            </div>
-            <div class="border-line-subtle bg-surface-primary rounded-card border p-4">
-              <p class="text-ink-muted text-xs font-semibold">Base support</p>
-              <p class="text-ink-primary mt-2 text-sm font-semibold">{{ placementPreview.focus }}</p>
-            </div>
-            <div class="border-line-subtle bg-surface-primary rounded-card border p-4">
-              <p class="text-ink-muted text-xs font-semibold">Safety limiters</p>
-              <p class="text-ink-primary mt-2 text-sm font-semibold">{{ placementPreview.mobility }}</p>
-            </div>
-          </div>
-
-          <div
-            v-if="weightedSkillSelected || onboarding.form.weightedBaselines.experience !== 'none'"
-            class="mb-6 space-y-4"
-          >
-            <OnboardingChoiceGrid
-              v-model="onboarding.form.weightedBaselines.experience"
-              columns="compact"
-              label="Weighted calisthenics experience"
-              name="onboarding-weighted-experience"
-              :options="weightedExperienceOptions"
-            />
-            <div class="space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <h3 class="text-ink-primary text-sm font-semibold">Recent weighted test sets</h3>
-                <UiButton variant="secondary" type="button" @click="addWeightedMovement">Add test set</UiButton>
-              </div>
-              <div
-                v-for="(movement, index) in onboarding.form.weightedBaselines.movements"
-                :key="index"
-                class="border-line-subtle bg-surface-primary rounded-card grid gap-3 border p-4 md:grid-cols-[1.2fr_1fr_1fr_1fr_auto]"
-              >
-                <label class="block space-y-2">
-                  <span class="text-ink-primary text-sm font-semibold">Movement</span>
-                  <select
-                    v-model="movement.movement"
-                    class="border-line-subtle bg-surface-elevated text-ink-primary rounded-control focus:border-accent-primary focus:ring-accent-primary/20 min-h-12 w-full border px-4 py-3 text-base transition outline-none focus:ring-4"
-                  >
-                    <option v-for="option in weightedMovementOptions" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </label>
-                <OnboardingNumberField
-                  :id="`onboarding-weighted-load-${index}`"
-                  v-model="movement.externalLoadValue"
-                  label="Added load"
-                  :max="400"
-                  :min="0"
-                  placeholder="10"
-                  :suffix="onboarding.form.weightedBaselines.unit"
-                />
-                <OnboardingNumberField
-                  :id="`onboarding-weighted-reps-${index}`"
-                  v-model="movement.reps"
-                  label="Reps"
-                  :max="30"
-                  :min="1"
-                  placeholder="5"
-                />
-                <OnboardingNumberField
-                  :id="`onboarding-weighted-rir-${index}`"
-                  v-model="movement.rir"
-                  label="RIR"
-                  :max="10"
-                  :min="0"
-                  placeholder="2"
-                />
-                <UiButton class="self-end" variant="secondary" type="button" @click="removeWeightedMovement(index)">
-                  Remove
-                </UiButton>
-              </div>
-            </div>
-          </div>
-
-          <OnboardingChoiceGrid
-            v-model="onboarding.form.starterPlanKey"
-            :error="errorFor('starterPlanKey')"
-            label="Starter plan"
-            name="onboarding-starter-plan"
-            :options="starterPlanOptions"
-          />
+          <OnboardingRoadmapReviewStep />
         </OnboardingStepPanel>
 
         <div

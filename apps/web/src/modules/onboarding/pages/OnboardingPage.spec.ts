@@ -23,11 +23,48 @@ describe('OnboardingPage', () => {
 
     expect(wrapper.find('h1').text()).toContain('Level up your skills')
     expect(wrapper.text()).toContain('Handstand')
-    expect(wrapper.text()).toContain('Context')
+    expect(wrapper.text()).toContain('Personal')
     expect(wrapper.text()).toContain('Equipment')
-    expect(wrapper.text()).toContain('Positions')
-    expect(wrapper.text()).toContain('Roadmap')
-    expect(wrapper.text()).toContain('Starter plan')
+    expect(wrapper.text()).toContain('Pain + mobility')
+    expect(wrapper.text()).toContain('Baseline')
+    expect(wrapper.text()).toContain('Goal')
+    expect(wrapper.text()).toContain('Skill detail')
+    expect(wrapper.text()).toContain('Availability')
+    expect(wrapper.text()).toContain('Review')
+    expect(wrapper.text()).not.toContain('Starter plan')
+  })
+
+  it('keeps later steps locked until required earlier data is complete', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(
+        jsonResponse(
+          onboardingResponse({
+            age_years: null,
+            current_bodyweight_value: null,
+            height_value: null,
+            prior_sport_background: [],
+            training_age_months: null,
+          }),
+        ),
+      ),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    const reviewStep = wrapper.findAll('button').find((button) => button.text().includes('Review'))
+
+    expect(reviewStep?.attributes('disabled')).toBeDefined()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Save and continue')
+      ?.trigger('click')
+
+    expect(wrapper.text()).toContain('Enter a number from 13 to 90.')
+    expect(wrapper.text()).toContain('Choose at least one background option')
   })
 
   it('saves drafts when moving between steps', async () => {
@@ -64,7 +101,27 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).toContain('Map the places and tools')
   })
 
-  it('completes onboarding from the starter step', async () => {
+  it('shows relevant conditional goal modules after goal selection', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(onboardingResponse())),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Skill detail'))
+      ?.trigger('click')
+
+    expect(wrapper.text()).toContain('Inversion skill check')
+    expect(wrapper.text()).toContain('Freestanding kick-up')
+    expect(wrapper.text()).not.toContain('Lower-body skill check')
+  })
+
+  it('shows the Roadmap V2 review and completes onboarding from the review step', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse(onboardingResponse()))
@@ -83,8 +140,20 @@ describe('OnboardingPage', () => {
 
     await wrapper
       .findAll('button')
-      .find((button) => button.text() === 'Starter plan')
+      .find((button) => button.text().includes('Review'))
       ?.trigger('click')
+
+    expect(wrapper.text()).toContain('Primary roadmap')
+    expect(wrapper.text()).toContain('Handstand')
+    expect(wrapper.text()).toContain('Secondary lane')
+    expect(wrapper.text()).toContain('Pull-up')
+    expect(wrapper.text()).toContain('Deferred for later')
+    expect(wrapper.text()).toContain('One-arm pull-up')
+    expect(wrapper.text()).toContain('8-16 weeks')
+    expect(wrapper.text()).toContain('Medium confidence')
+    expect(wrapper.text()).toContain('First block')
+    expect(wrapper.text()).toContain('Wrist extension')
+
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
@@ -235,7 +304,75 @@ function roadmapSuggestions() {
         skill: 'strict_pull_up',
       },
     ],
+    blockers: [
+      {
+        key: 'wrist_extension',
+        label: 'Wrist extension',
+        message: 'Wrist extension is limited, so keep handstand volume progressive.',
+        severity: 'watch',
+      },
+    ],
+    compatible_secondary_goal: {
+      skill: 'strict_pull_up',
+      label: 'Pull-up',
+      lane: 'secondary',
+      current_progression_node: { id: 'strict_pull_up.current', label: 'Current pull-up base' },
+      next_node: { id: 'strict_pull_up.next', label: 'Build repeatable sets' },
+      next_milestone: { id: 'strict_pull_up.milestone', label: '3 sets of 6 to 8' },
+      eta_range: { min_weeks: 6, max_weeks: 12, label: '6-12 weeks' },
+      confidence: { level: 'medium', score: 0.7, reasons: ['Pull-up reps are measured.'] },
+      blockers: [],
+      unlock_conditions: [],
+      compatibility_tags: ['pull', 'foundation'],
+      explanation: 'Pairs well as a strength support lane.',
+    },
+    confidence: {
+      level: 'medium',
+      score: 0.72,
+      reasons: ['Baseline tests are complete enough for a first block.'],
+    },
+    current_block_focus: {
+      eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+      focus_areas: ['handstand_line', 'core_bodyline'],
+      label: 'First block',
+      lanes: ['primary', 'secondary'],
+      retest_cadence: ['Retest handstand and hollow hold in 4 weeks.'],
+      should_improve: ['Freestanding balance entries', 'Hollow body line'],
+    },
+    deferred_goals: [
+      {
+        skill: 'one_arm_pull_up',
+        label: 'One-arm pull-up',
+        lane: 'deferred',
+        current_progression_node: { id: 'one_arm_pull_up.locked', label: 'Locked' },
+        next_node: { id: 'weighted_pull_up.base', label: 'Build weighted pull-up base' },
+        next_milestone: { id: 'weighted_pull_up.strong_base', label: 'Heavy weighted pull-up base' },
+        eta_range: { min_weeks: 52, max_weeks: 104, label: '12-24+ months' },
+        confidence: { level: 'low', score: 0.42, reasons: ['Advanced pulling metrics are incomplete.'] },
+        blockers: [],
+        unlock_conditions: [],
+        compatibility_tags: ['pull', 'elbow_flexor_load'],
+        explanation: 'Deferred until weighted pulling is stronger.',
+      },
+    ],
     deferred_tracks: [],
+    domain_bottlenecks: [
+      {
+        confidence: 0.72,
+        domain: 'inversion_balance',
+        label: 'Inversion balance',
+        missing_inputs: [],
+        reason: 'Wall line is present, but freestanding control still needs exposure.',
+        score: 0.58,
+      },
+    ],
+    eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+    explanation: {
+      summary: 'Handstand is the clearest first roadmap priority from the current assessment.',
+      why_this_goal: ['Handstand pairs with the current pressing and bodyline base.'],
+      watch_out_for: ['Keep wrist loading progressive.'],
+      fallback: 'Keep handstand as line practice if wrists feel irritated.',
+    },
     level: 'intermediate',
     long_term_tracks: [
       {
@@ -247,6 +384,20 @@ function roadmapSuggestions() {
         skill: 'planche',
       },
     ],
+    primary_goal: {
+      skill: 'handstand',
+      label: 'Handstand',
+      lane: 'primary',
+      current_progression_node: { id: 'handstand.current', label: 'Wall line and entry work' },
+      next_node: { id: 'handstand.next', label: 'Build wall line consistency' },
+      next_milestone: { id: 'handstand.milestone', label: '30-second wall line' },
+      eta_range: { min_weeks: 8, max_weeks: 16, label: '8-16 weeks' },
+      confidence: { level: 'medium', score: 0.72, reasons: ['Baseline tests are complete enough for a first block.'] },
+      blockers: [],
+      unlock_conditions: [{ skill: 'handstand', label: 'Pain-free wrist loading' }],
+      compatibility_tags: ['overhead', 'wrist_extension', 'skill_practice'],
+      explanation: 'Handstand is the clearest first roadmap priority from the current assessment.',
+    },
     summary: 'You have enough base strength for a focused skill roadmap plus one light secondary exposure.',
     unlocked_tracks: [
       {

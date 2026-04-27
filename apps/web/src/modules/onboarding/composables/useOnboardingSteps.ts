@@ -3,14 +3,14 @@ import { computed, type Ref } from 'vue'
 import type { OnboardingStepId } from '../types'
 
 export const onboardingSteps: Array<{ id: OnboardingStepId; label: string; short: string }> = [
-  { id: 'context', label: 'Context', short: 'Stats' },
+  { id: 'context', label: 'Personal', short: 'You' },
   { id: 'equipment', label: 'Equipment', short: 'Tools' },
-  { id: 'mobility', label: 'Positions', short: 'Mobility' },
-  { id: 'level', label: 'Level tests', short: 'Tests' },
-  { id: 'availability', label: 'Availability', short: 'Schedule' },
-  { id: 'roadmap', label: 'Roadmap', short: 'Targets' },
-  { id: 'readiness', label: 'Readiness', short: 'Safety' },
-  { id: 'starter', label: 'Starter plan', short: 'Plan' },
+  { id: 'mobility', label: 'Pain + mobility', short: 'Limits' },
+  { id: 'level', label: 'Baseline', short: 'Tests' },
+  { id: 'goal', label: 'Goal', short: 'Goal' },
+  { id: 'modules', label: 'Skill detail', short: 'Skill' },
+  { id: 'availability', label: 'Availability', short: 'Week' },
+  { id: 'review', label: 'Review', short: 'Map' },
 ]
 
 export function useOnboardingSteps(activeStep: Ref<OnboardingStepId>) {

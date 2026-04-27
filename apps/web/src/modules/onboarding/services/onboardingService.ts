@@ -260,10 +260,9 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     }
   }
 
-  if (step === 'roadmap') {
+  if (step === 'goal') {
     const activeSkills = activeRoadmapSkills(form.roadmapSuggestions)
     const primaryTarget = form.primaryTargetSkill
-    const requiredGoalModules = activeRequiredGoalModules(form)
 
     if (!form.primaryGoal) {
       errors.primaryGoal = 'Choose the main outcome for your first plan.'
@@ -287,18 +286,20 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
       errors.secondaryTargetSkills = 'Secondary interests must differ from the primary and long-term targets.'
     }
 
-    for (const module of requiredGoalModules) {
-      if (!isGoalModuleTested(form.goalModules[module])) {
-        errors[`goalModules.${module}`] = 'Add the tested progression for the selected primary goal.'
-      }
-    }
-
     if (form.baseFocusAreas.length === 0) {
       errors.baseFocusAreas = 'Choose at least one base area from the recommendation.'
     }
 
     if (form.longTermTargetSkills.some((skill) => form.targetSkills.includes(skill))) {
       errors.longTermTargetSkills = 'Long-term targets should be different from the active roadmap.'
+    }
+  }
+
+  if (step === 'modules') {
+    for (const module of activeRequiredGoalModules(form)) {
+      if (!isGoalModuleTested(form.goalModules[module])) {
+        errors[`goalModules.${module}`] = 'Add the tested progression for the selected primary goal.'
+      }
     }
   }
 
@@ -344,6 +345,10 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     if (!testedMobility) {
       errors.mobilityChecks = 'Mark at least one position so the first plan can avoid obvious blockers.'
     }
+
+    if (Number(form.painLevel) >= 4 && form.painAreas.length === 0) {
+      errors.painAreas = 'Choose the painful area so recommendations can stay conservative.'
+    }
   }
 
   if (step === 'availability') {
@@ -351,18 +356,7 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
       errors.preferredTrainingDays = 'Choose at least one training day.'
     }
 
-    addNumberError(errors, 'preferredSessionMinutes', form.preferredSessionMinutes, 10, 240)
     addNumberError(errors, 'weeklySessionGoal', form.weeklySessionGoal, 1, 14)
-  }
-
-  if (step === 'readiness') {
-    if (Number(form.painLevel) >= 4 && form.painAreas.length === 0) {
-      errors.painAreas = 'Choose the painful area so recommendations can stay conservative.'
-    }
-  }
-
-  if (step === 'starter' && !form.starterPlanKey) {
-    errors.starterPlanKey = 'Choose the starter plan shape you want to begin with.'
   }
 
   return errors

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { mapRoadmapSuggestions } from '@/modules/roadmap'
 import { configureLeverlyApiClient, resetLeverlyApiClient } from '@/shared/api/leverlyApi/runtimeClient'
 import { jsonResponse } from '@/tests/http'
 
@@ -293,6 +294,50 @@ describe('onboardingService', () => {
       'currentLevelTests.squatBarbellLoadValue': 'Enter a number from 0 to 1000.',
       'currentLevelTests.squatBarbellReps': 'Enter a number from 0 to 30.',
       'currentLevelTests.topSupportHoldSeconds': 'Enter a number from 0 to 600.',
+    })
+  })
+
+  it('validates Roadmap V2 goal and module steps separately', () => {
+    const form = {
+      ...defaultOnboardingForm(),
+      baseFocusAreas: ['core_bodyline'],
+      goalModules: {
+        ...defaultOnboardingForm().goalModules,
+        inversion: {
+          ...defaultOnboardingForm().goalModules.inversion,
+          highestProgression: 'not_tested',
+          holdSeconds: '',
+          metricType: 'hold_seconds',
+        },
+      },
+      primaryGoal: 'skill',
+      primaryTargetSkill: 'handstand',
+      requiredGoalModules: ['inversion'],
+      roadmapSuggestions: mapRoadmapSuggestions(roadmapSuggestions()),
+      targetSkills: ['handstand'],
+    }
+
+    expect(validateOnboardingStep({ ...form, primaryTargetSkill: '', targetSkills: [] }, 'goal')).toMatchObject({
+      primaryTargetSkill: 'Choose the one suggested target Leverly should prioritize first.',
+    })
+    expect(validateOnboardingStep(form, 'goal')).not.toHaveProperty('goalModules.inversion')
+    expect(validateOnboardingStep(form, 'modules')).toMatchObject({
+      'goalModules.inversion': 'Add the tested progression for the selected primary goal.',
+    })
+  })
+
+  it('validates pain flags inside the pain and mobility step', () => {
+    expect(
+      validateOnboardingStep(
+        {
+          ...defaultOnboardingForm(),
+          painLevel: '5',
+        },
+        'mobility',
+      ),
+    ).toMatchObject({
+      mobilityChecks: 'Mark at least one position so the first plan can avoid obvious blockers.',
+      painAreas: 'Choose the painful area so recommendations can stay conservative.',
     })
   })
 })
