@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mapRoadmapPortfolio, mapRoadmapSuggestions } from './roadmapMapper'
+import { emptyRoadmapPortfolio, mapRoadmapPortfolio, mapRoadmapSuggestions } from './roadmapMapper'
 
 describe('roadmapMapper', () => {
   it('maps level-aware goal candidates from the API payload', () => {
@@ -116,10 +116,51 @@ describe('roadmapMapper', () => {
               day_index: 1,
               label: 'Day 1',
               day_type: 'pull_strength',
-              modules: [],
+              modules: [
+                {
+                  module_id: 'front_lever.advanced_tuck.development',
+                  skill_track_id: 'front_lever',
+                  title: 'Advanced tuck front lever exposure',
+                  purpose: 'development',
+                  pattern: 'straight_arm_pull',
+                  intensity_tier: 'high',
+                  source_mode: 'development',
+                  slot: 'skill_a',
+                  slot_rank: 20,
+                  order: 1,
+                  exposure_index: 1,
+                  estimated_minutes: 12,
+                  stress_vector: { straight_arm_pull: 2 },
+                },
+              ],
+              stress_ledger: {
+                axes: [{ axis: 'straight_arm_pull', load: 2, budget: 4, status: 'green' }],
+                warnings: [],
+              },
+              time_ledger: {
+                estimated_minutes: 12,
+                budget_minutes: 60,
+                overflow_minutes: 0,
+                status: 'green',
+              },
               warnings: [],
             },
           ],
+          rest_days: [{ day_index: 2, label: 'Rest day 1', day_type: 'rest' }],
+          template: {
+            sessions_per_week: 4,
+            day_types: ['general_skills', 'pull_strength', 'push_strength', 'legs'],
+            slot_order: ['warmup_prep', 'skill_a', 'primary_strength'],
+          },
+          stress_ledger: {
+            axes: [{ axis: 'straight_arm_pull', load: 2, budget: 4, status: 'green' }],
+            warnings: [],
+          },
+          time_ledger: {
+            estimated_minutes_per_week: 34,
+            budget_minutes_per_week: 240,
+            overflow_minutes_per_week: 0,
+          },
           warnings: [],
         },
         stress_ledger: {
@@ -137,6 +178,55 @@ describe('roadmapMapper', () => {
           why_this_mix: ['It fits the current pull budget.'],
           watch_out_for: ['Keep elbows calm.'],
           fallback: 'Reduce lever intensity if pulling joints complain.',
+        },
+        phase_plan: {
+          phase_id: 'current_block',
+          duration_weeks: { min: 4, target: 4, max: 4 },
+          duration_reason: 'First blocks use a 4-week phase.',
+          weekly_emphasis: ['Prioritize development exposures while quality is freshest.'],
+          roles: {
+            development: [
+              {
+                skill_track_id: 'front_lever',
+                display_name: 'Front lever',
+                module_ids: ['front_lever.advanced_tuck.development'],
+              },
+            ],
+            technical_practice: [],
+            accessory: [],
+            maintenance: [],
+            foundation: [],
+          },
+          foundation_layer: [],
+          retest_timing: {
+            session_update: 'Log pain, readiness, and quality after each exposure.',
+            weekly_review: 'Review quality, pain, and completed exposures every week.',
+            block_retest_week: 4,
+            seasonal_goal_review_weeks: [12, 24],
+          },
+          deload_guidance: {
+            planned_week: 4,
+            triggers: ['Planned deload/retest at the end of the phase.'],
+            retest_guidance: 'Retest after the deload/retest week.',
+          },
+          progression_rules: [
+            {
+              module_id: 'front_lever.advanced_tuck.development',
+              skill_track_id: 'front_lever',
+              title: 'Advanced tuck front lever exposure',
+              rule_type: 'static_hold',
+              metric: 'hold_seconds',
+              progression_allowed: true,
+              next_action: 'Add a few seconds before changing leverage.',
+              success_requirements: ['Own all target holds for two exposures.'],
+              allowed_levers: ['hold_seconds'],
+              only_one_major_lever: true,
+              pain_rule: 'Pain 4/10 or higher blocks progression.',
+              next_adjustment: { hold_seconds: 2 },
+              deload_triggers: ['Pain reaches 4/10 or higher.'],
+            },
+          ],
+          safety_notes: ['Progression changes only one major lever at a time by default.'],
         },
       },
       onboarding_goal_choices: {
@@ -176,6 +266,28 @@ describe('roadmapMapper', () => {
       dayIndex: 1,
       dayType: 'pull_strength',
     })
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.days[0]?.modules[0]).toMatchObject({
+      moduleId: 'front_lever.advanced_tuck.development',
+      slot: 'skill_a',
+      stressVector: { straight_arm_pull: 2 },
+    })
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.restDays[0]).toMatchObject({
+      dayIndex: 2,
+      dayType: 'rest',
+    })
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.template.sessionsPerWeek).toBe(4)
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.stressLedger.axes[0]?.axis).toBe('straight_arm_pull')
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.timeLedger.budgetMinutesPerWeek).toBe(240)
+    expect(portfolio.activeSkillPortfolio.phasePlan).toMatchObject({
+      phaseId: 'current_block',
+      durationWeeks: { target: 4 },
+    })
+    expect(portfolio.activeSkillPortfolio.phasePlan.progressionRules[0]).toMatchObject({
+      moduleId: 'front_lever.advanced_tuck.development',
+      ruleType: 'static_hold',
+      progressionAllowed: true,
+      onlyOneMajorLever: true,
+    })
     expect(portfolio.activeSkillPortfolio.stressLedger.axes[0]).toMatchObject({
       axis: 'straight_arm_pull',
       status: 'green',
@@ -184,5 +296,17 @@ describe('roadmapMapper', () => {
       skill: 'front_lever',
       role: 'primary_candidate',
     })
+  })
+
+  it('returns stable empty portfolio defaults for V3 fallback states', () => {
+    const portfolio = emptyRoadmapPortfolio()
+
+    expect(portfolio.activeSkillPortfolio.phasePlan.durationWeeks.target).toBe(0)
+    expect(portfolio.activeSkillPortfolio.phasePlan.progressionRules).toEqual([])
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.days).toEqual([])
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.restDays).toEqual([])
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.template.sessionsPerWeek).toBe(0)
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.stressLedger.axes).toEqual([])
+    expect(portfolio.activeSkillPortfolio.weeklySchedule.timeLedger.estimatedMinutesPerWeek).toBe(0)
   })
 })

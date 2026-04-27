@@ -128,6 +128,17 @@ final readonly class RoadmapPortfolioResult
         $pendingTests = $input === null
             ? []
             : RoadmapMicroTestRequestGenerator::fromInput($input, $goalCandidates);
+        $compatibilityFields = self::compatibilityFields(
+            suggestions: $suggestions,
+            developmentTracks: $developmentTracks,
+            technicalPracticeTracks: $technicalPracticeTracks,
+            accessoryTracks: $accessoryTracks,
+            maintenanceTracks: $maintenanceTracks,
+            foundationTracks: $foundationTracks,
+            futureQueue: $futureQueue,
+            blockedTracks: $blockedTracks,
+            phasePlan: $phasePlan,
+        );
 
         $payload = [
             'version' => self::VERSION,
@@ -174,7 +185,12 @@ final readonly class RoadmapPortfolioResult
             'blocked' => $blockedTracks,
             'pending_tests' => $pendingTests,
             'goal_candidates' => $goalCandidates,
+            ...$compatibilityFields,
         ];
+
+        if (is_array($suggestions['intermediate'] ?? null)) {
+            $payload['intermediate'] = $suggestions['intermediate'];
+        }
 
         return new self($payload);
     }
@@ -716,6 +732,241 @@ final readonly class RoadmapPortfolioResult
     /**
      * @param  array<string, mixed>  $suggestions
      * @param  list<array<string, mixed>>  $developmentTracks
+     * @param  list<array<string, mixed>>  $technicalPracticeTracks
+     * @param  list<array<string, mixed>>  $accessoryTracks
+     * @param  list<array<string, mixed>>  $maintenanceTracks
+     * @param  list<array<string, mixed>>  $foundationTracks
+     * @param  list<array<string, mixed>>  $futureQueue
+     * @param  list<array<string, mixed>>  $blockedTracks
+     * @param  array<string, mixed>  $phasePlan
+     * @return array<string, mixed>
+     */
+    private static function compatibilityFields(
+        array $suggestions,
+        array $developmentTracks,
+        array $technicalPracticeTracks,
+        array $accessoryTracks,
+        array $maintenanceTracks,
+        array $foundationTracks,
+        array $futureQueue,
+        array $blockedTracks,
+        array $phasePlan,
+    ): array {
+        $activeTracks = self::dedupeTracks([
+            ...$developmentTracks,
+            ...$technicalPracticeTracks,
+            ...$accessoryTracks,
+            ...$maintenanceTracks,
+            ...$foundationTracks,
+        ]);
+        $primaryTrack = $developmentTracks[0] ?? null;
+        $secondaryTrack = self::secondaryCompatibilityTrack(
+            $suggestions,
+            [...$technicalPracticeTracks, ...$accessoryTracks, ...$maintenanceTracks, ...$foundationTracks],
+        );
+        $primaryGoal = self::compatibilityGoalFromTrack($primaryTrack, 'primary', $suggestions['primary_goal'] ?? null);
+        $secondaryGoal = self::compatibilityGoalFromTrack($secondaryTrack, 'secondary', $suggestions['compatible_secondary_goal'] ?? null);
+
+        return [
+            'level' => self::stringValue($suggestions['level'] ?? null, 'foundation'),
+            'body_context' => is_array($suggestions['body_context'] ?? null) ? $suggestions['body_context'] : ['notes' => []],
+            'base_focus_areas' => self::stringList($suggestions['base_focus_areas'] ?? []),
+            'primary_goal' => $primaryGoal,
+            'compatible_secondary_goal' => $secondaryGoal,
+            'foundation_lane' => self::foundationLaneCompatibility($suggestions, $foundationTracks),
+            'deferred_goals' => self::arrayList($suggestions['deferred_goals'] ?? []),
+            'current_progression_node' => self::compatibilityNode($primaryTrack, 'current_node', $suggestions['current_progression_node'] ?? null, 'roadmap.current', 'Current placement'),
+            'next_node' => self::compatibilityNode($primaryTrack, 'next_node', $suggestions['next_node'] ?? null, 'roadmap.next', 'Next progression'),
+            'next_milestone' => self::compatibilityNode($primaryTrack, 'target_node', $suggestions['next_milestone'] ?? null, 'roadmap.milestone', 'Next milestone'),
+            'eta_range' => is_array($primaryTrack)
+                ? self::etaValue($primaryTrack['eta_to_next_node'] ?? null)
+                : self::etaValue($suggestions['eta_range'] ?? null),
+            'confidence' => is_array($primaryTrack)
+                ? self::confidenceValue($primaryTrack['confidence'] ?? null, self::stringValue($primaryTrack['display_name'] ?? null, 'Roadmap target'))
+                : self::confidenceValue($suggestions['confidence'] ?? null, 'Complete more baseline data.'),
+            'blockers' => self::arrayList($suggestions['blockers'] ?? []),
+            'unlock_conditions' => self::arrayList($suggestions['unlock_conditions'] ?? []),
+            'compatibility_tags' => self::stringList($suggestions['compatibility_tags'] ?? []),
+            'domain_bottlenecks' => self::arrayList($suggestions['domain_bottlenecks'] ?? []),
+            'current_block_focus' => self::currentBlockFocusCompatibility($suggestions, $activeTracks, $primaryTrack, $phasePlan),
+            'explanation' => self::explanationCompatibility($suggestions, $primaryGoal, $futureQueue, $blockedTracks),
+            'unlocked_tracks' => self::arrayList($suggestions['unlocked_tracks'] ?? []),
+            'bridge_tracks' => self::arrayList($suggestions['bridge_tracks'] ?? []),
+            'long_term_tracks' => self::arrayList($suggestions['long_term_tracks'] ?? []),
+            'deferred_tracks' => self::arrayList($suggestions['deferred_tracks'] ?? []),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $tracks
+     * @return array<string, mixed>|null
+     */
+    private static function secondaryCompatibilityTrack(array $suggestions, array $tracks): ?array
+    {
+        $secondarySkill = self::stringValue($suggestions['compatible_secondary_goal']['skill'] ?? null, '');
+
+        if ($secondarySkill !== '') {
+            foreach ($tracks as $track) {
+                if (($track['skill_track_id'] ?? null) === $secondarySkill) {
+                    return $track;
+                }
+            }
+        }
+
+        return $tracks[0] ?? null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function compatibilityGoalFromTrack(?array $track, string $lane, mixed $fallback): ?array
+    {
+        $goal = is_array($fallback) ? $fallback : [];
+
+        if ($track === null) {
+            return $goal === [] ? null : $goal;
+        }
+
+        $skill = self::stringValue($track['skill_track_id'] ?? null, '');
+        if ($skill === '') {
+            return $goal === [] ? null : $goal;
+        }
+
+        return [
+            ...$goal,
+            'skill' => $skill,
+            'label' => self::stringValue($track['display_name'] ?? null, self::labelFromSkill($skill)),
+            'lane' => $lane,
+            'current_progression_node' => self::nodeValue($track['current_node'] ?? null, "{$skill}.current", 'Current placement'),
+            'next_node' => self::nodeValue($track['next_node'] ?? null, "{$skill}.next", 'Next progression'),
+            'next_milestone' => self::nodeValue($track['target_node'] ?? null, "{$skill}.target", 'Next milestone'),
+            'eta_range' => self::etaValue($track['eta_to_next_node'] ?? null),
+            'confidence' => self::confidenceValue($track['confidence'] ?? null, self::stringValue($track['display_name'] ?? null, 'Roadmap target')),
+            'explanation' => self::stringValue(
+                $goal['explanation'] ?? null,
+                self::stringList($track['why_included'] ?? [])[0] ?? 'This track is part of the active portfolio.',
+            ),
+            'compatibility_tags' => self::stringList($goal['compatibility_tags'] ?? $track['primary_stress_axes'] ?? []),
+            'blockers' => self::arrayList($goal['blockers'] ?? []),
+            'unlock_conditions' => self::arrayList($goal['unlock_conditions'] ?? []),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $foundationTracks
+     * @return array<string, mixed>
+     */
+    private static function foundationLaneCompatibility(array $suggestions, array $foundationTracks): array
+    {
+        $fallback = is_array($suggestions['foundation_lane'] ?? null) ? $suggestions['foundation_lane'] : [];
+
+        return [
+            ...$fallback,
+            'slug' => self::stringValue($fallback['slug'] ?? null, 'foundation_strength'),
+            'label' => self::stringValue($fallback['label'] ?? null, 'Foundation strength'),
+            'focus_areas' => self::stringList($fallback['focus_areas'] ?? $suggestions['base_focus_areas'] ?? []),
+            'tracks' => $foundationTracks,
+        ];
+    }
+
+    /**
+     * @return array{id: string, label: string}
+     */
+    private static function compatibilityNode(
+        ?array $track,
+        string $trackKey,
+        mixed $fallback,
+        string $fallbackId,
+        string $fallbackLabel,
+    ): array {
+        if (is_array($track)) {
+            return self::nodeValue($track[$trackKey] ?? null, $fallbackId, $fallbackLabel);
+        }
+
+        return self::nodeValue($fallback, $fallbackId, $fallbackLabel);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $activeTracks
+     * @param  array<string, mixed>  $phasePlan
+     * @return array<string, mixed>
+     */
+    private static function currentBlockFocusCompatibility(
+        array $suggestions,
+        array $activeTracks,
+        ?array $primaryTrack,
+        array $phasePlan,
+    ): array {
+        $fallback = is_array($suggestions['current_block_focus'] ?? null) ? $suggestions['current_block_focus'] : [];
+
+        return [
+            ...$fallback,
+            'label' => self::stringValue($fallback['label'] ?? null, 'Current roadmap phase'),
+            'eta_range' => is_array($primaryTrack)
+                ? self::etaValue($primaryTrack['eta_to_next_node'] ?? null)
+                : self::etaValue($fallback['eta_range'] ?? null),
+            'lanes' => self::trackIds($activeTracks),
+            'focus_areas' => self::stringList($fallback['focus_areas'] ?? $suggestions['base_focus_areas'] ?? []),
+            'should_improve' => self::stringList($fallback['should_improve'] ?? $phasePlan['weekly_emphasis'] ?? []),
+            'retest_cadence' => self::retestCadenceCompatibility($fallback, $phasePlan),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $fallback
+     * @param  array<string, mixed>  $phasePlan
+     * @return list<string>
+     */
+    private static function retestCadenceCompatibility(array $fallback, array $phasePlan): array
+    {
+        $fallbackCadence = self::stringList($fallback['retest_cadence'] ?? []);
+        if ($fallbackCadence !== []) {
+            return $fallbackCadence;
+        }
+
+        $retestTiming = is_array($phasePlan['retest_timing'] ?? null) ? $phasePlan['retest_timing'] : [];
+
+        return self::uniqueStrings([
+            self::stringValue($retestTiming['session_update'] ?? null, 'Session updates'),
+            self::stringValue($retestTiming['weekly_review'] ?? null, 'Weekly review'),
+            'Block retest in week '.(self::intOrNull($retestTiming['block_retest_week'] ?? null) ?? 4),
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $primaryGoal
+     * @param  list<array<string, mixed>>  $futureQueue
+     * @param  list<array<string, mixed>>  $blockedTracks
+     * @return array<string, mixed>
+     */
+    private static function explanationCompatibility(
+        array $suggestions,
+        ?array $primaryGoal,
+        array $futureQueue,
+        array $blockedTracks,
+    ): array {
+        $fallback = is_array($suggestions['explanation'] ?? null) ? $suggestions['explanation'] : [];
+        $primaryLabel = self::stringValue($primaryGoal['label'] ?? null, 'the first roadmap track');
+
+        return [
+            ...$fallback,
+            'summary' => self::stringValue($fallback['summary'] ?? null, self::stringValue($suggestions['summary'] ?? null, 'Complete the baseline tests to unlock a useful roadmap.')),
+            'primary_now' => self::stringValue($fallback['primary_now'] ?? null, "{$primaryLabel} is the first active roadmap emphasis."),
+            'why_this_goal' => self::stringList($fallback['why_this_goal'] ?? []),
+            'what_is_missing' => self::stringList($fallback['what_is_missing'] ?? []),
+            'this_block_should_improve' => self::stringList($fallback['this_block_should_improve'] ?? []),
+            'not_trained_yet' => self::stringList($fallback['not_trained_yet'] ?? []),
+            'what_would_change_recommendation' => self::stringList($fallback['what_would_change_recommendation'] ?? []),
+            'watch_out_for' => $blockedTracks === []
+                ? self::stringList($fallback['watch_out_for'] ?? [])
+                : ['Blocked tracks should stay out of loaded progression until the blocker changes.'],
+            'fallback' => self::stringValue($fallback['fallback'] ?? null, $futureQueue === [] ? 'Build the foundation layer first.' : 'Keep advanced goals visible while training the nearest bridge.'),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $suggestions
+     * @param  list<array<string, mixed>>  $developmentTracks
      * @param  list<array<string, mixed>>  $futureQueue
      * @param  list<array<string, mixed>>  $blockedTracks
      * @return array{summary: string, why_this_mix: list<string>, watch_out_for: list<string>, fallback: string}
@@ -726,7 +977,7 @@ final readonly class RoadmapPortfolioResult
             'summary' => self::stringValue($suggestions['explanation']['summary'] ?? null, self::stringValue($suggestions['summary'] ?? null, 'Complete the baseline tests to unlock a useful roadmap.')),
             'why_this_mix' => $developmentTracks === []
                 ? ['Complete more baseline data before loading a development portfolio.']
-                : ['Development tracks come from the current roadmap candidates while compatibility fields remain available.'],
+                : ['The active mix is selected from current skill readiness, session capacity, and recovery budget.'],
             'watch_out_for' => $blockedTracks === []
                 ? self::stringList($suggestions['explanation']['watch_out_for'] ?? [])
                 : ['Blocked tracks should stay out of loaded progression until the blocker changes.'],

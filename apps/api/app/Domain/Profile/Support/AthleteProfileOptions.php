@@ -363,7 +363,7 @@ final class AthleteProfileOptions
 
         $roadmapSource = $merged;
         $roadmapSource['current_level_tests'] = $merged['baseline_tests'] ?? CalisthenicsPlacementOptions::emptyLevelTests();
-        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest(
+        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::portfolio(
             RoadmapInputMapper::fromAthleteData($roadmapSource),
         );
 

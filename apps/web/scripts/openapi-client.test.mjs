@@ -84,6 +84,17 @@ paths:
                         properties:
                           version:
                             type: string
+                          source_version:
+                            type: string
+                          active_skill_portfolio:
+                            type: object
+                            properties:
+                              weekly_schedule:
+                                type: object
+                              phase_plan:
+                                type: object
+                          pending_tests:
+                            type: array
                           goal_candidates:
                             type: object
                           primary_goal:
@@ -140,6 +151,17 @@ paths:
                         properties:
                           version:
                             type: string
+                          source_version:
+                            type: string
+                          active_skill_portfolio:
+                            type: object
+                            properties:
+                              weekly_schedule:
+                                type: object
+                              phase_plan:
+                                type: object
+                          pending_tests:
+                            type: array
                           goal_candidates:
                             type: object
                           primary_goal:
@@ -193,6 +215,17 @@ paths:
                         properties:
                           version:
                             type: string
+                          source_version:
+                            type: string
+                          active_skill_portfolio:
+                            type: object
+                            properties:
+                              weekly_schedule:
+                                type: object
+                              phase_plan:
+                                type: object
+                          pending_tests:
+                            type: array
                           goal_candidates:
                             type: object
                           primary_goal:
@@ -245,6 +278,17 @@ paths:
                         properties:
                           version:
                             type: string
+                          source_version:
+                            type: string
+                          active_skill_portfolio:
+                            type: object
+                            properties:
+                              weekly_schedule:
+                                type: object
+                              phase_plan:
+                                type: object
+                          pending_tests:
+                            type: array
                           goal_candidates:
                             type: object
                           primary_goal:
@@ -303,6 +347,12 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('readonly passive_hang_seconds: number | null')
     expect(generated).toContain('readonly top_support_hold_seconds: number | null')
     expect(generated).toContain('readonly version: string')
+    expect(generated).toContain('readonly source_version: string')
+    expect(generated).toContain('export interface RoadmapActiveSkillPortfolio')
+    expect(generated).toContain('readonly active_skill_portfolio: RoadmapActiveSkillPortfolio')
+    expect(generated).toContain('readonly weekly_schedule: RoadmapPortfolioWeeklySchedule')
+    expect(generated).toContain('readonly phase_plan: RoadmapPortfolioPhasePlan')
+    expect(generated).toContain('readonly pending_tests: readonly Readonly<Record<string, unknown>>[]')
     expect(generated).toContain('export interface RoadmapGoalCandidate')
     expect(generated).toContain('readonly goal_candidates: RoadmapGoalCandidates')
     expect(generated).toContain('readonly eta_range: RoadmapEtaRange')

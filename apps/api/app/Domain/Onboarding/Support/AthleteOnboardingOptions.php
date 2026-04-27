@@ -217,7 +217,7 @@ final class AthleteOnboardingOptions
             $merged['current_level_tests'] = CalisthenicsPlacementOptions::normalizeLevelTests($merged['current_level_tests']);
         }
 
-        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::suggest(
+        $merged['roadmap_suggestions'] = CalisthenicsRoadmapSuggester::portfolio(
             RoadmapInputMapper::fromAthleteData($merged),
         );
 

@@ -50,16 +50,10 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.goal_modules.inversion.highest_progression', 'freestanding_kick_up')
             ->assertJsonPath('data.goal_modules.inversion.metric_type', 'hold_seconds')
             ->assertJsonPath('data.goal_modules.inversion.hold_seconds', 20)
-            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
+            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.portfolio.v3')
+            ->assertJsonPath('data.roadmap_suggestions.source_version', 'roadmap.v2')
             ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
-            ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
-            ->assertJsonPath('data.roadmap_suggestions.compatible_secondary_goal.skill', 'strict_pull_up')
             ->assertJsonPath('data.roadmap_suggestions.foundation_lane.slug', 'foundation_strength')
-            ->assertJsonPath('data.roadmap_suggestions.current_progression_node.id', 'handstand.current')
-            ->assertJsonPath('data.roadmap_suggestions.next_node.id', 'handstand.next')
-            ->assertJsonPath('data.roadmap_suggestions.next_milestone.id', 'handstand.milestone')
-            ->assertJsonPath('data.roadmap_suggestions.eta_range.min_weeks', 8)
-            ->assertJsonPath('data.roadmap_suggestions.eta_range.max_weeks', 24)
             ->assertJsonPath('data.roadmap_suggestions.confidence.level', 'medium')
             ->assertJsonPath('data.roadmap_suggestions.blockers.0.key', 'wrist_extension')
             ->assertJsonPath('data.roadmap_suggestions.unlock_conditions.0.skill', 'handstand')
@@ -99,6 +93,7 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.is_complete', true)
             ->assertJsonPath('data.missing_sections', []);
 
+        $this->assertRoadmapPortfolioContract($response->json('data.roadmap_suggestions'));
         $this->assertNotEmpty($response->json('data.roadmap_suggestions.domain_bottlenecks'));
 
         $onboardingId = $response->json('data.id');
@@ -131,7 +126,8 @@ class AthleteOnboardingApiTest extends TestCase
         $this->assertSame('freestanding_kick_up', $profile->goal_modules['inversion']['highest_progression']);
         $this->assertSame(20, $profile->goal_modules['inversion']['hold_seconds']);
         $this->assertSame(['pull_capacity', 'core_bodyline', 'handstand_line'], $profile->base_focus_areas);
-        $this->assertSame('roadmap.v2', $profile->roadmap_suggestions['version']);
+        $this->assertSame('roadmap.portfolio.v3', $profile->roadmap_suggestions['version']);
+        $this->assertSame('roadmap.v2', $profile->roadmap_suggestions['source_version']);
         $this->assertSame('intermediate', $profile->roadmap_suggestions['level']);
         $this->assertSame('handstand', $profile->roadmap_suggestions['primary_goal']['skill']);
         $this->assertSame(['pull_up_bar', 'rings', 'parallettes'], $profile->available_equipment);
@@ -157,6 +153,7 @@ class AthleteOnboardingApiTest extends TestCase
 
         $response = $this->patchJson('/api/v1/me/onboarding?include_roadmap_intermediate=1', $this->completePayload())
             ->assertOk()
+            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.portfolio.v3')
             ->assertJsonPath('data.roadmap_suggestions.intermediate.compatibility_costs.0.skill', 'strict_pull_up');
 
         $skills = collect($response->json('data.roadmap_suggestions.intermediate.readiness_scores'))
@@ -183,7 +180,8 @@ class AthleteOnboardingApiTest extends TestCase
 
         $response = $this->getJson('/api/v1/me/onboarding')
             ->assertOk()
-            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
+            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.portfolio.v3')
+            ->assertJsonPath('data.roadmap_suggestions.source_version', 'roadmap.v2')
             ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
             ->assertJsonMissingPath('data.roadmap_suggestions.intermediate');
 
@@ -215,6 +213,12 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.roadmap_suggestions.confidence.level', 'low')
             ->assertJsonPath('data.roadmap_suggestions.explanation.what_is_missing.0', 'Objective baseline data')
             ->assertJsonPath('data.roadmap_suggestions.explanation.what_would_change_recommendation.0', 'Pain returning below 4/10 would reopen progression choices.');
+
+        $this->assertSame('roadmap.portfolio.v3', $response->json('data.roadmap_suggestions.version'));
+        $this->assertNotEmpty($response->json('data.roadmap_suggestions.pending_tests'));
+
+        $blocked = collect($response->json('data.roadmap_suggestions.blocked'));
+        $this->assertNotNull($blocked->firstWhere('skill_track_id', 'front_lever'));
 
         $deferred = collect($response->json('data.roadmap_suggestions.deferred_goals'));
 
@@ -639,6 +643,37 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.primary_goal', 'strength')
             ->assertJsonMissing(['id' => $otherOnboarding->id])
             ->assertJsonMissing(['primary_goal' => 'endurance']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $roadmap
+     */
+    private function assertRoadmapPortfolioContract(array $roadmap): void
+    {
+        $portfolio = $roadmap['active_skill_portfolio'];
+
+        $this->assertNotEmpty($portfolio['development_tracks']);
+        $this->assertNotEmpty($portfolio['weekly_schedule']['days']);
+        $this->assertArrayHasKey('rest_days', $portfolio['weekly_schedule']);
+        $this->assertArrayHasKey('stress_ledger', $portfolio['weekly_schedule']['days'][0]);
+        $this->assertArrayHasKey('time_ledger', $portfolio['weekly_schedule']['days'][0]);
+        $this->assertArrayHasKey('phase_plan', $portfolio);
+        $this->assertNotEmpty($portfolio['phase_plan']['progression_rules']);
+        $this->assertNotEmpty($portfolio['stress_ledger']['axes']);
+        $this->assertSame(3, $portfolio['time_ledger']['max_sessions_per_week']);
+        $this->assertNotEmpty($portfolio['explanation']['summary']);
+
+        $developmentTracks = $portfolio['development_tracks'];
+        $developmentIds = array_column($developmentTracks, 'skill_track_id');
+        $primaryTrack = $developmentTracks[0];
+
+        $this->assertSame($developmentIds, $roadmap['onboarding_goal_choices']['development']);
+        $this->assertSame($primaryTrack['skill_track_id'], $roadmap['primary_goal']['skill']);
+        $this->assertSame($primaryTrack['current_node'], $roadmap['current_progression_node']);
+        $this->assertSame($primaryTrack['next_node'], $roadmap['next_node']);
+        $this->assertSame($primaryTrack['target_node'], $roadmap['next_milestone']);
+        $this->assertSame($primaryTrack['eta_to_next_node'], $roadmap['eta_range']);
+        $this->assertSame($primaryTrack['confidence'], $roadmap['confidence']);
     }
 
     /**

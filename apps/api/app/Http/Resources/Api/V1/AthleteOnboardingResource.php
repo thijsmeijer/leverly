@@ -20,8 +20,8 @@ class AthleteOnboardingResource extends JsonResource
     {
         $data = AthleteOnboardingOptions::recordData($this->resource);
         $data['roadmap_suggestions'] = $request->boolean('include_roadmap_intermediate')
-            ? CalisthenicsRoadmapSuggester::suggestFromAthleteData($data, includeIntermediate: true)
-            : CalisthenicsRoadmapSuggester::suggestFromAthleteData($data);
+            ? CalisthenicsRoadmapSuggester::portfolioFromAthleteData($data, includeIntermediate: true)
+            : CalisthenicsRoadmapSuggester::portfolioFromAthleteData($data);
 
         return [
             'id' => $this->id,

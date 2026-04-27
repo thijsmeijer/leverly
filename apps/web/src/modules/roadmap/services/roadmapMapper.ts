@@ -12,14 +12,22 @@ import type {
   RoadmapIntermediate,
   RoadmapNode,
   RoadmapPortfolio,
+  RoadmapPortfolioDayTimeLedger,
   RoadmapPortfolioExplanation,
   RoadmapPortfolioFoundationLayer,
   RoadmapPortfolioGoalChoices,
+  RoadmapPortfolioPhasePlan,
+  RoadmapPortfolioProgressionRule,
+  RoadmapPortfolioRestDay,
   RoadmapPortfolioScheduledDay,
+  RoadmapPortfolioScheduledModule,
+  RoadmapPortfolioScheduleStressLedger,
+  RoadmapPortfolioScheduleTemplate,
   RoadmapPortfolioStressAxis,
   RoadmapPortfolioStressLedger,
   RoadmapPortfolioTimeLedger,
   RoadmapPortfolioTrack,
+  RoadmapPortfolioWeeklyTimeLedger,
   RoadmapPortfolioWeeklySchedule,
   RoadmapSuggestions,
   RoadmapTrack,
@@ -95,6 +103,7 @@ export function mapRoadmapPortfolio(value: unknown): RoadmapPortfolio {
       maintenanceTracks: recordArray(activePortfolio.maintenance_tracks ?? activePortfolio.maintenanceTracks).map(
         mapPortfolioTrack,
       ),
+      phasePlan: mapPortfolioPhasePlan(activePortfolio.phase_plan ?? activePortfolio.phasePlan),
       stressLedger: mapPortfolioStressLedger(activePortfolio.stress_ledger ?? activePortfolio.stressLedger),
       technicalPracticeTracks: recordArray(
         activePortfolio.technical_practice_tracks ?? activePortfolio.technicalPracticeTracks,
@@ -141,6 +150,10 @@ function mapPortfolioWeeklySchedule(value: unknown): RoadmapPortfolioWeeklySched
 
   return {
     days: recordArray(source.days).map(mapPortfolioScheduledDay),
+    restDays: recordArray(source.rest_days ?? source.restDays).map(mapPortfolioRestDay),
+    stressLedger: mapPortfolioScheduleStressLedger(source.stress_ledger ?? source.stressLedger),
+    template: mapPortfolioScheduleTemplate(source.template),
+    timeLedger: mapPortfolioWeeklyTimeLedger(source.time_ledger ?? source.timeLedger),
     warnings: stringArray(source.warnings),
   }
 }
@@ -150,8 +163,76 @@ function mapPortfolioScheduledDay(value: UnknownRecord): RoadmapPortfolioSchedul
     dayIndex: numberValue(value.day_index ?? value.dayIndex, 0),
     dayType: stringValue(value.day_type ?? value.dayType, 'rest'),
     label: stringValue(value.label, 'Day'),
-    modules: recordArray(value.modules),
+    modules: recordArray(value.modules).map(mapPortfolioScheduledModule),
+    stressLedger: mapPortfolioScheduleStressLedger(value.stress_ledger ?? value.stressLedger),
+    timeLedger: mapPortfolioDayTimeLedger(value.time_ledger ?? value.timeLedger),
     warnings: stringArray(value.warnings),
+  }
+}
+
+function mapPortfolioScheduledModule(value: UnknownRecord): RoadmapPortfolioScheduledModule {
+  return {
+    estimatedMinutes: numberValue(value.estimated_minutes ?? value.estimatedMinutes, 0),
+    exposureIndex: numberValue(value.exposure_index ?? value.exposureIndex, 0),
+    intensityTier: stringValue(value.intensity_tier ?? value.intensityTier, 'medium'),
+    moduleId: stringValue(value.module_id ?? value.moduleId, ''),
+    order: numberValue(value.order, 0),
+    pattern: stringValue(value.pattern, 'general'),
+    purpose: stringValue(value.purpose, 'training'),
+    skillTrackId: stringValue(value.skill_track_id ?? value.skillTrackId, ''),
+    slot: stringValue(value.slot, 'accessory'),
+    slotRank: numberValue(value.slot_rank ?? value.slotRank, 0),
+    sourceMode: stringValue(value.source_mode ?? value.sourceMode, ''),
+    stressVector: numberRecord(value.stress_vector ?? value.stressVector),
+    title: stringValue(value.title, 'Training module'),
+  }
+}
+
+function mapPortfolioRestDay(value: UnknownRecord): RoadmapPortfolioRestDay {
+  return {
+    dayIndex: numberValue(value.day_index ?? value.dayIndex, 0),
+    dayType: stringValue(value.day_type ?? value.dayType, 'rest'),
+    label: stringValue(value.label, 'Rest day'),
+  }
+}
+
+function mapPortfolioScheduleTemplate(value: unknown): RoadmapPortfolioScheduleTemplate {
+  const source = recordValue(value)
+
+  return {
+    dayTypes: stringArray(source.day_types ?? source.dayTypes),
+    sessionsPerWeek: numberValue(source.sessions_per_week ?? source.sessionsPerWeek, 0),
+    slotOrder: stringArray(source.slot_order ?? source.slotOrder),
+  }
+}
+
+function mapPortfolioScheduleStressLedger(value: unknown): RoadmapPortfolioScheduleStressLedger {
+  const source = recordValue(value)
+
+  return {
+    axes: recordArray(source.axes).map(mapPortfolioStressAxis),
+    warnings: stringArray(source.warnings),
+  }
+}
+
+function mapPortfolioDayTimeLedger(value: unknown): RoadmapPortfolioDayTimeLedger {
+  const source = recordValue(value)
+
+  return {
+    budgetMinutes: numberValue(source.budget_minutes ?? source.budgetMinutes, 0),
+    estimatedMinutes: numberValue(source.estimated_minutes ?? source.estimatedMinutes, 0),
+    overflowMinutes: numberValue(source.overflow_minutes ?? source.overflowMinutes, 0),
+    status: stringValue(source.status, 'green'),
+  }
+}
+
+function mapPortfolioWeeklyTimeLedger(value: unknown): RoadmapPortfolioWeeklyTimeLedger {
+  const source = recordValue(value)
+
+  return {
+    budgetMinutesPerWeek: numberValue(source.budget_minutes_per_week ?? source.budgetMinutesPerWeek, 0),
+    estimatedMinutesPerWeek: numberValue(source.estimated_minutes_per_week ?? source.estimatedMinutesPerWeek, 0),
+    overflowMinutesPerWeek: numberValue(source.overflow_minutes_per_week ?? source.overflowMinutesPerWeek, 0),
   }
 }
 
@@ -161,6 +242,46 @@ function mapPortfolioStressLedger(value: unknown): RoadmapPortfolioStressLedger 
   return {
     axes: recordArray(source.axes).map(mapPortfolioStressAxis),
     notes: stringArray(source.notes),
+  }
+}
+
+function mapPortfolioPhasePlan(value: unknown): RoadmapPortfolioPhasePlan {
+  const source = recordValue(value)
+  const durationWeeks = recordValue(source.duration_weeks ?? source.durationWeeks)
+
+  return {
+    deloadGuidance: recordValue(source.deload_guidance ?? source.deloadGuidance),
+    durationReason: stringValue(source.duration_reason ?? source.durationReason, ''),
+    durationWeeks: {
+      max: numberValue(durationWeeks.max, 0),
+      min: numberValue(durationWeeks.min, 0),
+      target: numberValue(durationWeeks.target, 0),
+    },
+    foundationLayer: recordArray(source.foundation_layer ?? source.foundationLayer),
+    phaseId: stringValue(source.phase_id ?? source.phaseId, 'current_block'),
+    progressionRules: recordArray(source.progression_rules ?? source.progressionRules).map(mapPortfolioProgressionRule),
+    retestTiming: recordValue(source.retest_timing ?? source.retestTiming),
+    roles: mapRecordArrayMap(source.roles),
+    safetyNotes: stringArray(source.safety_notes ?? source.safetyNotes),
+    weeklyEmphasis: stringArray(source.weekly_emphasis ?? source.weeklyEmphasis),
+  }
+}
+
+function mapPortfolioProgressionRule(value: UnknownRecord): RoadmapPortfolioProgressionRule {
+  return {
+    allowedLevers: stringArray(value.allowed_levers ?? value.allowedLevers),
+    deloadTriggers: stringArray(value.deload_triggers ?? value.deloadTriggers),
+    metric: stringValue(value.metric, ''),
+    moduleId: stringValue(value.module_id ?? value.moduleId, ''),
+    nextAction: stringValue(value.next_action ?? value.nextAction, ''),
+    nextAdjustment: recordValue(value.next_adjustment ?? value.nextAdjustment),
+    onlyOneMajorLever: booleanValue(value.only_one_major_lever ?? value.onlyOneMajorLever, true),
+    painRule: stringValue(value.pain_rule ?? value.painRule, ''),
+    progressionAllowed: booleanValue(value.progression_allowed ?? value.progressionAllowed, false),
+    ruleType: stringValue(value.rule_type ?? value.ruleType, ''),
+    skillTrackId: stringValue(value.skill_track_id ?? value.skillTrackId, ''),
+    successRequirements: stringArray(value.success_requirements ?? value.successRequirements),
+    title: stringValue(value.title, ''),
   }
 }
 
@@ -432,6 +553,32 @@ function stringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
 }
 
+function mapRecordArrayMap(value: unknown): Readonly<Record<string, readonly Record<string, unknown>[]>> {
+  const source = recordValue(value)
+  const mapped: Record<string, readonly Record<string, unknown>[]> = {}
+
+  Object.entries(source).forEach(([key, nestedValue]) => {
+    mapped[key] = recordArray(nestedValue)
+  })
+
+  return mapped
+}
+
+function numberRecord(value: unknown): Readonly<Record<string, number>> {
+  const source = recordValue(value)
+  const mapped: Record<string, number> = {}
+
+  Object.entries(source).forEach(([key, nestedValue]) => {
+    const parsed = nullableNumber(nestedValue)
+
+    if (parsed !== null) {
+      mapped[key] = parsed
+    }
+  })
+
+  return mapped
+}
+
 function stringValue(value: unknown, fallback: string): string {
   return typeof value === 'string' && value !== '' ? value : fallback
 }
@@ -454,4 +601,8 @@ function numberValue(value: unknown, fallback: number): number {
 
 function nullableBoolean(value: unknown): boolean | null {
   return typeof value === 'boolean' ? value : null
+}
+
+function booleanValue(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
 }

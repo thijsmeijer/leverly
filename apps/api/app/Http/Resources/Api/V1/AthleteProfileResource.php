@@ -20,8 +20,8 @@ class AthleteProfileResource extends JsonResource
     {
         $profileData = AthleteProfileOptions::recordData($this->resource);
         $roadmapSuggestions = $request->boolean('include_roadmap_intermediate')
-            ? CalisthenicsRoadmapSuggester::suggestFromAthleteData($profileData, includeIntermediate: true)
-            : CalisthenicsRoadmapSuggester::suggestFromAthleteData($profileData);
+            ? CalisthenicsRoadmapSuggester::portfolioFromAthleteData($profileData, includeIntermediate: true)
+            : CalisthenicsRoadmapSuggester::portfolioFromAthleteData($profileData);
 
         return [
             'id' => $this->id,

@@ -179,16 +179,68 @@ export interface RoadmapPortfolioTrack {
   readonly whyNotHigherPriority: readonly string[]
 }
 
+export interface RoadmapPortfolioScheduledModule {
+  readonly moduleId: string
+  readonly skillTrackId: string
+  readonly title: string
+  readonly purpose: string
+  readonly pattern: string
+  readonly intensityTier: string
+  readonly sourceMode: string
+  readonly slot: string
+  readonly slotRank: number
+  readonly order: number
+  readonly exposureIndex: number
+  readonly estimatedMinutes: number
+  readonly stressVector: Readonly<Record<string, number>>
+}
+
+export interface RoadmapPortfolioScheduleStressLedger {
+  readonly axes: readonly RoadmapPortfolioStressAxis[]
+  readonly warnings: readonly string[]
+}
+
+export interface RoadmapPortfolioDayTimeLedger {
+  readonly estimatedMinutes: number
+  readonly budgetMinutes: number
+  readonly overflowMinutes: number
+  readonly status: string
+}
+
 export interface RoadmapPortfolioScheduledDay {
   readonly dayIndex: number
   readonly label: string
   readonly dayType: string
-  readonly modules: readonly Record<string, unknown>[]
+  readonly modules: readonly RoadmapPortfolioScheduledModule[]
+  readonly stressLedger: RoadmapPortfolioScheduleStressLedger
+  readonly timeLedger: RoadmapPortfolioDayTimeLedger
   readonly warnings: readonly string[]
+}
+
+export interface RoadmapPortfolioRestDay {
+  readonly dayIndex: number
+  readonly label: string
+  readonly dayType: string
+}
+
+export interface RoadmapPortfolioScheduleTemplate {
+  readonly sessionsPerWeek: number
+  readonly dayTypes: readonly string[]
+  readonly slotOrder: readonly string[]
+}
+
+export interface RoadmapPortfolioWeeklyTimeLedger {
+  readonly estimatedMinutesPerWeek: number
+  readonly budgetMinutesPerWeek: number
+  readonly overflowMinutesPerWeek: number
 }
 
 export interface RoadmapPortfolioWeeklySchedule {
   readonly days: readonly RoadmapPortfolioScheduledDay[]
+  readonly restDays: readonly RoadmapPortfolioRestDay[]
+  readonly stressLedger: RoadmapPortfolioScheduleStressLedger
+  readonly template: RoadmapPortfolioScheduleTemplate
+  readonly timeLedger: RoadmapPortfolioWeeklyTimeLedger
   readonly warnings: readonly string[]
 }
 
@@ -218,6 +270,39 @@ export interface RoadmapPortfolioExplanation {
   readonly whyThisMix: readonly string[]
 }
 
+export interface RoadmapPortfolioProgressionRule {
+  readonly moduleId: string
+  readonly skillTrackId: string
+  readonly title: string
+  readonly ruleType: string
+  readonly metric: string
+  readonly progressionAllowed: boolean
+  readonly nextAction: string
+  readonly successRequirements: readonly string[]
+  readonly allowedLevers: readonly string[]
+  readonly onlyOneMajorLever: boolean
+  readonly painRule: string
+  readonly nextAdjustment: Readonly<Record<string, unknown>>
+  readonly deloadTriggers: readonly string[]
+}
+
+export interface RoadmapPortfolioPhasePlan {
+  readonly phaseId: string
+  readonly durationWeeks: {
+    readonly min: number
+    readonly target: number
+    readonly max: number
+  }
+  readonly durationReason: string
+  readonly weeklyEmphasis: readonly string[]
+  readonly roles: Readonly<Record<string, readonly Record<string, unknown>[]>>
+  readonly foundationLayer: readonly Record<string, unknown>[]
+  readonly retestTiming: Readonly<Record<string, unknown>>
+  readonly deloadGuidance: Readonly<Record<string, unknown>>
+  readonly progressionRules: readonly RoadmapPortfolioProgressionRule[]
+  readonly safetyNotes: readonly string[]
+}
+
 export interface RoadmapActiveSkillPortfolio {
   readonly accessoryTracks: readonly RoadmapPortfolioTrack[]
   readonly developmentTracks: readonly RoadmapPortfolioTrack[]
@@ -225,6 +310,7 @@ export interface RoadmapActiveSkillPortfolio {
   readonly foundationTracks: readonly RoadmapPortfolioTrack[]
   readonly futureQueue: readonly RoadmapPortfolioTrack[]
   readonly maintenanceTracks: readonly RoadmapPortfolioTrack[]
+  readonly phasePlan: RoadmapPortfolioPhasePlan
   readonly stressLedger: RoadmapPortfolioStressLedger
   readonly technicalPracticeTracks: readonly RoadmapPortfolioTrack[]
   readonly timeLedger: RoadmapPortfolioTimeLedger

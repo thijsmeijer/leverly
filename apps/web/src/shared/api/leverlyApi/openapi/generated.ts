@@ -238,10 +238,192 @@ export interface RoadmapGoalCandidates {
   readonly foundation: readonly RoadmapGoalCandidate[]
 }
 
+export interface RoadmapPortfolioTrack {
+  readonly skill_track_id: string
+  readonly display_name: string
+  readonly current_node: RoadmapNode
+  readonly next_node: RoadmapNode
+  readonly target_node: RoadmapNode
+  readonly mode: string
+  readonly weekly_exposures: number
+  readonly estimated_minutes_per_week: number
+  readonly primary_stress_axes: readonly string[]
+  readonly eta_to_next_node: RoadmapEtaRange
+  readonly confidence: RoadmapConfidence
+  readonly modules: readonly Readonly<Record<string, unknown>>[]
+  readonly why_included: readonly string[]
+  readonly why_not_higher_priority: readonly string[]
+}
+
+export interface RoadmapPortfolioScheduledModule {
+  readonly module_id: string
+  readonly skill_track_id: string
+  readonly title: string
+  readonly purpose: string
+  readonly pattern: string
+  readonly intensity_tier: string
+  readonly source_mode: string
+  readonly slot: string
+  readonly slot_rank: number
+  readonly order: number
+  readonly exposure_index: number
+  readonly estimated_minutes: number
+  readonly stress_vector: Readonly<Record<string, number>>
+}
+
+export interface RoadmapPortfolioStressAxis {
+  readonly axis: string
+  readonly load: number
+  readonly budget: number
+  readonly status: string
+}
+
+export interface RoadmapPortfolioScheduleStressLedger {
+  readonly axes: readonly RoadmapPortfolioStressAxis[]
+  readonly warnings: readonly string[]
+}
+
+export interface RoadmapPortfolioDayTimeLedger {
+  readonly estimated_minutes: number
+  readonly budget_minutes: number
+  readonly overflow_minutes: number
+  readonly status: string
+}
+
+export interface RoadmapPortfolioScheduledDay {
+  readonly day_index: number
+  readonly label: string
+  readonly day_type: string
+  readonly modules: readonly RoadmapPortfolioScheduledModule[]
+  readonly stress_ledger: RoadmapPortfolioScheduleStressLedger
+  readonly time_ledger: RoadmapPortfolioDayTimeLedger
+  readonly warnings: readonly string[]
+}
+
+export interface RoadmapPortfolioRestDay {
+  readonly day_index: number
+  readonly label: string
+  readonly day_type: string
+}
+
+export interface RoadmapPortfolioScheduleTemplate {
+  readonly sessions_per_week: number
+  readonly day_types: readonly string[]
+  readonly slot_order: readonly string[]
+}
+
+export interface RoadmapPortfolioWeeklyTimeLedger {
+  readonly estimated_minutes_per_week: number
+  readonly budget_minutes_per_week: number
+  readonly overflow_minutes_per_week: number
+}
+
+export interface RoadmapPortfolioWeeklySchedule {
+  readonly days: readonly RoadmapPortfolioScheduledDay[]
+  readonly rest_days: readonly RoadmapPortfolioRestDay[]
+  readonly template: RoadmapPortfolioScheduleTemplate
+  readonly stress_ledger: RoadmapPortfolioScheduleStressLedger
+  readonly time_ledger: RoadmapPortfolioWeeklyTimeLedger
+  readonly warnings: readonly string[]
+}
+
+export interface RoadmapPortfolioStressLedger {
+  readonly axes: readonly RoadmapPortfolioStressAxis[]
+  readonly notes: readonly string[]
+}
+
+export interface RoadmapPortfolioTimeLedger {
+  readonly max_sessions_per_week: number
+  readonly estimated_minutes_per_week: number
+  readonly remaining_minutes_per_week: number
+  readonly notes: readonly string[]
+}
+
+export interface RoadmapPortfolioProgressionRule {
+  readonly module_id: string
+  readonly skill_track_id: string
+  readonly title: string
+  readonly rule_type: string
+  readonly metric: string
+  readonly progression_allowed: boolean
+  readonly next_action: string
+  readonly success_requirements: readonly string[]
+  readonly allowed_levers: readonly string[]
+  readonly only_one_major_lever: boolean
+  readonly pain_rule: string
+  readonly next_adjustment: Readonly<Record<string, unknown>>
+  readonly deload_triggers: readonly string[]
+}
+
+export interface RoadmapPortfolioPhasePlan {
+  readonly phase_id: string
+  readonly duration_weeks: {
+    readonly min: number
+    readonly target: number
+    readonly max: number
+  }
+  readonly duration_reason: string
+  readonly weekly_emphasis: readonly string[]
+  readonly roles: Readonly<Record<string, readonly Readonly<Record<string, unknown>>[]>>
+  readonly foundation_layer: readonly Readonly<Record<string, unknown>>[]
+  readonly retest_timing: Readonly<Record<string, unknown>>
+  readonly deload_guidance: Readonly<Record<string, unknown>>
+  readonly progression_rules: readonly RoadmapPortfolioProgressionRule[]
+  readonly safety_notes: readonly string[]
+}
+
+export interface RoadmapPortfolioExplanation {
+  readonly summary: string
+  readonly why_this_mix: readonly string[]
+  readonly watch_out_for: readonly string[]
+  readonly fallback: string
+}
+
+export interface RoadmapActiveSkillPortfolio {
+  readonly development_tracks: readonly RoadmapPortfolioTrack[]
+  readonly technical_practice_tracks: readonly RoadmapPortfolioTrack[]
+  readonly accessory_tracks: readonly RoadmapPortfolioTrack[]
+  readonly maintenance_tracks: readonly RoadmapPortfolioTrack[]
+  readonly foundation_tracks: readonly RoadmapPortfolioTrack[]
+  readonly foundation_modules: readonly Readonly<Record<string, unknown>>[]
+  readonly future_queue: readonly RoadmapPortfolioTrack[]
+  readonly weekly_schedule: RoadmapPortfolioWeeklySchedule
+  readonly stress_ledger: RoadmapPortfolioStressLedger
+  readonly stress_budget: Readonly<Record<string, unknown>>
+  readonly module_compatibility: readonly Readonly<Record<string, unknown>>[]
+  readonly optimizer: Readonly<Record<string, unknown>>
+  readonly phase_plan: RoadmapPortfolioPhasePlan
+  readonly time_ledger: RoadmapPortfolioTimeLedger
+  readonly explanation: RoadmapPortfolioExplanation
+}
+
+export interface RoadmapPortfolioGoalChoices {
+  readonly development: readonly string[]
+  readonly technical_practice: readonly string[]
+  readonly accessories: readonly string[]
+  readonly future: readonly string[]
+  readonly blocked: readonly string[]
+}
+
+export interface RoadmapPortfolioFoundationLayer {
+  readonly summary: string
+  readonly focus_areas: readonly string[]
+  readonly tracks: readonly RoadmapPortfolioTrack[]
+  readonly modules: readonly Readonly<Record<string, unknown>>[]
+}
+
 export interface RoadmapSuggestions {
   readonly version: string
+  readonly source_version: string
   readonly level: string
   readonly summary: string
+  readonly active_skill_portfolio: RoadmapActiveSkillPortfolio
+  readonly onboarding_goal_choices: RoadmapPortfolioGoalChoices
+  readonly foundation_layer: RoadmapPortfolioFoundationLayer
+  readonly long_term_aspirations: readonly RoadmapPortfolioTrack[]
+  readonly not_recommended_now: readonly RoadmapPortfolioTrack[]
+  readonly blocked: readonly RoadmapPortfolioTrack[]
+  readonly pending_tests: readonly Readonly<Record<string, unknown>>[]
   readonly goal_candidates: RoadmapGoalCandidates
   readonly primary_goal: RoadmapGoal | null
   readonly compatible_secondary_goal: RoadmapGoal | null
