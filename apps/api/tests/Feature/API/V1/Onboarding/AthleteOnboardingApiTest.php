@@ -41,11 +41,15 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('data.weight_trend', 'maintaining')
             ->assertJsonPath('data.prior_sport_background.0', 'strength_training')
             ->assertJsonPath('data.primary_goal', 'skill')
-            ->assertJsonPath('data.target_skills.0', 'strict_pull_up')
+            ->assertJsonPath('data.target_skills.0', 'handstand')
             ->assertJsonPath('data.primary_target_skill', 'handstand')
             ->assertJsonPath('data.secondary_target_skills.0', 'strict_pull_up')
             ->assertJsonPath('data.long_term_target_skills.0', 'planche')
             ->assertJsonPath('data.base_focus_areas.0', 'pull_capacity')
+            ->assertJsonPath('data.required_goal_modules.0', 'inversion')
+            ->assertJsonPath('data.goal_modules.inversion.highest_progression', 'freestanding_kick_up')
+            ->assertJsonPath('data.goal_modules.inversion.metric_type', 'hold_seconds')
+            ->assertJsonPath('data.goal_modules.inversion.hold_seconds', 20)
             ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
             ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
             ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
@@ -116,10 +120,12 @@ class AthleteOnboardingApiTest extends TestCase
         $this->assertSame('maintaining', $profile->weight_trend);
         $this->assertSame(['strength_training'], $profile->prior_sport_background);
         $this->assertSame(['strength'], $profile->secondary_goals);
-        $this->assertSame(['strict_pull_up', 'handstand'], $profile->target_skills);
+        $this->assertSame(['handstand'], $profile->target_skills);
         $this->assertSame('handstand', $profile->primary_target_skill);
         $this->assertSame(['strict_pull_up'], $profile->secondary_target_skills);
         $this->assertSame(['planche'], $profile->long_term_target_skills);
+        $this->assertSame('freestanding_kick_up', $profile->goal_modules['inversion']['highest_progression']);
+        $this->assertSame(20, $profile->goal_modules['inversion']['hold_seconds']);
         $this->assertSame(['pull_capacity', 'core_bodyline', 'handstand_line'], $profile->base_focus_areas);
         $this->assertSame('roadmap.v2', $profile->roadmap_suggestions['version']);
         $this->assertSame('intermediate', $profile->roadmap_suggestions['level']);
@@ -217,6 +223,51 @@ class AthleteOnboardingApiTest extends TestCase
             ->assertJsonPath('errors.complete.0', 'Onboarding cannot be completed until age is provided.');
     }
 
+    public function test_completion_requires_only_goal_modules_for_the_selected_primary_family(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->patchJson('/api/v1/me/onboarding', $this->completePayload([
+            'goal_modules' => [],
+        ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['complete'])
+            ->assertJsonPath('errors.complete.0', 'Onboarding cannot be completed until goal_module_inversion is provided.');
+    }
+
+    public function test_goal_modules_must_match_the_selected_primary_goal_family(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->patchJson('/api/v1/me/onboarding', [
+            'primary_target_skill' => 'handstand',
+            'target_skills' => ['handstand'],
+            'goal_modules' => [
+                'pull_skill' => [
+                    'highest_progression' => 'high_pull_up',
+                    'metric_type' => 'reps',
+                    'reps' => 3,
+                    'quality' => 'solid',
+                ],
+            ],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['goal_modules.pull_skill']);
+    }
+
+    public function test_only_one_active_primary_target_is_allowed_during_onboarding(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->patchJson('/api/v1/me/onboarding', [
+            'primary_target_skill' => 'handstand',
+            'target_skills' => ['handstand', 'strict_pull_up'],
+            'secondary_target_skills' => ['strict_pull_up'],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['target_skills']);
+    }
+
     public function test_completion_accepts_bodyweight_lower_body_baseline_without_barbell_access(): void
     {
         Sanctum::actingAs(User::factory()->create());
@@ -292,11 +343,23 @@ class AthleteOnboardingApiTest extends TestCase
             'weight_trend' => 'crashing',
             'prior_sport_background' => ['space_walking'],
             'secondary_goals' => ['conditioning', 'mobility', 'strength'],
-            'target_skills' => ['generic fitness'],
-            'primary_target_skill' => 'generic fitness',
+            'target_skills' => ['generic fitness', 'strict_pull_up'],
+            'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['handstand'],
             'long_term_target_skills' => ['generic fitness'],
             'base_focus_areas' => ['random'],
+            'goal_modules' => [
+                'pull_skill' => [
+                    'highest_progression' => 'made_up',
+                    'metric_type' => 'reps',
+                    'reps' => -1,
+                    'hold_seconds' => 700,
+                    'load_value' => -1,
+                    'load_unit' => 'stone',
+                    'quality' => 'messy',
+                    'notes' => str_repeat('x', 301),
+                ],
+            ],
             'available_equipment' => ['machine'],
             'training_locations' => ['moon'],
             'preferred_training_days' => ['funday'],
@@ -367,10 +430,19 @@ class AthleteOnboardingApiTest extends TestCase
                 'prior_sport_background.0',
                 'secondary_goals',
                 'target_skills.0',
+                'target_skills',
                 'primary_target_skill',
                 'secondary_target_skills.0',
                 'long_term_target_skills.0',
                 'base_focus_areas.0',
+                'goal_modules.pull_skill',
+                'goal_modules.pull_skill.highest_progression',
+                'goal_modules.pull_skill.reps',
+                'goal_modules.pull_skill.hold_seconds',
+                'goal_modules.pull_skill.load_value',
+                'goal_modules.pull_skill.load_unit',
+                'goal_modules.pull_skill.quality',
+                'goal_modules.pull_skill.notes',
                 'available_equipment.0',
                 'training_locations.0',
                 'preferred_training_days.0',
@@ -456,11 +528,23 @@ class AthleteOnboardingApiTest extends TestCase
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
-            'target_skills' => ['strict_pull_up', 'handstand'],
+            'target_skills' => ['handstand'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['planche'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline', 'handstand_line'],
+            'goal_modules' => [
+                'inversion' => [
+                    'highest_progression' => 'freestanding_kick_up',
+                    'metric_type' => 'hold_seconds',
+                    'reps' => null,
+                    'hold_seconds' => 20,
+                    'load_value' => null,
+                    'load_unit' => 'kg',
+                    'quality' => 'solid',
+                    'notes' => null,
+                ],
+            ],
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home'],
             'preferred_training_days' => ['monday', 'wednesday', 'friday'],

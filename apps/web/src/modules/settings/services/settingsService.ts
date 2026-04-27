@@ -1,5 +1,13 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
-import { emptyRoadmapSuggestions, mapRoadmapSuggestions } from '@/modules/roadmap'
+import {
+  defaultGoalModules,
+  emptyRoadmapSuggestions,
+  isGoalModuleTested,
+  mapGoalModulesToForm,
+  mapRoadmapSuggestions,
+  requiredGoalModulesForGoal,
+  serializeGoalModules,
+} from '@/modules/roadmap'
 
 import { compatibleSecondaryGoals, equipmentOptions, mobilityCheckOptions } from '../data/profileOptions'
 import type { ProfileFieldErrors, ProfileSettingsForm, ProfileSettingsState } from '../types'
@@ -25,6 +33,7 @@ type ProfileUpdateBody = {
   readonly display_name: string
   readonly effort_tracking_preference: string
   readonly experience_level: string
+  readonly goal_modules: ReturnType<typeof serializeGoalModules>
   readonly injury_notes: string | null
   readonly intensity_preference: string
   readonly height_unit: string
@@ -110,6 +119,7 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     displayName: '',
     effortTrackingPreference: 'simple',
     experienceLevel: 'new',
+    goalModules: defaultGoalModules(),
     injuryNotes: '',
     intensityPreference: 'auto',
     heightUnit: 'cm',
@@ -129,6 +139,7 @@ export function defaultProfileSettingsForm(): ProfileSettingsForm {
     primaryGoal: 'strength',
     primaryTargetSkill: '',
     progressionPace: 'balanced',
+    requiredGoalModules: [],
     roadmapSuggestions: emptyRoadmapSuggestions(),
     secondaryGoals: [],
     secondaryTargetSkills: [],
@@ -268,16 +279,31 @@ export function validateProfileSettingsForm(form: ProfileSettingsForm): ProfileF
 
   const targetSkills = splitTargetSkills(form.targetSkillsText)
 
-  if (form.primaryTargetSkill && !targetSkills.includes(form.primaryTargetSkill)) {
-    errors.primaryTargetSkill = 'Primary target must also be listed as a target skill.'
+  if (form.primaryTargetSkill && targetSkills.length > 0 && targetSkills[0] !== form.primaryTargetSkill) {
+    errors.primaryTargetSkill = 'Primary target must match the active target skill.'
   }
 
-  if (form.secondaryTargetSkills.some((skill) => skill === form.primaryTargetSkill || !targetSkills.includes(skill))) {
-    errors.secondaryTargetSkills = 'Secondary targets must be listed target skills and differ from the primary target.'
+  if (targetSkills.length > 1) {
+    errors.targetSkillsText =
+      'Keep exactly one active target; put other skills in secondary interests or long-term targets.'
+  }
+
+  if (
+    form.secondaryTargetSkills.some(
+      (skill) => skill === form.primaryTargetSkill || form.longTermTargetSkills.includes(skill),
+    )
+  ) {
+    errors.secondaryTargetSkills = 'Secondary interests must differ from the primary and long-term targets.'
   }
 
   if (form.longTermTargetSkills.some((skill) => targetSkills.includes(skill))) {
     errors.longTermTargetSkills = 'Long-term targets should be different from active targets.'
+  }
+
+  for (const module of activeRequiredGoalModules(form)) {
+    if (!isGoalModuleTested(form.goalModules[module])) {
+      errors.goalModules = 'Add the tested progression for the selected primary goal.'
+    }
   }
 
   if (form.baseFocusAreas.length > 4) {
@@ -300,6 +326,9 @@ function mapProfileResponse(response: AthleteProfileResponse): ProfileSettingsSt
 
 function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
   const limitation = profile.movement_limitations[0]
+  const requiredGoalModules = [
+    ...(profile.required_goal_modules ?? requiredGoalModulesForGoal(profile.primary_target_skill ?? '')),
+  ]
 
   return {
     availableEquipment: profile.available_equipment.filter(isSupportedEquipment),
@@ -388,6 +417,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     displayName: profile.display_name,
     effortTrackingPreference: profile.effort_tracking_preference,
     experienceLevel: profile.experience_level,
+    goalModules: mapGoalModulesToForm(profile.goal_modules, requiredGoalModules),
     injuryNotes: profile.injury_notes ?? '',
     intensityPreference: profile.intensity_preference,
     heightUnit: profile.height_unit ?? 'cm',
@@ -409,6 +439,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
     primaryGoal: profile.primary_goal ?? 'strength',
     primaryTargetSkill: profile.primary_target_skill ?? '',
     progressionPace: profile.progression_pace,
+    requiredGoalModules,
     roadmapSuggestions: mapRoadmapSuggestions(profile.roadmap_suggestions),
     secondaryGoals: profile.secondary_goals.filter((goal) =>
       (compatibleSecondaryGoals[profile.primary_goal ?? 'strength'] ?? []).includes(goal),
@@ -454,6 +485,7 @@ function mapProfileToForm(profile: AthleteProfile): ProfileSettingsForm {
 }
 
 function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
+  const requiredGoalModules = activeRequiredGoalModules(form)
   const limitationNotes = form.movementLimitation.notes.trim()
   const movementLimitations =
     form.injuryNotes.trim() || limitationNotes
@@ -511,6 +543,7 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     display_name: form.displayName.trim(),
     effort_tracking_preference: form.effortTrackingPreference,
     experience_level: form.experienceLevel,
+    goal_modules: serializeGoalModules(form.goalModules, requiredGoalModules),
     injury_notes: form.injuryNotes.trim() || null,
     intensity_preference: form.intensityPreference,
     height_unit: form.heightUnit,
@@ -531,7 +564,7 @@ function mapFormToUpdateBody(form: ProfileSettingsForm): ProfileUpdateBody {
     secondary_target_skills: [...form.secondaryTargetSkills],
     session_structure_preferences: form.sessionStructurePreferences.slice(0, 3),
     skill_statuses: { ...form.skillStatuses },
-    target_skills: splitTargetSkills(form.targetSkillsText),
+    target_skills: activeTargetSkills(form),
     timezone: form.timezone.trim(),
     training_age_months: nullableNumber(form.trainingAgeMonths),
     training_locations: form.trainingLocations,
@@ -585,6 +618,16 @@ function splitTargetSkills(value: string): string[] {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function activeTargetSkills(form: ProfileSettingsForm): string[] {
+  return form.primaryTargetSkill ? [form.primaryTargetSkill] : splitTargetSkills(form.targetSkillsText).slice(0, 1)
+}
+
+function activeRequiredGoalModules(form: ProfileSettingsForm): string[] {
+  return form.requiredGoalModules.length > 0
+    ? [...form.requiredGoalModules]
+    : requiredGoalModulesForGoal(form.primaryTargetSkill)
 }
 
 function isSupportedEquipment(value: string): boolean {
@@ -667,6 +710,7 @@ function mapServerField(field: string): keyof ProfileSettingsForm | null {
     display_name: 'displayName',
     effort_tracking_preference: 'effortTrackingPreference',
     experience_level: 'experienceLevel',
+    goal_modules: 'goalModules',
     injury_notes: 'injuryNotes',
     intensity_preference: 'intensityPreference',
     height_unit: 'heightUnit',

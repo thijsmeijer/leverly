@@ -131,6 +131,19 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       injury_notes: 'No sharp pain.',
       intensity_preference: 'auto',
+      required_goal_modules: ['inversion'],
+      goal_modules: {
+        inversion: {
+          highest_progression: 'freestanding_kick_up',
+          metric_type: 'hold_seconds',
+          reps: null,
+          hold_seconds: 20,
+          load_value: null,
+          load_unit: 'kg',
+          quality: 'solid',
+          notes: null,
+        },
+      },
       movement_limitations: [
         {
           area: 'wrist',
@@ -161,7 +174,7 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
           status: 'assisted',
         },
       },
-      target_skills: ['handstand', 'strict_pull_up'],
+      target_skills: ['handstand'],
       timezone: 'Europe/Amsterdam',
       training_age_months: 18,
       training_locations: ['home'],

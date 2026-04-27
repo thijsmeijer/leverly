@@ -48,6 +48,10 @@ class AthleteProfileApiTest extends TestCase
             ->assertJsonPath('data.primary_target_skill', 'handstand')
             ->assertJsonPath('data.long_term_target_skills.0', 'planche')
             ->assertJsonPath('data.base_focus_areas.0', 'pull_capacity')
+            ->assertJsonPath('data.required_goal_modules.0', 'inversion')
+            ->assertJsonPath('data.goal_modules.inversion.highest_progression', 'freestanding_kick_up')
+            ->assertJsonPath('data.goal_modules.inversion.metric_type', 'hold_seconds')
+            ->assertJsonPath('data.goal_modules.inversion.hold_seconds', 20)
             ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
             ->assertJsonPath('data.roadmap_suggestions.level', 'intermediate')
             ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
@@ -93,6 +97,8 @@ class AthleteProfileApiTest extends TestCase
 
         $this->assertSame('maintaining', $profile->weight_trend);
         $this->assertSame('recurring', $profile->pain_flags['wrist']['status']);
+        $this->assertSame('freestanding_kick_up', $profile->goal_modules['inversion']['highest_progression']);
+        $this->assertSame(20, $profile->goal_modules['inversion']['hold_seconds']);
         $this->assertSame('ring_row', $profile->baseline_tests['rows']['variant']);
         $this->assertSame(45, $profile->baseline_tests['passive_hang_seconds']);
         $this->assertSame(25, $profile->baseline_tests['top_support_hold_seconds']);
@@ -101,7 +107,7 @@ class AthleteProfileApiTest extends TestCase
         $this->getJson('/api/v1/me/profile')
             ->assertOk()
             ->assertJsonPath('data.id', $profileId)
-            ->assertJsonPath('data.target_skills.1', 'strict_pull_up');
+            ->assertJsonPath('data.secondary_target_skills.0', 'strict_pull_up');
 
         $this->patchJson('/api/v1/me/profile', [
             'display_name' => 'Ada Bars',
@@ -195,11 +201,23 @@ class AthleteProfileApiTest extends TestCase
             'prior_sport_background' => ['space_walking'],
             'primary_goal' => 'unsupported_goal',
             'secondary_goals' => ['strength', 'unsupported_goal', 'mobility'],
-            'target_skills' => ['a'],
+            'target_skills' => ['a', 'strict_pull_up'],
             'primary_target_skill' => 'handstand',
-            'secondary_target_skills' => ['strict_pull_up'],
+            'secondary_target_skills' => ['handstand'],
             'long_term_target_skills' => ['a'],
             'base_focus_areas' => ['random'],
+            'goal_modules' => [
+                'pull_skill' => [
+                    'highest_progression' => 'made_up',
+                    'metric_type' => 'reps',
+                    'reps' => -1,
+                    'hold_seconds' => 700,
+                    'load_value' => -1,
+                    'load_unit' => 'stone',
+                    'quality' => 'messy',
+                    'notes' => str_repeat('x', 301),
+                ],
+            ],
             'available_equipment' => ['trampoline'],
             'training_locations' => ['moon'],
             'movement_limitations' => [
@@ -277,10 +295,19 @@ class AthleteProfileApiTest extends TestCase
                 'secondary_goals.1',
                 'secondary_goals',
                 'target_skills.0',
+                'target_skills',
                 'primary_target_skill',
                 'secondary_target_skills.0',
                 'long_term_target_skills.0',
                 'base_focus_areas.0',
+                'goal_modules.pull_skill',
+                'goal_modules.pull_skill.highest_progression',
+                'goal_modules.pull_skill.reps',
+                'goal_modules.pull_skill.hold_seconds',
+                'goal_modules.pull_skill.load_value',
+                'goal_modules.pull_skill.load_unit',
+                'goal_modules.pull_skill.quality',
+                'goal_modules.pull_skill.notes',
                 'available_equipment.0',
                 'training_locations.0',
                 'movement_limitations.0.area',
@@ -349,11 +376,23 @@ class AthleteProfileApiTest extends TestCase
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength', 'mobility'],
-            'target_skills' => ['handstand', 'strict_pull_up'],
+            'target_skills' => ['handstand'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['planche'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline', 'handstand_line'],
+            'goal_modules' => [
+                'inversion' => [
+                    'highest_progression' => 'freestanding_kick_up',
+                    'metric_type' => 'hold_seconds',
+                    'reps' => null,
+                    'hold_seconds' => 20,
+                    'load_value' => null,
+                    'load_unit' => 'kg',
+                    'quality' => 'solid',
+                    'notes' => null,
+                ],
+            ],
             'available_equipment' => ['pull_up_bar', 'low_bar', 'dip_bars', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home', 'park'],
             'movement_limitations' => [

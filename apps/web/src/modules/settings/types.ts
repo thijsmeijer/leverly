@@ -1,4 +1,4 @@
-import type { RoadmapSuggestions } from '@/modules/roadmap'
+import type { GoalModuleForm, RoadmapSuggestions } from '@/modules/roadmap'
 
 export type UnitSystem = 'imperial' | 'metric'
 export type BodyweightUnit = 'kg' | 'lb'
@@ -58,6 +58,7 @@ export interface ProfileSettingsForm {
   displayName: string
   effortTrackingPreference: string
   experienceLevel: string
+  goalModules: Record<string, GoalModuleForm>
   injuryNotes: string
   intensityPreference: string
   heightUnit: string
@@ -72,6 +73,7 @@ export interface ProfileSettingsForm {
   primaryGoal: string
   primaryTargetSkill: string
   progressionPace: string
+  requiredGoalModules: string[]
   roadmapSuggestions: RoadmapSuggestions
   secondaryGoals: string[]
   secondaryTargetSkills: string[]

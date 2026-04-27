@@ -1,5 +1,13 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
-import { emptyRoadmapSuggestions, mapRoadmapSuggestions } from '@/modules/roadmap'
+import {
+  defaultGoalModules,
+  emptyRoadmapSuggestions,
+  isGoalModuleTested,
+  mapGoalModulesToForm,
+  mapRoadmapSuggestions,
+  requiredGoalModulesForGoal,
+  serializeGoalModules,
+} from '@/modules/roadmap'
 
 import {
   mobilityCheckOptions,
@@ -62,6 +70,7 @@ type OnboardingUpdateBody = {
     readonly top_support_hold_seconds: number | null
   }
   readonly experience_level: string
+  readonly goal_modules: ReturnType<typeof serializeGoalModules>
   readonly height_unit: string
   readonly height_value: number | null
   readonly long_term_target_skills: string[]
@@ -147,6 +156,7 @@ export function defaultOnboardingForm(): OnboardingForm {
       topSupportHoldSeconds: '',
     },
     experienceLevel: 'new',
+    goalModules: defaultGoalModules(),
     heightUnit: 'cm',
     heightValue: '',
     longTermTargetSkills: [],
@@ -161,6 +171,7 @@ export function defaultOnboardingForm(): OnboardingForm {
     primaryTargetSkill: '',
     primaryGoal: 'skill',
     readinessRating: '3',
+    requiredGoalModules: [],
     roadmapSuggestions: emptyRoadmapSuggestions(),
     secondaryGoals: [],
     secondaryTargetSkills: [],
@@ -251,29 +262,35 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
 
   if (step === 'roadmap') {
     const activeSkills = activeRoadmapSkills(form.roadmapSuggestions)
+    const primaryTarget = form.primaryTargetSkill
+    const requiredGoalModules = activeRequiredGoalModules(form)
 
     if (!form.primaryGoal) {
       errors.primaryGoal = 'Choose the main outcome for your first plan.'
     }
 
-    if (form.targetSkills.length === 0) {
-      errors.targetSkills = 'Choose one suggested current or bridge target.'
-    }
-
-    if (form.targetSkills.some((skill) => !activeSkills.includes(skill))) {
-      errors.targetSkills = 'Active targets must come from the suggested current or bridge roadmap.'
-    }
-
-    if (!form.primaryTargetSkill || !form.targetSkills.includes(form.primaryTargetSkill)) {
+    if (!primaryTarget) {
       errors.primaryTargetSkill = 'Choose the one suggested target Leverly should prioritize first.'
     }
 
+    if (primaryTarget && !activeSkills.includes(primaryTarget)) {
+      errors.primaryTargetSkill = 'Primary target must come from the suggested current or bridge roadmap.'
+    }
+
+    if (form.targetSkills.length > 1 || (form.targetSkills.length === 1 && form.targetSkills[0] !== primaryTarget)) {
+      errors.targetSkills = 'Active targets should contain only the primary roadmap.'
+    }
+
     if (
-      form.secondaryTargetSkills.some(
-        (skill) => skill === form.primaryTargetSkill || !form.targetSkills.includes(skill),
-      )
+      form.secondaryTargetSkills.some((skill) => skill === primaryTarget || form.longTermTargetSkills.includes(skill))
     ) {
-      errors.secondaryTargetSkills = 'Secondary targets must be selected targets and cannot match the primary roadmap.'
+      errors.secondaryTargetSkills = 'Secondary interests must differ from the primary and long-term targets.'
+    }
+
+    for (const module of requiredGoalModules) {
+      if (!isGoalModuleTested(form.goalModules[module])) {
+        errors[`goalModules.${module}`] = 'Add the tested progression for the selected primary goal.'
+      }
     }
 
     if (form.baseFocusAreas.length === 0) {
@@ -362,6 +379,9 @@ function mapOnboardingResponse(response: AthleteOnboardingResponse): OnboardingS
 
 function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
   const defaults = defaultOnboardingForm()
+  const requiredGoalModules = [
+    ...(onboarding.required_goal_modules ?? requiredGoalModulesForGoal(onboarding.primary_target_skill ?? '')),
+  ]
 
   return {
     ...defaults,
@@ -452,6 +472,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
           : String(onboarding.current_level_tests.top_support_hold_seconds),
     },
     experienceLevel: onboarding.experience_level,
+    goalModules: mapGoalModulesToForm(onboarding.goal_modules, requiredGoalModules),
     heightUnit: onboarding.height_unit,
     heightValue: onboarding.height_value === null ? '' : String(onboarding.height_value),
     longTermTargetSkills: [...onboarding.long_term_target_skills],
@@ -470,6 +491,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     primaryGoal: onboarding.primary_goal ?? defaults.primaryGoal,
     readinessRating:
       onboarding.readiness_rating === null ? defaults.readinessRating : String(onboarding.readiness_rating),
+    requiredGoalModules,
     roadmapSuggestions: mapRoadmapSuggestions(onboarding.roadmap_suggestions),
     secondaryGoals: [...onboarding.secondary_goals],
     secondaryTargetSkills: [...onboarding.secondary_target_skills],
@@ -521,6 +543,8 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
 }
 
 function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean }): OnboardingUpdateBody {
+  const requiredGoalModules = activeRequiredGoalModules(form)
+
   const body: OnboardingUpdateBody = {
     age_years: nullableInteger(form.ageYears),
     available_equipment: [...form.availableEquipment],
@@ -562,6 +586,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
       top_support_hold_seconds: nullableInteger(form.currentLevelTests.topSupportHoldSeconds),
     },
     experience_level: form.experienceLevel,
+    goal_modules: serializeGoalModules(form.goalModules, requiredGoalModules),
     height_unit: form.heightUnit,
     height_value: nullableNumber(form.heightValue),
     long_term_target_skills: [...form.longTermTargetSkills],
@@ -598,7 +623,7 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
     sleep_quality: nullableInteger(form.sleepQuality),
     soreness_level: nullableInteger(form.sorenessLevel),
     starter_plan_key: form.starterPlanKey || null,
-    target_skills: [...form.targetSkills],
+    target_skills: activeTargetSkills(form),
     training_age_months: nullableInteger(form.trainingAgeMonths),
     training_locations: [...form.trainingLocations],
     weight_trend: form.weightTrend,
@@ -769,6 +794,7 @@ function serverKeyToField(key: string): string {
     bodyweight_unit: 'bodyweightUnit',
     current_bodyweight_value: 'currentBodyweightValue',
     experience_level: 'experienceLevel',
+    goal_modules: 'goalModules',
     height_unit: 'heightUnit',
     height_value: 'heightValue',
     long_term_target_skills: 'longTermTargetSkills',
@@ -830,4 +856,14 @@ function isServerValidationBody(body: unknown): body is ServerValidationBody {
 
 function activeRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
   return [...suggestions.unlockedTracks, ...suggestions.bridgeTracks].map((track) => track.skill)
+}
+
+function activeTargetSkills(form: OnboardingForm): string[] {
+  return form.primaryTargetSkill ? [form.primaryTargetSkill] : [...form.targetSkills].slice(0, 1)
+}
+
+function activeRequiredGoalModules(form: OnboardingForm): string[] {
+  return form.requiredGoalModules.length > 0
+    ? [...form.requiredGoalModules]
+    : requiredGoalModulesForGoal(form.primaryTargetSkill)
 }

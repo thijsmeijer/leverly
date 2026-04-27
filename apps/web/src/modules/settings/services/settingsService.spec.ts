@@ -59,9 +59,19 @@ describe('settingsService', () => {
             status: 'recurring',
           },
         },
+        goalModules: {
+          inversion: {
+            highestProgression: 'freestanding_kick_up',
+            holdSeconds: '20',
+            metricType: 'hold_seconds',
+            quality: 'solid',
+          },
+        },
         primaryTargetSkill: 'handstand',
         preferredTrainingDays: ['monday', 'wednesday'],
-        targetSkillsText: 'handstand\nstrict_pull_up',
+        requiredGoalModules: ['inversion'],
+        secondaryTargetSkills: ['strict_pull_up'],
+        targetSkillsText: 'handstand',
         weightTrend: 'maintaining',
         roadmapSuggestions: {
           confidence: {
@@ -104,10 +114,22 @@ describe('settingsService', () => {
           status: 'recurring',
         },
       },
+      goalModules: {
+        ...defaultProfileSettingsForm().goalModules,
+        inversion: {
+          ...defaultProfileSettingsForm().goalModules.inversion,
+          highestProgression: 'freestanding_kick_up',
+          holdSeconds: '20',
+          metricType: 'hold_seconds',
+          quality: 'solid',
+        },
+      },
       primaryTargetSkill: 'handstand',
       preferredSessionMinutes: '60',
       preferredTrainingDays: ['monday', 'friday'],
-      targetSkillsText: 'handstand, strict_pull_up',
+      requiredGoalModules: ['inversion'],
+      secondaryTargetSkills: ['strict_pull_up'],
+      targetSkillsText: 'handstand',
       trainingAgeMonths: '18',
       weightTrend: 'maintaining',
     }
@@ -122,10 +144,14 @@ describe('settingsService', () => {
       2,
       '/api/v1/me/profile',
       expect.objectContaining({
-        body: expect.stringContaining('"target_skills":["handstand","strict_pull_up"]'),
+        body: expect.stringContaining('"target_skills":["handstand"]'),
         credentials: 'include',
         method: 'PATCH',
       }),
+    )
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"secondary_target_skills":["strict_pull_up"]')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain(
+      '"goal_modules":{"inversion":{"highest_progression":"freestanding_kick_up","metric_type":"hold_seconds","reps":null,"hold_seconds":20,"load_value":null,"load_unit":"kg","quality":"solid","notes":null}}',
     )
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"weight_trend":"maintaining"')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"pain_flags":{"wrist"')
@@ -238,6 +264,19 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       injury_notes: 'No sharp pain.',
       intensity_preference: 'auto',
+      required_goal_modules: ['inversion'],
+      goal_modules: {
+        inversion: {
+          highest_progression: 'freestanding_kick_up',
+          metric_type: 'hold_seconds',
+          reps: null,
+          hold_seconds: 20,
+          load_value: null,
+          load_unit: 'kg',
+          quality: 'solid',
+          notes: null,
+        },
+      },
       movement_limitations: [
         {
           area: 'wrist',
@@ -333,7 +372,7 @@ function profileResponse(overrides: Partial<Record<string, unknown>> = {}) {
           status: 'freestanding_kick_up',
         },
       },
-      target_skills: ['handstand', 'strict_pull_up'],
+      target_skills: ['handstand'],
       timezone: 'Europe/Amsterdam',
       training_age_months: 18,
       training_locations: ['home'],

@@ -18,6 +18,8 @@ class AthleteProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $profileData = AthleteProfileOptions::recordData($this->resource);
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
@@ -40,6 +42,8 @@ class AthleteProfileResource extends JsonResource
             'secondary_target_skills' => $this->secondary_target_skills ?? [],
             'long_term_target_skills' => $this->long_term_target_skills ?? [],
             'base_focus_areas' => $this->base_focus_areas ?? [],
+            'required_goal_modules' => $profileData['required_goal_modules'],
+            'goal_modules' => $profileData['goal_modules'],
             'roadmap_suggestions' => $this->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => $this->available_equipment ?? [],
             'training_locations' => $this->training_locations ?? [],

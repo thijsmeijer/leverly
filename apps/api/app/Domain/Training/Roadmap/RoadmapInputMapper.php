@@ -55,6 +55,8 @@ final class RoadmapInputMapper
                 'skill_statuses' => $skillStatuses,
                 'mobility_checks' => $mobilityChecks,
                 'weighted_baselines' => $weightedBaselines,
+                'required_modules' => self::stringList($data['required_goal_modules'] ?? []),
+                'conditional_modules' => self::arrayValue($data['goal_modules'] ?? []),
             ],
             selectedPrimaryGoal: self::stringOrNull($data['primary_target_skill'] ?? null),
             secondaryInterests: self::stringList($data['secondary_target_skills'] ?? []),

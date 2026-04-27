@@ -56,7 +56,16 @@ describe('onboardingService', () => {
             status: 'recurring',
           },
         },
+        goalModules: {
+          inversion: {
+            highestProgression: 'freestanding_kick_up',
+            holdSeconds: '20',
+            metricType: 'hold_seconds',
+            quality: 'solid',
+          },
+        },
         primaryTargetSkill: 'handstand',
+        requiredGoalModules: ['inversion'],
         roadmapSuggestions: {
           baseFocusAreas: ['pull_capacity', 'core_bodyline'],
           blockers: [{ key: 'wrist_extension' }],
@@ -78,7 +87,7 @@ describe('onboardingService', () => {
           },
           version: 'roadmap.v2',
         },
-        targetSkills: ['strict_pull_up', 'handstand'],
+        targetSkills: ['handstand'],
         trainingAgeMonths: '18',
         weightTrend: 'maintaining',
       },
@@ -132,9 +141,21 @@ describe('onboardingService', () => {
       preferredSessionMinutes: '60',
       preferredTrainingDays: ['monday', 'wednesday', 'friday'],
       priorSportBackground: ['strength_training'],
+      goalModules: {
+        ...defaultOnboardingForm().goalModules,
+        inversion: {
+          ...defaultOnboardingForm().goalModules.inversion,
+          highestProgression: 'freestanding_kick_up',
+          holdSeconds: '20',
+          metricType: 'hold_seconds',
+          quality: 'solid',
+        },
+      },
       primaryTargetSkill: 'handstand',
+      requiredGoalModules: ['inversion'],
       weightTrend: 'maintaining',
-      targetSkills: ['strict_pull_up', 'handstand'],
+      targetSkills: ['handstand'],
+      secondaryTargetSkills: ['strict_pull_up'],
       trainingLocations: ['home'],
     }
 
@@ -150,7 +171,11 @@ describe('onboardingService', () => {
         method: 'PATCH',
       }),
     )
-    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"target_skills":["strict_pull_up","handstand"]')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"target_skills":["handstand"]')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"secondary_target_skills":["strict_pull_up"]')
+    expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain(
+      '"goal_modules":{"inversion":{"highest_progression":"freestanding_kick_up","metric_type":"hold_seconds","reps":null,"hold_seconds":20,"load_value":null,"load_unit":"kg","quality":"solid","notes":null}}',
+    )
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"age_years":29')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"hollow_hold_seconds":35')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"passive_hang_seconds":45')
@@ -321,6 +346,19 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       is_complete: false,
       long_term_target_skills: ['planche'],
+      required_goal_modules: ['inversion'],
+      goal_modules: {
+        inversion: {
+          highest_progression: 'freestanding_kick_up',
+          metric_type: 'hold_seconds',
+          reps: null,
+          hold_seconds: 20,
+          load_value: null,
+          load_unit: 'kg',
+          quality: 'solid',
+          notes: null,
+        },
+      },
       missing_sections: [],
       mobility_checks: {
         ankle_dorsiflexion: 'limited',
@@ -358,7 +396,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       sleep_quality: 4,
       soreness_level: 2,
       starter_plan_key: 'skill_strength_split',
-      target_skills: ['strict_pull_up', 'handstand'],
+      target_skills: ['handstand'],
       training_age_months: 18,
       training_locations: ['home'],
       user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',

@@ -60,6 +60,19 @@ class RoadmapInputMapperTest extends TestCase
                     ['movement' => 'weighted_pull_up', 'external_load_value' => 10, 'reps' => 5, 'rir' => 2],
                 ],
             ],
+            'required_goal_modules' => ['inversion'],
+            'goal_modules' => [
+                'inversion' => [
+                    'highest_progression' => 'freestanding_kick_up',
+                    'metric_type' => 'hold_seconds',
+                    'reps' => null,
+                    'hold_seconds' => 20,
+                    'load_value' => null,
+                    'load_unit' => 'kg',
+                    'quality' => 'solid',
+                    'notes' => null,
+                ],
+            ],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['planche'],
@@ -75,6 +88,9 @@ class RoadmapInputMapperTest extends TestCase
         $this->assertSame('ring_row', $input->baselineTests['rows']['variant']);
         $this->assertSame(45, $input->baselineTests['passive_hang_seconds']);
         $this->assertSame('freestanding_kick_up', $input->goalModules['skill_statuses']['handstand']['status']);
+        $this->assertSame(['inversion'], $input->goalModules['required_modules']);
+        $this->assertSame('hold_seconds', $input->goalModules['conditional_modules']['inversion']['metric_type']);
+        $this->assertSame(20, $input->goalModules['conditional_modules']['inversion']['hold_seconds']);
         $this->assertSame('handstand', $input->selectedPrimaryGoal);
         $this->assertSame(['strict_pull_up'], $input->secondaryInterests);
         $this->assertSame(['planche'], $input->longTermAspirations);

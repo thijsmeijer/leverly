@@ -22,7 +22,6 @@ describe('OnboardingPage', () => {
     await flushPromises()
 
     expect(wrapper.find('h1').text()).toContain('Level up your skills')
-    expect(wrapper.text()).toContain('Pull-up')
     expect(wrapper.text()).toContain('Handstand')
     expect(wrapper.text()).toContain('Context')
     expect(wrapper.text()).toContain('Equipment')
@@ -58,7 +57,7 @@ describe('OnboardingPage', () => {
       3,
       '/api/v1/me/onboarding',
       expect.objectContaining({
-        body: expect.stringContaining('"target_skills":["strict_pull_up","handstand"]'),
+        body: expect.stringContaining('"target_skills":["handstand"]'),
         method: 'PATCH',
       }),
     )
@@ -150,6 +149,19 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       id: '01kb0b6h4az3er8g7vnh9k5m1a',
       is_complete: false,
       long_term_target_skills: ['planche'],
+      required_goal_modules: ['inversion'],
+      goal_modules: {
+        inversion: {
+          highest_progression: 'freestanding_kick_up',
+          metric_type: 'hold_seconds',
+          reps: null,
+          hold_seconds: 20,
+          load_value: null,
+          load_unit: 'kg',
+          quality: 'solid',
+          notes: null,
+        },
+      },
       missing_sections: [],
       mobility_checks: {
         ankle_dorsiflexion: 'limited',
@@ -180,7 +192,7 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
       sleep_quality: 4,
       soreness_level: 2,
       starter_plan_key: 'skill_strength_split',
-      target_skills: ['strict_pull_up', 'handstand'],
+      target_skills: ['handstand'],
       training_age_months: 18,
       training_locations: ['home'],
       user_id: '01kaw4k7q6v7m9r6rddm4xyf2p',

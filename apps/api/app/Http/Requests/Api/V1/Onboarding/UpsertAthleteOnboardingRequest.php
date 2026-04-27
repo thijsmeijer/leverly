@@ -7,6 +7,7 @@ namespace App\Http\Requests\Api\V1\Onboarding;
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
 use App\Domain\Profile\Support\AthleteProfileOptions;
 use App\Domain\Training\Roadmap\RoadmapInputMapper;
+use App\Domain\Training\Support\CalisthenicsGoalModuleOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use Illuminate\Foundation\Http\FormRequest;
@@ -40,7 +41,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'primary_goal' => ['sometimes', 'nullable', 'string', Rule::in(AthleteProfileOptions::GOALS)],
             'secondary_goals' => ['sometimes', 'array', 'max:2'],
             'secondary_goals.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::GOALS)],
-            'target_skills' => ['sometimes', 'array', 'max:3'],
+            'target_skills' => ['sometimes', 'array', 'max:1'],
             'target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'primary_target_skill' => ['sometimes', 'nullable', 'string', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'secondary_target_skills' => ['sometimes', 'array', 'max:2'],
@@ -49,6 +50,16 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'long_term_target_skills.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::TARGET_SKILLS)],
             'base_focus_areas' => ['sometimes', 'array', 'max:4'],
             'base_focus_areas.*' => ['string', 'distinct', Rule::in(AthleteOnboardingOptions::BASE_FOCUS_AREAS)],
+            'goal_modules' => ['sometimes', 'array'],
+            'goal_modules.*' => ['array:highest_progression,metric_type,reps,hold_seconds,load_value,load_unit,quality,notes'],
+            'goal_modules.*.highest_progression' => ['required', 'string'],
+            'goal_modules.*.metric_type' => ['required', 'string', Rule::in(AthleteOnboardingOptions::GOAL_MODULE_METRIC_TYPES)],
+            'goal_modules.*.reps' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
+            'goal_modules.*.hold_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:600'],
+            'goal_modules.*.load_value' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:400'],
+            'goal_modules.*.load_unit' => ['sometimes', 'string', Rule::in(AthleteProfileOptions::BODYWEIGHT_UNITS)],
+            'goal_modules.*.quality' => ['sometimes', 'string', Rule::in(AthleteOnboardingOptions::GOAL_MODULE_QUALITY_MARKERS)],
+            'goal_modules.*.notes' => ['sometimes', 'nullable', 'string', 'max:300'],
             'available_equipment' => ['sometimes', 'array', 'max:20'],
             'available_equipment.*' => ['string', 'distinct', Rule::in(AthleteProfileOptions::EQUIPMENT)],
             'training_locations' => ['sometimes', 'array', 'max:5'],
@@ -148,11 +159,26 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             'prior_sport_background' => ['description' => 'Relevant prior sport or training background.', 'example' => ['strength_training']],
             'primary_goal' => ['description' => 'Primary training goal.', 'example' => 'skill'],
             'secondary_goals' => ['description' => 'Compatible secondary goals.', 'example' => ['strength']],
-            'target_skills' => ['description' => 'Current active skill target slugs from the generated roadmap.', 'example' => ['strict_pull_up', 'handstand']],
+            'target_skills' => ['description' => 'Active primary target skill slug.', 'example' => ['handstand']],
             'primary_target_skill' => ['description' => 'The one roadmap the first plan should prioritize.', 'example' => 'handstand'],
-            'secondary_target_skills' => ['description' => 'Optional target skills that can receive lighter exposure.', 'example' => ['strict_pull_up']],
+            'secondary_target_skills' => ['description' => 'Optional secondary interests that remain non-blocking until accepted by compatibility scoring.', 'example' => ['strict_pull_up']],
             'long_term_target_skills' => ['description' => 'Later aspirations that should not drive the first block yet.', 'example' => ['planche']],
             'base_focus_areas' => ['description' => 'Base-development areas that should support the primary roadmap.', 'example' => ['pull_capacity', 'core_bodyline']],
+            'goal_modules' => [
+                'description' => 'Conditional module answers required by the selected primary goal family.',
+                'example' => [
+                    'inversion' => [
+                        'highest_progression' => 'freestanding_kick_up',
+                        'metric_type' => 'hold_seconds',
+                        'reps' => null,
+                        'hold_seconds' => 20,
+                        'load_value' => null,
+                        'load_unit' => 'kg',
+                        'quality' => 'solid',
+                        'notes' => null,
+                    ],
+                ],
+            ],
             'available_equipment' => ['description' => 'Available equipment slugs.', 'example' => ['pull_up_bar', 'rings']],
             'training_locations' => ['description' => 'Where the athlete can train.', 'example' => ['home', 'park']],
             'preferred_training_days' => ['description' => 'Training days available for scheduling.', 'example' => ['monday', 'wednesday', 'friday']],
@@ -231,6 +257,7 @@ class UpsertAthleteOnboardingRequest extends FormRequest
             function (Validator $validator): void {
                 $this->validateSecondaryGoals($validator);
                 $this->validatePlacementTargets($validator);
+                $this->validateGoalModules($validator);
                 $this->validateHeight($validator);
                 $this->validateRoadmapTargets($validator);
                 $this->validateCompletion($validator);
@@ -267,15 +294,23 @@ class UpsertAthleteOnboardingRequest extends FormRequest
         $primaryTargetSkill = $this->input('primary_target_skill');
         $secondaryTargetSkills = $this->input('secondary_target_skills', []);
         $longTermTargetSkills = $this->input('long_term_target_skills', []);
+        $longTermTargetSkills = is_array($longTermTargetSkills) ? $longTermTargetSkills : [];
 
         if (! is_array($targetSkills)) {
             return;
         }
 
-        if (is_string($primaryTargetSkill) && ! in_array($primaryTargetSkill, $targetSkills, true)) {
+        if ($this->has('target_skills') && is_string($primaryTargetSkill) && $primaryTargetSkill !== '' && ! in_array($primaryTargetSkill, $targetSkills, true)) {
             $validator->errors()->add(
                 'primary_target_skill',
                 'The primary target skill must be one of the selected target skills.',
+            );
+        }
+
+        if ($this->has('target_skills') && is_string($primaryTargetSkill) && $primaryTargetSkill !== '' && $targetSkills !== [$primaryTargetSkill]) {
+            $validator->errors()->add(
+                'target_skills',
+                'Active targets must contain exactly the selected primary goal.',
             );
         }
 
@@ -295,10 +330,10 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                 );
             }
 
-            if (! in_array($secondaryTargetSkill, $targetSkills, true)) {
+            if (in_array($secondaryTargetSkill, $longTermTargetSkills, true)) {
                 $validator->errors()->add(
                     "secondary_target_skills.{$index}",
-                    'Secondary targets must also be selected target skills.',
+                    'A secondary interest cannot also be a long-term target.',
                 );
             }
         }
@@ -314,6 +349,78 @@ class UpsertAthleteOnboardingRequest extends FormRequest
                     'A long-term target cannot also be an active target.',
                 );
             }
+        }
+    }
+
+    private function validateGoalModules(Validator $validator): void
+    {
+        $goalModules = $this->input('goal_modules', []);
+
+        if (! is_array($goalModules)) {
+            return;
+        }
+
+        $current = AthleteOnboarding::query()
+            ->ownedBy($this->user())
+            ->first();
+        $candidate = AthleteOnboardingOptions::mergeForCompletion($current, $this->all());
+        $primaryTargetSkill = is_string($candidate['primary_target_skill'] ?? null)
+            ? $candidate['primary_target_skill']
+            : null;
+        $requiredModules = CalisthenicsGoalModuleOptions::modulesForGoal($primaryTargetSkill);
+
+        foreach ($goalModules as $module => $moduleData) {
+            $moduleKey = is_string($module) ? $module : (string) $module;
+
+            if (! in_array($moduleKey, $requiredModules, true)) {
+                $validator->errors()->add(
+                    "goal_modules.{$moduleKey}",
+                    'This goal module does not belong to the selected primary goal.',
+                );
+            }
+
+            if (! is_array($moduleData)) {
+                continue;
+            }
+
+            $progression = $moduleData['highest_progression'] ?? null;
+
+            if (is_string($progression) && ! CalisthenicsGoalModuleOptions::progressionBelongsToModule($moduleKey, $progression)) {
+                $validator->errors()->add(
+                    "goal_modules.{$moduleKey}.highest_progression",
+                    'The selected progression does not belong to this goal module.',
+                );
+            }
+
+            $metricType = $moduleData['metric_type'] ?? null;
+
+            if (! is_string($metricType) || $progression === 'not_tested') {
+                continue;
+            }
+
+            $this->validateGoalModuleMetric($validator, $moduleKey, $moduleData, $metricType);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $moduleData
+     */
+    private function validateGoalModuleMetric(Validator $validator, string $module, array $moduleData, string $metricType): void
+    {
+        if ($metricType === 'reps' && (! is_numeric($moduleData['reps'] ?? null) || (int) $moduleData['reps'] <= 0)) {
+            $validator->errors()->add("goal_modules.{$module}.reps", 'Enter reps for this tested progression.');
+        }
+
+        if ($metricType === 'hold_seconds' && (! is_numeric($moduleData['hold_seconds'] ?? null) || (int) $moduleData['hold_seconds'] <= 0)) {
+            $validator->errors()->add("goal_modules.{$module}.hold_seconds", 'Enter hold seconds for this tested progression.');
+        }
+
+        if ($metricType === 'load' && (! is_numeric($moduleData['load_value'] ?? null) || (float) $moduleData['load_value'] <= 0)) {
+            $validator->errors()->add("goal_modules.{$module}.load_value", 'Enter load for this tested progression.');
+        }
+
+        if ($metricType === 'quality' && (($moduleData['quality'] ?? 'unknown') === 'unknown')) {
+            $validator->errors()->add("goal_modules.{$module}.quality", 'Choose a quality marker for this tested progression.');
         }
     }
 

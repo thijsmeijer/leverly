@@ -30,6 +30,7 @@ return new class extends Migration
             $table->json('secondary_target_skills');
             $table->json('long_term_target_skills');
             $table->json('base_focus_areas');
+            $table->json('goal_modules');
             $table->json('roadmap_suggestions');
             $table->json('available_equipment');
             $table->json('training_locations');

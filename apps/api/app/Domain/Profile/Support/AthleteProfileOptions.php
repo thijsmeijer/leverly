@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Profile\Support;
 
 use App\Domain\Training\Roadmap\RoadmapInputMapper;
+use App\Domain\Training\Support\CalisthenicsGoalModuleOptions;
 use App\Domain\Training\Support\CalisthenicsPlacementOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteProfile;
@@ -134,6 +135,12 @@ final class AthleteProfileOptions
 
     public const array TARGET_SKILLS = CalisthenicsPlacementOptions::TARGET_SKILLS;
 
+    public const array GOAL_MODULES = CalisthenicsGoalModuleOptions::MODULES;
+
+    public const array GOAL_MODULE_METRIC_TYPES = CalisthenicsGoalModuleOptions::METRIC_TYPES;
+
+    public const array GOAL_MODULE_QUALITY_MARKERS = CalisthenicsGoalModuleOptions::QUALITY_MARKERS;
+
     public const array BASE_FOCUS_AREAS = CalisthenicsPlacementOptions::BASE_FOCUS_AREAS;
 
     public const array MOBILITY_CHECK_KEYS = CalisthenicsPlacementOptions::MOBILITY_CHECK_KEYS;
@@ -173,6 +180,7 @@ final class AthleteProfileOptions
             'secondary_target_skills' => [],
             'long_term_target_skills' => [],
             'base_focus_areas' => [],
+            'goal_modules' => [],
             'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => [],
             'training_locations' => [],
@@ -226,6 +234,32 @@ final class AthleteProfileOptions
             }
         }
 
+        $primaryTargetSkill = is_string($data['primary_target_skill'] ?? null) ? $data['primary_target_skill'] : null;
+
+        if ($primaryTargetSkill !== null && $primaryTargetSkill !== '') {
+            $data['target_skills'] = [$primaryTargetSkill];
+
+            if (is_array($data['secondary_target_skills'] ?? null)) {
+                $data['secondary_target_skills'] = array_values(array_filter(
+                    self::uniqueList($data['secondary_target_skills']),
+                    fn (mixed $skill): bool => is_string($skill) && $skill !== $primaryTargetSkill,
+                ));
+            }
+        }
+
+        if (array_key_exists('goal_modules', $data) && $primaryTargetSkill !== null && $primaryTargetSkill !== '') {
+            if (is_array($data['goal_modules'])) {
+                $data['goal_modules'] = CalisthenicsGoalModuleOptions::normalizeForGoal(
+                    $data['goal_modules'],
+                    $primaryTargetSkill,
+                );
+            } else {
+                unset($data['goal_modules']);
+            }
+        } elseif (array_key_exists('goal_modules', $data) && ! is_array($data['goal_modules'])) {
+            unset($data['goal_modules']);
+        }
+
         foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines'] as $key) {
             if (array_key_exists($key, $data) && ! is_array($data[$key])) {
                 unset($data[$key]);
@@ -262,6 +296,11 @@ final class AthleteProfileOptions
             'secondary_target_skills' => $profile->secondary_target_skills ?? [],
             'long_term_target_skills' => $profile->long_term_target_skills ?? [],
             'base_focus_areas' => $profile->base_focus_areas ?? [],
+            'required_goal_modules' => CalisthenicsGoalModuleOptions::modulesForGoal($profile->primary_target_skill),
+            'goal_modules' => CalisthenicsGoalModuleOptions::normalizeForGoal(
+                $profile->goal_modules ?? [],
+                $profile->primary_target_skill,
+            ),
             'roadmap_suggestions' => $profile->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => $profile->available_equipment ?? [],
             'training_locations' => $profile->training_locations ?? [],
@@ -292,11 +331,27 @@ final class AthleteProfileOptions
     {
         $merged = [...$base, ...$incoming];
 
-        foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines', 'pain_flags'] as $key) {
+        foreach (['baseline_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines', 'pain_flags', 'goal_modules'] as $key) {
             if (is_array($base[$key] ?? null) && is_array($incoming[$key] ?? null)) {
                 $merged[$key] = array_replace_recursive($base[$key], $incoming[$key]);
             }
         }
+
+        $primaryTargetSkill = is_string($merged['primary_target_skill'] ?? null) ? $merged['primary_target_skill'] : null;
+
+        if ($primaryTargetSkill !== null && $primaryTargetSkill !== '') {
+            $merged['target_skills'] = [$primaryTargetSkill];
+            $merged['secondary_target_skills'] = array_values(array_filter(
+                self::uniqueList(is_array($merged['secondary_target_skills'] ?? null) ? $merged['secondary_target_skills'] : []),
+                fn (mixed $skill): bool => is_string($skill) && $skill !== $primaryTargetSkill,
+            ));
+        }
+
+        $merged['goal_modules'] = CalisthenicsGoalModuleOptions::normalizeForGoal(
+            is_array($merged['goal_modules'] ?? null) ? $merged['goal_modules'] : [],
+            $primaryTargetSkill,
+        );
+        unset($merged['required_goal_modules']);
 
         $merged['pain_flags'] = self::completePainFlags(
             is_array($merged['pain_flags'] ?? null) ? $merged['pain_flags'] : [],

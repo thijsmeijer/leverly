@@ -94,6 +94,10 @@ paths:
                         type: integer
                       primary_target_skill:
                         type: string
+                      required_goal_modules:
+                        type: array
+                      goal_modules:
+                        type: object
                       baseline_tests:
                         type: object
                       mobility_checks:
@@ -142,6 +146,10 @@ paths:
                         type: integer
                       primary_target_skill:
                         type: string
+                      required_goal_modules:
+                        type: array
+                      goal_modules:
+                        type: object
                       baseline_tests:
                         type: object
                       mobility_checks:
@@ -185,6 +193,10 @@ paths:
                             type: object
                       primary_target_skill:
                         type: string
+                      required_goal_modules:
+                        type: array
+                      goal_modules:
+                        type: object
                       mobility_checks:
                         type: object
                       weighted_baselines:
@@ -229,6 +241,10 @@ paths:
                             type: object
                       primary_target_skill:
                         type: string
+                      required_goal_modules:
+                        type: array
+                      goal_modules:
+                        type: object
                       mobility_checks:
                         type: object
                       weighted_baselines:
@@ -261,6 +277,9 @@ describe('OpenAPI client generation', () => {
     expect(generated).toContain('export interface AthleteProfileResponse')
     expect(generated).toContain('export interface AthleteOnboardingResponse')
     expect(generated).toContain('export interface PainFlag')
+    expect(generated).toContain('export interface GoalModule')
+    expect(generated).toContain('readonly required_goal_modules: readonly string[]')
+    expect(generated).toContain('readonly goal_modules: GoalModules')
     expect(generated).toContain('readonly weight_trend: string')
     expect(generated).toContain('readonly pain_flags: PainFlags')
     expect(generated).toContain('readonly rows:')

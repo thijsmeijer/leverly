@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Domain\Onboarding\Support\AthleteOnboardingOptions;
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Support\CalisthenicsGoalModuleOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
 use App\Models\User;
@@ -36,11 +37,19 @@ class AthleteOnboardingFactory extends Factory
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => 'skill',
             'secondary_goals' => ['strength'],
-            'target_skills' => ['strict_pull_up', 'handstand'],
+            'target_skills' => ['handstand'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['front_lever'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
+            'goal_modules' => [
+                'inversion' => [
+                    ...CalisthenicsGoalModuleOptions::emptyModule('inversion'),
+                    'highest_progression' => 'freestanding_kick_up',
+                    'hold_seconds' => 20,
+                    'quality' => 'solid',
+                ],
+            ],
             'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
             'training_locations' => ['home'],

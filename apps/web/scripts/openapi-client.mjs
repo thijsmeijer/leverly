@@ -64,6 +64,8 @@ export function findContractProblems(openApiSource) {
     ['athlete profile roadmap primary goal property', 'primary_goal:'],
     ['athlete profile roadmap eta range property', 'eta_range:'],
     ['athlete profile primary target skill property', 'primary_target_skill:'],
+    ['athlete profile required goal modules property', 'required_goal_modules:'],
+    ['athlete profile goal modules property', 'goal_modules:'],
     ['athlete profile baseline tests property', 'baseline_tests:'],
     ['athlete profile mobility checks property', 'mobility_checks:'],
     ['athlete profile weighted baselines property', 'weighted_baselines:'],
@@ -80,6 +82,8 @@ export function findContractProblems(openApiSource) {
     ['athlete onboarding roadmap intermediate property', 'intermediate:'],
     ['athlete onboarding level tests property', 'current_level_tests:'],
     ['athlete onboarding primary target skill property', 'primary_target_skill:'],
+    ['athlete onboarding required goal modules property', 'required_goal_modules:'],
+    ['athlete onboarding goal modules property', 'goal_modules:'],
     ['athlete onboarding mobility checks property', 'mobility_checks:'],
     ['athlete onboarding weighted baselines property', 'weighted_baselines:'],
     ['athlete onboarding completion property', 'is_complete:'],
@@ -139,6 +143,19 @@ export interface PainFlag {
 }
 
 export type PainFlags = Readonly<Record<string, PainFlag>>
+
+export interface GoalModule {
+  readonly highest_progression: string
+  readonly metric_type: string
+  readonly reps: number | null
+  readonly hold_seconds: number | null
+  readonly load_value: number | null
+  readonly load_unit: string
+  readonly quality: string
+  readonly notes: string | null
+}
+
+export type GoalModules = Readonly<Record<string, GoalModule>>
 
 export interface PlacementLevelTests {
   readonly push_ups: {
@@ -325,6 +342,8 @@ export interface AthleteProfile {
   readonly secondary_target_skills: readonly string[]
   readonly long_term_target_skills: readonly string[]
   readonly base_focus_areas: readonly string[]
+  readonly required_goal_modules: readonly string[]
+  readonly goal_modules: GoalModules
   readonly roadmap_suggestions: RoadmapSuggestions
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
@@ -410,6 +429,8 @@ export interface AthleteOnboarding {
   readonly secondary_target_skills: readonly string[]
   readonly long_term_target_skills: readonly string[]
   readonly base_focus_areas: readonly string[]
+  readonly required_goal_modules: readonly string[]
+  readonly goal_modules: GoalModules
   readonly roadmap_suggestions: RoadmapSuggestions
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]

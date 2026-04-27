@@ -34,6 +34,19 @@ export interface PainFlag {
 
 export type PainFlags = Readonly<Record<string, PainFlag>>
 
+export interface GoalModule {
+  readonly highest_progression: string
+  readonly metric_type: string
+  readonly reps: number | null
+  readonly hold_seconds: number | null
+  readonly load_value: number | null
+  readonly load_unit: string
+  readonly quality: string
+  readonly notes: string | null
+}
+
+export type GoalModules = Readonly<Record<string, GoalModule>>
+
 export interface PlacementLevelTests {
   readonly push_ups: {
     readonly max_strict_reps: number | null
@@ -219,6 +232,8 @@ export interface AthleteProfile {
   readonly secondary_target_skills: readonly string[]
   readonly long_term_target_skills: readonly string[]
   readonly base_focus_areas: readonly string[]
+  readonly required_goal_modules: readonly string[]
+  readonly goal_modules: GoalModules
   readonly roadmap_suggestions: RoadmapSuggestions
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]
@@ -304,6 +319,8 @@ export interface AthleteOnboarding {
   readonly secondary_target_skills: readonly string[]
   readonly long_term_target_skills: readonly string[]
   readonly base_focus_areas: readonly string[]
+  readonly required_goal_modules: readonly string[]
+  readonly goal_modules: GoalModules
   readonly roadmap_suggestions: RoadmapSuggestions
   readonly available_equipment: readonly string[]
   readonly training_locations: readonly string[]

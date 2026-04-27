@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Domain\Profile\Support\AthleteProfileOptions;
+use App\Domain\Training\Support\CalisthenicsGoalModuleOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteProfile;
 use App\Models\User;
@@ -38,11 +39,19 @@ class AthleteProfileFactory extends Factory
             'prior_sport_background' => ['strength_training'],
             'primary_goal' => fake()->randomElement(AthleteProfileOptions::GOALS),
             'secondary_goals' => ['strength', 'skill'],
-            'target_skills' => ['handstand', 'strict_pull_up'],
+            'target_skills' => ['handstand'],
             'primary_target_skill' => 'handstand',
             'secondary_target_skills' => ['strict_pull_up'],
             'long_term_target_skills' => ['front_lever'],
             'base_focus_areas' => ['pull_capacity', 'core_bodyline'],
+            'goal_modules' => [
+                'inversion' => [
+                    ...CalisthenicsGoalModuleOptions::emptyModule('inversion'),
+                    'highest_progression' => 'freestanding_kick_up',
+                    'hold_seconds' => 20,
+                    'quality' => 'solid',
+                ],
+            ],
             'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => ['pull_up_bar', 'rings', 'parallettes', 'resistance_band'],
             'training_locations' => ['home'],

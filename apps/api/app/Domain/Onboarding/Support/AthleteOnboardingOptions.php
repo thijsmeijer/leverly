@@ -6,6 +6,7 @@ namespace App\Domain\Onboarding\Support;
 
 use App\Domain\Profile\Support\AthleteProfileOptions;
 use App\Domain\Training\Roadmap\RoadmapInputMapper;
+use App\Domain\Training\Support\CalisthenicsGoalModuleOptions;
 use App\Domain\Training\Support\CalisthenicsPlacementOptions;
 use App\Domain\Training\Support\CalisthenicsRoadmapSuggester;
 use App\Models\AthleteOnboarding;
@@ -14,6 +15,12 @@ use App\Models\User;
 final class AthleteOnboardingOptions
 {
     public const array TARGET_SKILLS = CalisthenicsPlacementOptions::TARGET_SKILLS;
+
+    public const array GOAL_MODULES = CalisthenicsGoalModuleOptions::MODULES;
+
+    public const array GOAL_MODULE_METRIC_TYPES = CalisthenicsGoalModuleOptions::METRIC_TYPES;
+
+    public const array GOAL_MODULE_QUALITY_MARKERS = CalisthenicsGoalModuleOptions::QUALITY_MARKERS;
 
     public const array BASE_FOCUS_AREAS = CalisthenicsPlacementOptions::BASE_FOCUS_AREAS;
 
@@ -61,6 +68,7 @@ final class AthleteOnboardingOptions
             'secondary_target_skills' => [],
             'long_term_target_skills' => [],
             'base_focus_areas' => [],
+            'goal_modules' => [],
             'roadmap_suggestions' => CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => [],
             'training_locations' => [],
@@ -139,6 +147,32 @@ final class AthleteOnboardingOptions
             }
         }
 
+        $primaryTargetSkill = is_string($data['primary_target_skill'] ?? null) ? $data['primary_target_skill'] : null;
+
+        if ($primaryTargetSkill !== null && $primaryTargetSkill !== '') {
+            $data['target_skills'] = [$primaryTargetSkill];
+
+            if (is_array($data['secondary_target_skills'] ?? null)) {
+                $data['secondary_target_skills'] = array_values(array_filter(
+                    array_values(array_unique($data['secondary_target_skills'])),
+                    fn (mixed $skill): bool => is_string($skill) && $skill !== $primaryTargetSkill,
+                ));
+            }
+        }
+
+        if (array_key_exists('goal_modules', $data) && $primaryTargetSkill !== null && $primaryTargetSkill !== '') {
+            if (is_array($data['goal_modules'])) {
+                $data['goal_modules'] = CalisthenicsGoalModuleOptions::normalizeForGoal(
+                    $data['goal_modules'],
+                    $primaryTargetSkill,
+                );
+            } else {
+                unset($data['goal_modules']);
+            }
+        } elseif (array_key_exists('goal_modules', $data) && ! is_array($data['goal_modules'])) {
+            unset($data['goal_modules']);
+        }
+
         unset($data['roadmap_suggestions']);
 
         return $data;
@@ -153,11 +187,27 @@ final class AthleteOnboardingOptions
     {
         $merged = [...$base, ...$incoming];
 
-        foreach (['current_level_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines', 'pain_flags'] as $key) {
+        foreach (['current_level_tests', 'skill_statuses', 'mobility_checks', 'weighted_baselines', 'pain_flags', 'goal_modules'] as $key) {
             if (is_array($base[$key] ?? null) && is_array($incoming[$key] ?? null)) {
                 $merged[$key] = array_replace_recursive($base[$key], $incoming[$key]);
             }
         }
+
+        $primaryTargetSkill = is_string($merged['primary_target_skill'] ?? null) ? $merged['primary_target_skill'] : null;
+
+        if ($primaryTargetSkill !== null && $primaryTargetSkill !== '') {
+            $merged['target_skills'] = [$primaryTargetSkill];
+            $merged['secondary_target_skills'] = array_values(array_filter(
+                array_values(array_unique(is_array($merged['secondary_target_skills'] ?? null) ? $merged['secondary_target_skills'] : [])),
+                fn (mixed $skill): bool => is_string($skill) && $skill !== $primaryTargetSkill,
+            ));
+        }
+
+        $merged['goal_modules'] = CalisthenicsGoalModuleOptions::normalizeForGoal(
+            is_array($merged['goal_modules'] ?? null) ? $merged['goal_modules'] : [],
+            $primaryTargetSkill,
+        );
+        unset($merged['required_goal_modules']);
 
         $merged['pain_flags'] = AthleteProfileOptions::completePainFlags(
             is_array($merged['pain_flags'] ?? null) ? $merged['pain_flags'] : [],
@@ -208,6 +258,13 @@ final class AthleteOnboardingOptions
 
         if (! is_string($candidate['primary_target_skill'] ?? null) || $candidate['primary_target_skill'] === '') {
             $missing[] = 'primary_target_skill';
+        }
+
+        foreach (CalisthenicsGoalModuleOptions::missingRequiredModules(
+            is_array($candidate['goal_modules'] ?? null) ? $candidate['goal_modules'] : [],
+            is_string($candidate['primary_target_skill'] ?? null) ? $candidate['primary_target_skill'] : null,
+        ) as $missingGoalModule) {
+            $missing[] = $missingGoalModule;
         }
 
         if (empty($candidate['base_focus_areas']) || ! is_array($candidate['base_focus_areas'])) {
@@ -353,6 +410,11 @@ final class AthleteOnboardingOptions
             'secondary_target_skills' => $onboarding->secondary_target_skills ?? [],
             'long_term_target_skills' => $onboarding->long_term_target_skills ?? [],
             'base_focus_areas' => $onboarding->base_focus_areas ?? [],
+            'required_goal_modules' => CalisthenicsGoalModuleOptions::modulesForGoal($onboarding->primary_target_skill),
+            'goal_modules' => CalisthenicsGoalModuleOptions::normalizeForGoal(
+                $onboarding->goal_modules ?? [],
+                $onboarding->primary_target_skill,
+            ),
             'roadmap_suggestions' => $onboarding->roadmap_suggestions ?? CalisthenicsRoadmapSuggester::empty(),
             'available_equipment' => $onboarding->available_equipment ?? [],
             'training_locations' => $onboarding->training_locations ?? [],
@@ -390,6 +452,7 @@ final class AthleteOnboardingOptions
             'secondary_target_skills',
             'long_term_target_skills',
             'base_focus_areas',
+            'goal_modules',
             'age_years',
             'training_age_months',
             'experience_level',
