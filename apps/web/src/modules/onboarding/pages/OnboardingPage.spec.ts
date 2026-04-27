@@ -121,6 +121,30 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).not.toContain('Lower-body skill check')
   })
 
+  it('uses roomy option cards for pain and recovery controls', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(onboardingResponse())),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Pain + mobility'))
+      ?.trigger('click')
+
+    for (const label of ['Readiness', 'Sleep quality', 'Soreness', 'Pain right now']) {
+      const fieldset = wrapper.findAll('fieldset').find((candidate) => candidate.find('legend').text() === label)
+
+      expect(fieldset, `${label} fieldset should exist`).toBeDefined()
+      expect(fieldset?.find('.grid').classes().join(' ')).toContain('minmax(7.5rem,1fr)')
+      expect(fieldset?.find('label').classes().join(' ')).toContain('min-h-20')
+    }
+  })
+
   it('shows the Roadmap V2 review and completes onboarding from the review step', async () => {
     const fetcher = vi
       .fn<typeof fetch>()

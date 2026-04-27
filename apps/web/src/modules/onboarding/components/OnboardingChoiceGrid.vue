@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { ChoiceOption } from '../types'
 
 const model = defineModel<string | string[]>({ required: true })
 
 const props = withDefaults(
   defineProps<{
-    columns?: 'compact' | 'relaxed'
+    columns?: 'comfortable' | 'compact' | 'relaxed'
     error?: string
     help?: string
     label: string
@@ -21,6 +23,22 @@ const props = withDefaults(
     maxSelections: undefined,
     multiple: false,
   },
+)
+
+const gridClass = computed(() => {
+  if (props.columns === 'compact') {
+    return 'grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))]'
+  }
+
+  if (props.columns === 'comfortable') {
+    return 'grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))]'
+  }
+
+  return 'sm:grid-cols-2 xl:grid-cols-3'
+})
+
+const optionCardLayoutClass = computed(() =>
+  props.columns === 'comfortable' ? 'min-h-20 p-3.5 sm:p-4' : 'min-h-24 p-4',
 )
 
 function isSelected(value: string): boolean {
@@ -63,23 +81,19 @@ function isDisabled(value: string): boolean {
 <template>
   <fieldset class="space-y-3" :aria-describedby="error ? `${name}-error` : help ? `${name}-help` : undefined">
     <legend class="text-ink-primary text-sm font-semibold">{{ label }}</legend>
-    <div
-      class="grid gap-3"
-      :class="
-        columns === 'compact' ? 'grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))]' : 'sm:grid-cols-2 xl:grid-cols-3'
-      "
-    >
+    <div class="grid gap-3" :class="gridClass">
       <label
         v-for="option in options"
         :key="option.value"
-        class="rounded-card focus-within:ring-accent-primary focus-within:ring-offset-surface-elevated min-h-24 border p-4 transition duration-200 focus-within:ring-2 focus-within:ring-offset-2"
-        :class="
+        class="rounded-card focus-within:ring-accent-primary focus-within:ring-offset-surface-elevated border transition duration-200 focus-within:ring-2 focus-within:ring-offset-2"
+        :class="[
+          optionCardLayoutClass,
           isDisabled(option.value)
             ? 'border-line-subtle bg-surface-muted text-ink-muted cursor-not-allowed opacity-60'
             : isSelected(option.value)
               ? 'border-accent-primary bg-accent-primary-soft text-ink-primary shadow-card'
-              : 'border-line-subtle bg-surface-elevated text-ink-secondary hover:border-line-strong hover:bg-surface-overlay hover:shadow-card-soft cursor-pointer'
-        "
+              : 'border-line-subtle bg-surface-elevated text-ink-secondary hover:border-line-strong hover:bg-surface-overlay hover:shadow-card-soft cursor-pointer',
+        ]"
       >
         <input
           class="sr-only"
@@ -91,7 +105,7 @@ function isDisabled(value: string): boolean {
           @change="selectValue(option.value)"
         />
         <span class="flex h-full items-start justify-between gap-3">
-          <span class="min-w-0">
+          <span class="min-w-0 break-words">
             <span class="block text-sm font-semibold">{{ option.label }}</span>
             <span v-if="option.meta" class="text-accent-secondary mt-1 block text-xs font-semibold">
               {{ option.meta }}

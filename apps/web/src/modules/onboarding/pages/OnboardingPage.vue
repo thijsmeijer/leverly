@@ -709,21 +709,21 @@ const lowerBodyVariantOptions = [
               <div class="grid gap-5 xl:grid-cols-3">
                 <OnboardingChoiceGrid
                   v-model="onboarding.form.readinessRating"
-                  columns="compact"
+                  columns="comfortable"
                   label="Readiness"
                   name="onboarding-readiness"
                   :options="readinessOptions"
                 />
                 <OnboardingChoiceGrid
                   v-model="onboarding.form.sleepQuality"
-                  columns="compact"
+                  columns="comfortable"
                   label="Sleep quality"
                   name="onboarding-sleep"
                   :options="readinessOptions"
                 />
                 <OnboardingChoiceGrid
                   v-model="onboarding.form.sorenessLevel"
-                  columns="compact"
+                  columns="comfortable"
                   label="Soreness"
                   name="onboarding-soreness"
                   :options="sorenessOptions"
@@ -733,7 +733,7 @@ const lowerBodyVariantOptions = [
               <div class="mt-5 space-y-5">
                 <OnboardingChoiceGrid
                   v-model="onboarding.form.painLevel"
-                  columns="compact"
+                  columns="comfortable"
                   label="Pain right now"
                   name="onboarding-pain"
                   :options="painOptions"
