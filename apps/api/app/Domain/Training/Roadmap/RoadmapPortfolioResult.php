@@ -26,24 +26,28 @@ final readonly class RoadmapPortfolioResult
     public static function fromRoadmapSuggestions(array $suggestions, ?RoadmapInput $input = null): self
     {
         $goalCandidates = self::goalCandidates($suggestions['goal_candidates'] ?? []);
+        $nodeReadiness = $input === null ? [] : NodeReadinessCalculator::fromInput($input);
         $blockedTracks = self::blockedTracks($goalCandidates, $suggestions, $input);
         $blockedIds = self::trackIds($blockedTracks);
         $developmentTracks = self::tracksFromCandidates(
             self::filterCandidates($goalCandidates['primary'], excludeBlocked: true),
             'development',
             $suggestions,
+            $nodeReadiness,
         );
         $technicalPracticeTracks = self::tracksFromCandidates(
             self::technicalPracticeCandidates($goalCandidates, $input),
             'technical_practice',
             $suggestions,
+            $nodeReadiness,
         );
         $accessoryTracks = self::tracksFromCandidates(
             self::accessoryCandidates($goalCandidates, $input),
             'accessory_transfer',
             $suggestions,
+            $nodeReadiness,
         );
-        $foundationTracks = self::tracksFromCandidates($goalCandidates['foundation'], 'foundation', $suggestions);
+        $foundationTracks = self::tracksFromCandidates($goalCandidates['foundation'], 'foundation', $suggestions, $nodeReadiness);
         $maintenanceTracks = self::tracksFromCandidates(
             array_values(array_filter(
                 $goalCandidates['foundation'],
@@ -51,12 +55,14 @@ final readonly class RoadmapPortfolioResult
             )),
             'maintenance',
             $suggestions,
+            $nodeReadiness,
         );
         $futureQueue = self::dedupeTracks([
             ...self::tracksFromCandidates(
                 self::futureCandidates($goalCandidates, $blockedIds),
                 'future_queue',
                 $suggestions,
+                $nodeReadiness,
             ),
             ...self::tracksFromGoals(
                 self::arrayList($suggestions['deferred_goals'] ?? []),
@@ -64,7 +70,7 @@ final readonly class RoadmapPortfolioResult
             ),
         ]);
         $notRecommendedNow = self::dedupeTracks([
-            ...self::tracksFromCandidates(self::futureCandidates($goalCandidates, $blockedIds), 'not_now', $suggestions),
+            ...self::tracksFromCandidates(self::futureCandidates($goalCandidates, $blockedIds), 'not_now', $suggestions, $nodeReadiness),
             ...self::tracksFromGoals(self::arrayList($suggestions['deferred_goals'] ?? []), 'not_now'),
         ]);
         $activeTracks = self::dedupeTracks([
@@ -278,9 +284,10 @@ final readonly class RoadmapPortfolioResult
     /**
      * @param  list<array<string, mixed>>  $candidates
      * @param  array<string, mixed>  $suggestions
+     * @param  array<string, NodeReadiness>  $nodeReadiness
      * @return list<array<string, mixed>>
      */
-    private static function tracksFromCandidates(array $candidates, string $mode, array $suggestions): array
+    private static function tracksFromCandidates(array $candidates, string $mode, array $suggestions, array $nodeReadiness = []): array
     {
         $tracks = [];
 
@@ -290,7 +297,7 @@ final readonly class RoadmapPortfolioResult
                 continue;
             }
 
-            $tracks[] = self::trackFromCandidate($candidate, $mode, self::goalBySkill($suggestions, $skill));
+            $tracks[] = self::trackFromCandidate($candidate, $mode, self::goalBySkill($suggestions, $skill), nodeReadiness: $nodeReadiness[$skill] ?? null);
         }
 
         return self::dedupeTracks($tracks);
@@ -328,8 +335,13 @@ final readonly class RoadmapPortfolioResult
      * @param  list<string>  $extraReasons
      * @return array<string, mixed>
      */
-    private static function trackFromCandidate(array $candidate, string $mode, ?array $goal = null, array $extraReasons = []): array
-    {
+    private static function trackFromCandidate(
+        array $candidate,
+        string $mode,
+        ?array $goal = null,
+        array $extraReasons = [],
+        ?NodeReadiness $nodeReadiness = null,
+    ): array {
         $skill = self::stringValue($candidate['skill'] ?? null, '');
         $label = self::stringValue($candidate['label'] ?? $goal['label'] ?? null, self::labelFromSkill($skill));
         $stressAxes = self::stringList($candidate['stress_tags'] ?? GoalStressCatalog::tags($skill));
@@ -341,7 +353,7 @@ final readonly class RoadmapPortfolioResult
             ...($mode === 'future_queue' || $mode === 'not_now' || $mode === 'blocked' ? $unlockConditions : []),
         ]));
 
-        return [
+        $track = [
             'skill_track_id' => $skill,
             'display_name' => $label,
             'current_node' => self::nodeValue($goal['current_progression_node'] ?? null, "{$skill}.current", 'Current placement'),
@@ -357,6 +369,25 @@ final readonly class RoadmapPortfolioResult
             'why_included' => self::uniqueStrings([$reason, ...$blockers, ...$extraReasons]),
             'why_not_higher_priority' => self::uniqueStrings($whyNotHigher),
         ];
+
+        if ($nodeReadiness === null) {
+            return $track;
+        }
+
+        $readiness = $nodeReadiness->toArray();
+        $track['current_node'] = $readiness['current_node'];
+        $track['next_node'] = $readiness['next_node'];
+        $track['target_node'] = $readiness['target_node'];
+        $track['eta_to_next_node'] = self::etaValue($readiness['eta_to_next_node']);
+        $track['confidence'] = self::confidenceValue($readiness['confidence'], $reason);
+        $track['node_readiness'] = $readiness;
+        $track['mode_detail'] = [
+            'node_status' => $readiness['status'],
+            'readiness_score' => $readiness['readiness_score'],
+            'confidence' => $readiness['confidence'],
+        ];
+
+        return $track;
     }
 
     /**
