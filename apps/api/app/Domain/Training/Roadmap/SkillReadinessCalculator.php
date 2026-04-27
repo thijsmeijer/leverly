@@ -34,52 +34,55 @@ final class SkillReadinessCalculator
 
     private const array DEFINITIONS = [
         'strict_push_up' => [
-            'domains' => ['vertical_push' => 0.65, 'trunk_rigidity' => 0.2, 'tissue_tolerance' => 0.15],
+            'domains' => ['bent_arm_push' => 0.55, 'trunk_rigidity' => 0.2, 'elbow_push_tendon' => 0.15, 'wrist_loaded_extension' => 0.1],
             'minimum_nodes' => [['push_up', 'first_push_up', 'Minimum push-up node is not reached yet.']],
             'family' => 'push_up',
         ],
         'one_arm_push_up' => [
-            'domains' => ['vertical_push' => 0.55, 'trunk_rigidity' => 0.25, 'tissue_tolerance' => 0.2],
+            'domains' => ['bent_arm_push' => 0.45, 'trunk_rigidity' => 0.2, 'elbow_push_tendon' => 0.2, 'wrist_loaded_extension' => 0.15],
             'minimum_nodes' => [['push_up', 'archer_push_up', 'Minimum push-up node is not reached yet.']],
             'family' => 'push_up',
             'advanced_anthropometry' => true,
             'high_fatigue' => true,
         ],
         'strict_pull_up' => [
-            'domains' => ['vertical_pull' => 0.75, 'tissue_tolerance' => 0.25],
+            'domains' => ['bent_arm_pull' => 0.6, 'grip_hang' => 0.2, 'elbow_pull_tendon' => 0.2],
             'equipment_groups' => [['pull_up_bar', 'rings']],
             'minimum_nodes' => [['pull_up', 'first_pull_up', 'Minimum pull-up node is not reached yet.']],
             'family' => 'pull_up',
         ],
         'weighted_pull_up' => [
-            'domains' => ['vertical_pull' => 0.7, 'tissue_tolerance' => 0.3],
+            'domains' => ['bent_arm_pull' => 0.55, 'grip_hang' => 0.15, 'elbow_pull_tendon' => 0.3],
             'equipment_groups' => [['pull_up_bar', 'rings'], ['dip_belt', 'weighted_vest']],
             'minimum_nodes' => [['pull_up', 'three_by_eight_pull_ups', 'Minimum pull-up node is not reached yet.']],
             'family' => 'pull_up',
             'high_fatigue' => true,
         ],
         'strict_dip' => [
-            'domains' => ['vertical_push' => 0.7, 'tissue_tolerance' => 0.3],
+            'domains' => ['bent_arm_push' => 0.5, 'shoulder_extension' => 0.25, 'elbow_push_tendon' => 0.25],
             'equipment_groups' => [['dip_bars', 'rings', 'parallettes']],
+            'mobility' => ['shoulder_extension'],
             'minimum_nodes' => [['dip', 'first_dip', 'Minimum dip node is not reached yet.']],
             'family' => 'dip',
         ],
         'ring_dip' => [
-            'domains' => ['vertical_push' => 0.55, 'tissue_tolerance' => 0.3, 'trunk_rigidity' => 0.15],
+            'domains' => ['bent_arm_push' => 0.45, 'shoulder_extension' => 0.25, 'elbow_push_tendon' => 0.2, 'trunk_rigidity' => 0.1],
             'equipment_groups' => [['rings']],
+            'mobility' => ['shoulder_extension'],
             'minimum_nodes' => [['dip', 'deep_dip_capacity', 'Minimum dip node is not reached yet.']],
             'family' => 'dip',
             'high_fatigue' => true,
         ],
         'weighted_dip' => [
-            'domains' => ['vertical_push' => 0.65, 'tissue_tolerance' => 0.35],
+            'domains' => ['bent_arm_push' => 0.45, 'shoulder_extension' => 0.25, 'elbow_push_tendon' => 0.3],
             'equipment_groups' => [['dip_bars', 'rings'], ['dip_belt', 'weighted_vest']],
+            'mobility' => ['shoulder_extension'],
             'minimum_nodes' => [['dip', 'deep_dip_capacity', 'Minimum dip node is not reached yet.']],
             'family' => 'dip',
             'high_fatigue' => true,
         ],
         'muscle_up' => [
-            'domains' => ['vertical_pull' => 0.45, 'vertical_push' => 0.35, 'horizontal_pull_straight_arm_pull' => 0.1, 'tissue_tolerance' => 0.1],
+            'domains' => ['explosive_pull' => 0.35, 'bent_arm_pull' => 0.25, 'bent_arm_push' => 0.2, 'elbow_pull_tendon' => 0.1, 'elbow_push_tendon' => 0.1],
             'equipment_groups' => [['pull_up_bar', 'rings'], ['dip_bars', 'rings']],
             'minimum_nodes' => [
                 ['pull_up', 'three_by_eight_pull_ups', 'Minimum pull-up node is not reached yet.'],
@@ -89,7 +92,7 @@ final class SkillReadinessCalculator
             'high_fatigue' => true,
         ],
         'weighted_muscle_up' => [
-            'domains' => ['vertical_pull' => 0.45, 'vertical_push' => 0.35, 'tissue_tolerance' => 0.2],
+            'domains' => ['explosive_pull' => 0.3, 'bent_arm_pull' => 0.25, 'bent_arm_push' => 0.2, 'elbow_pull_tendon' => 0.15, 'elbow_push_tendon' => 0.1],
             'equipment_groups' => [['pull_up_bar', 'rings'], ['dip_bars', 'rings'], ['dip_belt', 'weighted_vest']],
             'minimum_nodes' => [['muscle_up', 'strict_muscle_up', 'Minimum muscle-up node is not reached yet.']],
             'family' => 'muscle_up',
@@ -97,38 +100,38 @@ final class SkillReadinessCalculator
             'high_fatigue' => true,
         ],
         'l_sit' => [
-            'domains' => ['compression' => 0.6, 'trunk_rigidity' => 0.25, 'tissue_tolerance' => 0.15],
+            'domains' => ['compression' => 0.55, 'trunk_rigidity' => 0.25, 'wrist_loaded_extension' => 0.2],
             'minimum_nodes' => [['compression', 'tuck_l_sit', 'Minimum compression node is not reached yet.']],
             'family' => 'compression',
         ],
         'v_sit' => [
-            'domains' => ['compression' => 0.65, 'trunk_rigidity' => 0.2, 'tissue_tolerance' => 0.15],
+            'domains' => ['compression' => 0.6, 'trunk_rigidity' => 0.2, 'wrist_loaded_extension' => 0.2],
             'minimum_nodes' => [['compression', 'full_l_sit', 'Minimum compression node is not reached yet.']],
             'family' => 'compression',
             'advanced_anthropometry' => true,
         ],
         'handstand' => [
-            'domains' => ['inversion_balance' => 0.55, 'trunk_rigidity' => 0.25, 'tissue_tolerance' => 0.2],
+            'domains' => ['inversion_balance' => 0.45, 'trunk_rigidity' => 0.2, 'wrist_loaded_extension' => 0.2, 'shoulder_flexion' => 0.15],
             'mobility' => ['wrist_extension', 'shoulder_flexion'],
             'family' => 'handstand',
             'line_skill' => true,
         ],
         'handstand_push_up' => [
-            'domains' => ['inversion_balance' => 0.45, 'vertical_push' => 0.35, 'tissue_tolerance' => 0.2],
+            'domains' => ['inversion_balance' => 0.25, 'vertical_push' => 0.25, 'shoulder_flexion' => 0.2, 'wrist_loaded_extension' => 0.15, 'elbow_push_tendon' => 0.15],
             'mobility' => ['wrist_extension', 'shoulder_flexion'],
             'minimum_nodes' => [['hspu', 'pike_push_up', 'Minimum handstand push-up node is not reached yet.']],
             'family' => 'hspu',
             'high_fatigue' => true,
         ],
         'press_to_handstand' => [
-            'domains' => ['compression' => 0.4, 'inversion_balance' => 0.35, 'trunk_rigidity' => 0.25],
+            'domains' => ['compression' => 0.35, 'inversion_balance' => 0.25, 'trunk_rigidity' => 0.2, 'shoulder_flexion' => 0.1, 'wrist_loaded_extension' => 0.1],
             'mobility' => ['wrist_extension', 'pancake_compression'],
             'minimum_nodes' => [['compression', 'full_l_sit', 'Minimum compression node is not reached yet.']],
             'family' => 'handstand',
             'advanced_anthropometry' => true,
         ],
         'front_lever' => [
-            'domains' => ['horizontal_pull_straight_arm_pull' => 0.5, 'vertical_pull' => 0.25, 'trunk_rigidity' => 0.25],
+            'domains' => ['straight_arm_pull' => 0.4, 'bent_arm_pull' => 0.2, 'trunk_rigidity' => 0.2, 'elbow_pull_tendon' => 0.15, 'shoulder_straight_arm' => 0.05],
             'equipment_groups' => [['pull_up_bar', 'rings']],
             'minimum_nodes' => [
                 ['pull_up', 'multiple_pull_ups', 'Minimum pull-up node is not reached yet.'],
@@ -139,7 +142,7 @@ final class SkillReadinessCalculator
             'high_fatigue' => true,
         ],
         'back_lever' => [
-            'domains' => ['horizontal_pull_straight_arm_pull' => 0.45, 'trunk_rigidity' => 0.25, 'tissue_tolerance' => 0.3],
+            'domains' => ['straight_arm_pull' => 0.3, 'shoulder_extension' => 0.3, 'shoulder_straight_arm' => 0.2, 'trunk_rigidity' => 0.2],
             'equipment_groups' => [['pull_up_bar', 'rings']],
             'mobility' => ['shoulder_extension'],
             'minimum_nodes' => [['back_lever', 'skin_the_cat_prep', 'Minimum back lever node is not reached yet.']],
@@ -147,7 +150,7 @@ final class SkillReadinessCalculator
             'high_fatigue' => true,
         ],
         'planche' => [
-            'domains' => ['vertical_push' => 0.35, 'trunk_rigidity' => 0.25, 'compression' => 0.2, 'tissue_tolerance' => 0.2],
+            'domains' => ['straight_arm_push' => 0.35, 'wrist_loaded_extension' => 0.25, 'shoulder_straight_arm' => 0.15, 'trunk_rigidity' => 0.15, 'compression' => 0.1],
             'mobility' => ['wrist_extension'],
             'minimum_nodes' => [['planche', 'tuck_planche', 'Minimum planche node is not reached yet.']],
             'family' => 'planche',
@@ -155,19 +158,19 @@ final class SkillReadinessCalculator
             'high_fatigue' => true,
         ],
         'pistol_squat' => [
-            'domains' => ['lower_body_strength' => 0.8, 'tissue_tolerance' => 0.2],
+            'domains' => ['unilateral_leg' => 0.45, 'lower_body_squat' => 0.3, 'ankle_dorsiflexion' => 0.25],
             'mobility' => ['ankle_dorsiflexion'],
             'minimum_nodes' => [['pistol_squat', 'assisted_pistol', 'Minimum pistol squat node is not reached yet.']],
             'family' => 'pistol_squat',
         ],
         'nordic_curl' => [
-            'domains' => ['lower_body_strength' => 0.65, 'tissue_tolerance' => 0.35],
+            'domains' => ['posterior_chain' => 0.55, 'lower_body_squat' => 0.25, 'recovery_capacity' => 0.2],
             'minimum_nodes' => [['lower_body', 'split_squat', 'Minimum lower-body node is not reached yet.']],
             'family' => 'lower_body',
             'high_fatigue' => true,
         ],
         'one_arm_pull_up' => [
-            'domains' => ['vertical_pull' => 0.6, 'horizontal_pull_straight_arm_pull' => 0.2, 'tissue_tolerance' => 0.2],
+            'domains' => ['bent_arm_pull' => 0.45, 'grip_hang' => 0.2, 'elbow_pull_tendon' => 0.25, 'horizontal_pull' => 0.1],
             'equipment_groups' => [['pull_up_bar', 'rings']],
             'minimum_nodes' => [['pull_up', 'three_by_eight_pull_ups', 'Minimum pull-up node is not reached yet.']],
             'family' => 'one_arm_pull_up',
@@ -175,7 +178,7 @@ final class SkillReadinessCalculator
             'high_fatigue' => true,
         ],
         'human_flag' => [
-            'domains' => ['horizontal_pull_straight_arm_pull' => 0.35, 'trunk_rigidity' => 0.3, 'vertical_push' => 0.2, 'tissue_tolerance' => 0.15],
+            'domains' => ['straight_arm_pull' => 0.25, 'straight_arm_push' => 0.25, 'trunk_rigidity' => 0.25, 'shoulder_flexion' => 0.15, 'wrist_loaded_extension' => 0.1],
             'equipment_groups' => [['stall_bars', 'pull_up_bar']],
             'minimum_nodes' => [['human_flag', 'tuck_human_flag', 'Minimum human flag node is not reached yet.']],
             'family' => 'human_flag',
@@ -217,6 +220,7 @@ final class SkillReadinessCalculator
         self::applyEquipmentGates($definition, $input, $hardBlockers, $softFactors, $blockingGate);
         self::applyMobilityGates($definition, $input, $hardBlockers, $blockingGate);
         self::applyPainGates($definition, $input, $hardBlockers, $safetyPenalties, $blockingGate, $deferralGate);
+        self::applyTissueDomainGates($definition, $domains, $hardBlockers, $safetyPenalties, $blockingGate, $deferralGate);
         self::applyPrerequisiteGates($definition, $placements, $hardBlockers, $softFactors, $deferralGate);
 
         $domainReadiness = self::domainReadiness($definition['domains'], $domains, $softFactors, $missingEvidence);
@@ -257,7 +261,7 @@ final class SkillReadinessCalculator
     private static function definition(string $skill): array
     {
         return self::DEFINITIONS[$skill] ?? [
-            'domains' => ['trunk_rigidity' => 0.4, 'tissue_tolerance' => 0.3, 'vertical_push' => 0.3],
+            'domains' => ['trunk_rigidity' => 0.4, 'recovery_capacity' => 0.3, 'bent_arm_push' => 0.3],
             'family' => ProgressionGraphRegistry::targetFamily($skill) ?? 'bodyline',
         ];
     }
@@ -350,23 +354,85 @@ final class SkillReadinessCalculator
             $deferralGate = true;
         }
 
-        foreach (self::arrayValue($input->painFlags['regions'] ?? []) as $region => $flag) {
-            if (! is_string($region) || ! is_array($flag)) {
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     * @param  array<string, DomainScore>  $domains
+     * @param  list<string>  $hardBlockers
+     * @param  list<string>  $safetyPenalties
+     */
+    private static function applyTissueDomainGates(
+        array $definition,
+        array $domains,
+        array &$hardBlockers,
+        array &$safetyPenalties,
+        bool &$blockingGate,
+        bool &$deferralGate,
+    ): void {
+        foreach (self::tissueDomainKeys($definition) as $domainKey) {
+            $domain = $domains[$domainKey] ?? null;
+
+            if ($domain === null || $domain->score > 45 || ! self::hasPainContribution($domain)) {
                 continue;
             }
 
-            $status = $flag['status'] ?? 'none';
-            $severity = $flag['severity'] ?? 'none';
+            $hardBlockers[] = self::tissueGateMessage($domainKey);
+            $safetyPenalties[] = "{$domain->label} is a related weak link.";
+            $deferralGate = true;
 
-            if ($status === 'recurring') {
-                $safetyPenalties[] = "Recurring {$region} pain increases uncertainty.";
-            }
-
-            if (in_array($status, ['recent', 'acute'], true) || in_array($severity, ['moderate', 'severe'], true)) {
-                $hardBlockers[] = "Recent or significant {$region} pain defers this skill.";
-                $deferralGate = true;
+            if ($domain->score <= 20 && (bool) ($definition['high_fatigue'] ?? false)) {
+                $blockingGate = true;
             }
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     * @return list<string>
+     */
+    private static function tissueDomainKeys(array $definition): array
+    {
+        $domains = is_array($definition['domains'] ?? null) ? $definition['domains'] : [];
+        $tissueKeys = [
+            'wrist_loaded_extension',
+            'elbow_pull_tendon',
+            'elbow_push_tendon',
+            'shoulder_flexion',
+            'shoulder_extension',
+            'shoulder_straight_arm',
+            'ankle_dorsiflexion',
+            'recovery_capacity',
+        ];
+
+        return array_values(array_intersect(array_keys($domains), $tissueKeys));
+    }
+
+    private static function hasPainContribution(DomainScore $domain): bool
+    {
+        foreach ($domain->contributingInputs as $input) {
+            $lower = strtolower($input);
+
+            if (str_contains($lower, 'pain')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function tissueGateMessage(string $domainKey): string
+    {
+        return match ($domainKey) {
+            'wrist_loaded_extension' => 'Wrist loaded extension is limited by current pain for this skill.',
+            'elbow_pull_tendon' => 'Elbow pull tendon readiness is limited by current pain for this skill.',
+            'elbow_push_tendon' => 'Elbow push tendon readiness is limited by current pain for this skill.',
+            'shoulder_flexion' => 'Shoulder flexion is limited by current pain for this skill.',
+            'shoulder_extension' => 'Shoulder extension is limited by current pain for this skill.',
+            'shoulder_straight_arm' => 'Shoulder straight-arm readiness is limited by current pain for this skill.',
+            'ankle_dorsiflexion' => 'Ankle dorsiflexion is limited by current pain for this skill.',
+            default => 'Related tissue readiness is limited by current pain for this skill.',
+        };
     }
 
     /**

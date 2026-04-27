@@ -113,6 +113,124 @@ class SkillReadinessCalculatorTest extends TestCase
         $this->assertContains('One-arm pull-up is anthropometry-sensitive; missing body context increases uncertainty.', $oneArmPullUp->safetyPenalties);
     }
 
+    public function test_wrist_pain_limits_planche_without_blocking_unrelated_pull_skills(): void
+    {
+        $readiness = SkillReadinessCalculator::fromInput($this->input([
+            'available_equipment' => ['pull_up_bar', 'rings', 'parallettes'],
+            'current_bodyweight_value' => 76,
+            'height_value' => 178,
+            'training_age_months' => 24,
+            'current_level_tests' => [
+                'push_ups' => ['max_strict_reps' => 25],
+                'pull_ups' => ['max_strict_reps' => 10, 'fallback_variant' => 'none'],
+                'dips' => ['max_strict_reps' => 10, 'fallback_variant' => 'none'],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 14],
+                'hollow_hold_seconds' => 40,
+                'passive_hang_seconds' => 50,
+                'top_support_hold_seconds' => 40,
+            ],
+            'skill_statuses' => [
+                'planche' => ['status' => 'tuck_planche', 'best_hold_seconds' => 6],
+                'front_lever' => ['status' => 'advanced_tuck_front_lever', 'best_hold_seconds' => 8],
+            ],
+            'pain_flags' => [
+                'wrist' => ['severity' => 'moderate', 'status' => 'recent'],
+            ],
+        ]));
+
+        $planche = $readiness['planche'];
+        $frontLever = $readiness['front_lever'];
+
+        $this->assertSame('deferred', $planche->status);
+        $this->assertContains('Wrist loaded extension is limited by current pain for this skill.', $planche->hardBlockers);
+        $this->assertNotContainsText('wrist', $frontLever->hardBlockers);
+        $this->assertNotContainsText('wrist', $frontLever->safetyPenalties);
+    }
+
+    public function test_elbow_pull_pain_limits_front_lever_without_becoming_a_global_push_blocker(): void
+    {
+        $readiness = SkillReadinessCalculator::fromInput($this->input([
+            'available_equipment' => ['pull_up_bar', 'parallettes'],
+            'current_bodyweight_value' => 76,
+            'height_value' => 178,
+            'training_age_months' => 24,
+            'current_level_tests' => [
+                'push_ups' => ['max_strict_reps' => 24],
+                'pull_ups' => ['max_strict_reps' => 10, 'fallback_variant' => 'none'],
+                'rows' => ['variant' => 'ring_row', 'max_reps' => 14],
+                'hollow_hold_seconds' => 40,
+                'passive_hang_seconds' => 50,
+            ],
+            'skill_statuses' => [
+                'front_lever' => ['status' => 'one_leg_front_lever', 'best_hold_seconds' => 5],
+                'planche' => ['status' => 'tuck_planche', 'best_hold_seconds' => 6],
+            ],
+            'pain_flags' => [
+                'elbow' => ['severity' => 'moderate', 'status' => 'recent'],
+            ],
+        ]));
+
+        $frontLever = $readiness['front_lever'];
+        $planche = $readiness['planche'];
+
+        $this->assertSame('deferred', $frontLever->status);
+        $this->assertContains('Elbow pull tendon readiness is limited by current pain for this skill.', $frontLever->hardBlockers);
+        $this->assertNotContainsText('elbow pull tendon', $planche->hardBlockers);
+    }
+
+    public function test_shoulder_extension_limits_dip_and_back_lever_without_blocking_pull_up(): void
+    {
+        $readiness = SkillReadinessCalculator::fromInput($this->input([
+            'available_equipment' => ['pull_up_bar', 'dip_bars', 'rings'],
+            'current_bodyweight_value' => 76,
+            'height_value' => 178,
+            'training_age_months' => 18,
+            'current_level_tests' => [
+                'pull_ups' => ['max_strict_reps' => 8, 'fallback_variant' => 'none'],
+                'dips' => ['max_strict_reps' => 8, 'fallback_variant' => 'none'],
+                'passive_hang_seconds' => 45,
+                'top_support_hold_seconds' => 40,
+            ],
+            'skill_statuses' => [
+                'back_lever' => ['status' => 'tuck_back_lever', 'best_hold_seconds' => 8],
+            ],
+            'mobility_checks' => [
+                'shoulder_extension' => 'painful',
+            ],
+        ]));
+
+        $this->assertContains('Shoulder extension is painful for this skill.', $readiness['strict_dip']->hardBlockers);
+        $this->assertContains('Shoulder extension is painful for this skill.', $readiness['back_lever']->hardBlockers);
+        $this->assertNotContainsText('Shoulder extension', $readiness['strict_pull_up']->hardBlockers);
+    }
+
+    public function test_shoulder_flexion_and_ankle_limits_are_targeted_to_hspu_and_pistol(): void
+    {
+        $readiness = SkillReadinessCalculator::fromInput($this->input([
+            'available_equipment' => ['parallettes'],
+            'current_bodyweight_value' => 76,
+            'height_value' => 178,
+            'training_age_months' => 18,
+            'current_level_tests' => [
+                'push_ups' => ['max_strict_reps' => 20],
+                'lower_body' => ['variant' => 'bodyweight_squat', 'reps' => 24, 'load_unit' => 'kg', 'load_value' => null],
+            ],
+            'skill_statuses' => [
+                'handstand_push_up' => ['status' => 'pike_push_up', 'max_strict_reps' => 8],
+                'pistol_squat' => ['status' => 'assisted_pistol', 'max_strict_reps' => 6],
+            ],
+            'mobility_checks' => [
+                'shoulder_flexion' => 'blocked',
+                'ankle_dorsiflexion' => 'painful',
+            ],
+        ]));
+
+        $this->assertContains('Shoulder flexion is blocked for this skill.', $readiness['handstand_push_up']->hardBlockers);
+        $this->assertContains('Ankle dorsiflexion is painful for this skill.', $readiness['pistol_squat']->hardBlockers);
+        $this->assertNotContainsText('Ankle dorsiflexion', $readiness['handstand_push_up']->hardBlockers);
+        $this->assertNotContainsText('Shoulder flexion', $readiness['pistol_squat']->hardBlockers);
+    }
+
     public function test_missing_data_reduces_confidence_without_faking_a_blocker(): void
     {
         $readiness = SkillReadinessCalculator::fromInput($this->input([
@@ -164,5 +282,15 @@ class SkillReadinessCalculatorTest extends TestCase
             'pain_level' => null,
             'pain_flags' => [],
         ], $overrides));
+    }
+
+    /**
+     * @param  list<string>  $values
+     */
+    private function assertNotContainsText(string $needle, array $values): void
+    {
+        foreach ($values as $value) {
+            $this->assertStringNotContainsString($needle, $value);
+        }
     }
 }

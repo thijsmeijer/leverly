@@ -10,6 +10,7 @@ final readonly class DomainScore
      * @param  list<string>  $contributingInputs
      * @param  list<string>  $missingInputs
      * @param  list<string>  $modifiers
+     * @param  list<string>  $weakLinks
      */
     public function __construct(
         public string $domain,
@@ -21,11 +22,16 @@ final readonly class DomainScore
         public array $missingInputs,
         public string $bottleneck,
         public array $modifiers,
+        public string $kind = 'internal',
+        public string $displayDomain = '',
+        public array $weakLinks = [],
     ) {}
 
     /**
      * @return array{
      *     domain: string,
+     *     kind: string,
+     *     display_domain: string,
      *     label: string,
      *     score: int,
      *     confidence: float,
@@ -33,13 +39,16 @@ final readonly class DomainScore
      *     contributing_inputs: list<string>,
      *     missing_inputs: list<string>,
      *     bottleneck: string,
-     *     modifiers: list<string>
+     *     modifiers: list<string>,
+     *     weak_links: list<string>
      * }
      */
     public function toArray(): array
     {
         return [
             'domain' => $this->domain,
+            'kind' => $this->kind,
+            'display_domain' => $this->displayDomain,
             'label' => $this->label,
             'score' => $this->score,
             'confidence' => $this->confidence,
@@ -48,6 +57,7 @@ final readonly class DomainScore
             'missing_inputs' => $this->missingInputs,
             'bottleneck' => $this->bottleneck,
             'modifiers' => $this->modifiers,
+            'weak_links' => $this->weakLinks,
         ];
     }
 }
