@@ -118,6 +118,9 @@ final readonly class RoadmapPortfolioResult
         ]);
         $maxSessions = self::maxSessions($input);
         $estimatedMinutes = self::estimatedMinutes($activeTracks) + self::estimatedModuleMinutes($foundationModules);
+        $weeklySchedule = $input === null
+            ? RoadmapWeeklyScheduler::empty()
+            : RoadmapWeeklyScheduler::fromModules($input, $activeTracks, $foundationModules, $stressBudget);
 
         $pendingTests = $input === null
             ? []
@@ -138,7 +141,7 @@ final readonly class RoadmapPortfolioResult
                 'foundation_tracks' => $foundationTracks,
                 'foundation_modules' => $foundationModules,
                 'future_queue' => $futureQueue,
-                'weekly_schedule' => self::weeklySchedule($maxSessions),
+                'weekly_schedule' => $weeklySchedule,
                 'stress_ledger' => self::stressLedger($activeTracks, $maxSessions, $stressBudget),
                 'stress_budget' => $stressBudget->toArray(),
                 'module_compatibility' => self::moduleCompatibility($activeTracks, $stressBudget),
@@ -611,38 +614,6 @@ final readonly class RoadmapPortfolioResult
         $sessions = self::intOrNull($input->trainingContext['weekly_session_goal'] ?? null) ?? 3;
 
         return max(1, min(6, $sessions));
-    }
-
-    /**
-     * @return array{days: list<array<string, mixed>>, warnings: list<string>}
-     */
-    private static function weeklySchedule(int $maxSessions): array
-    {
-        if ($maxSessions < 1) {
-            return ['days' => [], 'warnings' => []];
-        }
-
-        $templates = [
-            1 => ['full_body'],
-            2 => ['upper_strength', 'legs'],
-            3 => ['push_strength', 'pull_strength', 'legs'],
-            4 => ['general_skills', 'pull_strength', 'push_strength', 'legs'],
-            5 => ['general_skills', 'legs', 'pull_strength', 'push_strength', 'pull_skills'],
-            6 => ['general_skills', 'legs', 'pull_strength', 'push_strength', 'pull_skills', 'push_skills'],
-        ];
-
-        $days = [];
-        foreach ($templates[$maxSessions] as $index => $dayType) {
-            $days[] = [
-                'day_index' => $index + 1,
-                'label' => 'Day '.($index + 1),
-                'day_type' => $dayType,
-                'modules' => [],
-                'warnings' => [],
-            ];
-        }
-
-        return ['days' => $days, 'warnings' => []];
     }
 
     /**
