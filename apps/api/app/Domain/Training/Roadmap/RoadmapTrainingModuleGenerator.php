@@ -43,6 +43,50 @@ final class RoadmapTrainingModuleGenerator
     }
 
     /**
+     * @param  array<string, mixed>  $readiness
+     * @return list<array<string, mixed>>
+     */
+    public static function fromReadinessPayload(array $readiness, string $mode): array
+    {
+        if (($readiness['status'] ?? null) === 'blocked_by_hard_gate') {
+            return [];
+        }
+
+        $purpose = self::PURPOSE_BY_MODE[$mode] ?? null;
+        $nodePayload = is_array($readiness['next_node'] ?? null)
+            ? $readiness['next_node']
+            : (is_array($readiness['target_node'] ?? null) ? $readiness['target_node'] : null);
+
+        if ($purpose === null || $nodePayload === null) {
+            return [];
+        }
+
+        $nodeId = self::stringValue($nodePayload['id'] ?? null, '');
+        [$family, $slug] = array_pad(explode('.', $nodeId, 2), 2, '');
+        $node = $family === '' || $slug === '' ? null : ProgressionGraphRegistry::node($family, $slug);
+
+        if ($node === null || ! $node->schedulable) {
+            return [];
+        }
+
+        $skillTrackId = self::stringValue($readiness['skill_track_id'] ?? null, $node->skillTrackId);
+
+        return [
+            self::fromGraphNode(
+                node: $node,
+                purpose: $purpose,
+                moduleId: "{$skillTrackId}.{$node->slug}.{$purpose}",
+                title: self::title($node, $purpose),
+                skillTrackId: $skillTrackId,
+                prerequisites: [
+                    ['type' => 'current_node', 'id' => self::stringValue($readiness['current_node']['id'] ?? null, ''), 'label' => 'Own the current node first.'],
+                    ...self::nodePrerequisites($node),
+                ],
+            )->toArray(),
+        ];
+    }
+
+    /**
      * @param  list<string>  $targetSkills
      * @return list<array<string, mixed>>
      */
@@ -619,6 +663,11 @@ final class RoadmapTrainingModuleGenerator
             'quality' => 'harder_variation',
             default => 'increase_reps',
         };
+    }
+
+    private static function stringValue(mixed $value, string $fallback): string
+    {
+        return is_string($value) && $value !== '' ? $value : $fallback;
     }
 
     /**

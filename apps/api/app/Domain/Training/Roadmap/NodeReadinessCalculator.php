@@ -183,6 +183,7 @@ final class NodeReadinessCalculator
         }
 
         return match ($required) {
+            'pull_up_bar' => in_array('rings', $equipment, true),
             'rings_or_pull_up_bar' => array_intersect(['rings', 'pull_up_bar'], $equipment) !== [],
             'low_bar_or_rings' => array_intersect(['low_bar', 'rings'], $equipment) !== [],
             'straight_bar' => in_array('pull_up_bar', $equipment, true),

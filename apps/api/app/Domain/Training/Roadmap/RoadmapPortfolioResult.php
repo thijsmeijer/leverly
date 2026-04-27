@@ -73,6 +73,42 @@ final readonly class RoadmapPortfolioResult
             ...self::tracksFromCandidates(self::futureCandidates($goalCandidates, $blockedIds), 'not_now', $suggestions, $nodeReadiness),
             ...self::tracksFromGoals(self::arrayList($suggestions['deferred_goals'] ?? []), 'not_now'),
         ]);
+        $foundationModules = $input === null
+            ? []
+            : RoadmapTrainingModuleGenerator::foundationModules($input, self::foundationTargetSkills($goalCandidates, $input));
+        $stressBudget = $input === null
+            ? RoadmapStressBudgetFactory::empty()
+            : RoadmapStressBudgetFactory::fromInput($input);
+
+        if ($input !== null) {
+            $optimized = RoadmapSkillPortfolioOptimizer::fromTracks(
+                input: $input,
+                developmentTracks: $developmentTracks,
+                technicalPracticeTracks: $technicalPracticeTracks,
+                accessoryTracks: $accessoryTracks,
+                maintenanceTracks: $maintenanceTracks,
+                foundationTracks: $foundationTracks,
+                futureQueue: $futureQueue,
+                notRecommendedNow: $notRecommendedNow,
+                stressBudget: $stressBudget,
+            );
+            $developmentTracks = $optimized->developmentTracks;
+            $technicalPracticeTracks = $optimized->technicalPracticeTracks;
+            $accessoryTracks = $optimized->accessoryTracks;
+            $maintenanceTracks = $optimized->maintenanceTracks;
+            $foundationTracks = $optimized->foundationTracks;
+            $futureQueue = $optimized->futureQueue;
+            $notRecommendedNow = $optimized->notRecommendedNow;
+            $optimizer = $optimized->optimizer;
+        } else {
+            $optimizer = [
+                'high_stress_development_cap' => 0,
+                'selected_high_stress_development_count' => 0,
+                'utility_inputs' => [],
+                'selection_notes' => [],
+            ];
+        }
+
         $activeTracks = self::dedupeTracks([
             ...$developmentTracks,
             ...$technicalPracticeTracks,
@@ -80,12 +116,6 @@ final readonly class RoadmapPortfolioResult
             ...$maintenanceTracks,
             ...$foundationTracks,
         ]);
-        $foundationModules = $input === null
-            ? []
-            : RoadmapTrainingModuleGenerator::foundationModules($input, self::foundationTargetSkills($goalCandidates, $input));
-        $stressBudget = $input === null
-            ? RoadmapStressBudgetFactory::empty()
-            : RoadmapStressBudgetFactory::fromInput($input);
         $maxSessions = self::maxSessions($input);
         $estimatedMinutes = self::estimatedMinutes($activeTracks) + self::estimatedModuleMinutes($foundationModules);
 
@@ -112,6 +142,7 @@ final readonly class RoadmapPortfolioResult
                 'stress_ledger' => self::stressLedger($activeTracks, $maxSessions, $stressBudget),
                 'stress_budget' => $stressBudget->toArray(),
                 'module_compatibility' => self::moduleCompatibility($activeTracks, $stressBudget),
+                'optimizer' => $optimizer,
                 'time_ledger' => self::timeLedger($input, $maxSessions, $estimatedMinutes),
                 'explanation' => self::portfolioExplanation($suggestions, $developmentTracks, $futureQueue, $blockedTracks),
             ],

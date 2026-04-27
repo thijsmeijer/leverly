@@ -36,6 +36,7 @@ final class BaselineNodeMapper
         'strict_one_arm_pull_up' => 'one_arm_pull_up',
         'weighted_pull_up_reps' => 'weighted_pull_up',
         'nordic_eccentric' => 'nordic_curl_negative',
+        'wall_handstand' => 'chest_to_wall_handstand',
     ];
 
     /**
