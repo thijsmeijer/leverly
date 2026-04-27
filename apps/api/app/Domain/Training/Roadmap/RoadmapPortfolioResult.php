@@ -23,8 +23,11 @@ final readonly class RoadmapPortfolioResult
     /**
      * @param  array<string, mixed>  $suggestions
      */
-    public static function fromRoadmapSuggestions(array $suggestions, ?RoadmapInput $input = null): self
-    {
+    public static function fromRoadmapSuggestions(
+        array $suggestions,
+        ?RoadmapInput $input = null,
+        ?RoadmapAdaptationEvidenceProvider $adaptationProvider = null,
+    ): self {
         $goalCandidates = self::goalCandidates($suggestions['goal_candidates'] ?? []);
         $nodeReadiness = $input === null ? [] : NodeReadinessCalculator::fromInput($input);
         $blockedTracks = self::blockedTracks($goalCandidates, $suggestions, $input);
@@ -128,6 +131,32 @@ final readonly class RoadmapPortfolioResult
         $pendingTests = $input === null
             ? []
             : RoadmapMicroTestRequestGenerator::fromInput($input, $goalCandidates);
+        $activeSkillPortfolio = [
+            'development_tracks' => $developmentTracks,
+            'technical_practice_tracks' => $technicalPracticeTracks,
+            'accessory_tracks' => $accessoryTracks,
+            'maintenance_tracks' => $maintenanceTracks,
+            'foundation_tracks' => $foundationTracks,
+            'foundation_modules' => $foundationModules,
+            'future_queue' => $futureQueue,
+            'weekly_schedule' => $weeklySchedule,
+            'stress_ledger' => self::stressLedger($activeTracks, $maxSessions, $stressBudget),
+            'stress_budget' => $stressBudget->toArray(),
+            'module_compatibility' => self::moduleCompatibility($activeTracks, $stressBudget),
+            'optimizer' => $optimizer,
+            'phase_plan' => $phasePlan,
+            'time_ledger' => self::timeLedger($input, $maxSessions, $estimatedMinutes),
+            'explanation' => self::portfolioExplanation($suggestions, $developmentTracks, $futureQueue, $blockedTracks),
+        ];
+        $adaptationInput = $input === null
+            ? RoadmapAdaptationInput::empty()
+            : ($adaptationProvider ?? new RoadmapNullAdaptationEvidenceProvider)->evidenceFor($input, $activeSkillPortfolio);
+        $activeSkillPortfolio = RoadmapAdaptationModel::apply($activeSkillPortfolio, $adaptationInput);
+        $developmentTracks = self::arrayList($activeSkillPortfolio['development_tracks'] ?? []);
+        $technicalPracticeTracks = self::arrayList($activeSkillPortfolio['technical_practice_tracks'] ?? []);
+        $accessoryTracks = self::arrayList($activeSkillPortfolio['accessory_tracks'] ?? []);
+        $maintenanceTracks = self::arrayList($activeSkillPortfolio['maintenance_tracks'] ?? []);
+        $foundationTracks = self::arrayList($activeSkillPortfolio['foundation_tracks'] ?? []);
         $compatibilityFields = self::compatibilityFields(
             suggestions: $suggestions,
             developmentTracks: $developmentTracks,
@@ -148,21 +177,7 @@ final readonly class RoadmapPortfolioResult
                 'Complete the baseline tests to unlock a useful roadmap.',
             ),
             'active_skill_portfolio' => [
-                'development_tracks' => $developmentTracks,
-                'technical_practice_tracks' => $technicalPracticeTracks,
-                'accessory_tracks' => $accessoryTracks,
-                'maintenance_tracks' => $maintenanceTracks,
-                'foundation_tracks' => $foundationTracks,
-                'foundation_modules' => $foundationModules,
-                'future_queue' => $futureQueue,
-                'weekly_schedule' => $weeklySchedule,
-                'stress_ledger' => self::stressLedger($activeTracks, $maxSessions, $stressBudget),
-                'stress_budget' => $stressBudget->toArray(),
-                'module_compatibility' => self::moduleCompatibility($activeTracks, $stressBudget),
-                'optimizer' => $optimizer,
-                'phase_plan' => $phasePlan,
-                'time_ledger' => self::timeLedger($input, $maxSessions, $estimatedMinutes),
-                'explanation' => self::portfolioExplanation($suggestions, $developmentTracks, $futureQueue, $blockedTracks),
+                ...$activeSkillPortfolio,
             ],
             'onboarding_goal_choices' => [
                 'development' => self::trackIds($developmentTracks),

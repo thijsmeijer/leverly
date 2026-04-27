@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Training\Support;
 
+use App\Domain\Training\Roadmap\RoadmapAdaptationEvidenceProvider;
 use App\Domain\Training\Roadmap\RoadmapInput;
 use App\Domain\Training\Roadmap\RoadmapInputMapper;
 use App\Domain\Training\Roadmap\RoadmapPortfolioResult;
@@ -174,9 +175,16 @@ final class CalisthenicsRoadmapSuggester
     /**
      * @return array<string, mixed>
      */
-    public static function portfolio(RoadmapInput $input, bool $includeIntermediate = false): array
-    {
-        return RoadmapPortfolioResult::fromRoadmapSuggestions(self::suggest($input, $includeIntermediate), $input)->toArray();
+    public static function portfolio(
+        RoadmapInput $input,
+        bool $includeIntermediate = false,
+        ?RoadmapAdaptationEvidenceProvider $adaptationProvider = null,
+    ): array {
+        return RoadmapPortfolioResult::fromRoadmapSuggestions(
+            self::suggest($input, $includeIntermediate),
+            $input,
+            $adaptationProvider,
+        )->toArray();
     }
 
     /**
