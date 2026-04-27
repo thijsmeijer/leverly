@@ -164,6 +164,56 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).not.toContain('Top support hold')
   })
 
+  it('hides the lower-body fallback when barbell squat data is complete', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(onboardingResponse())),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Baseline'))
+      ?.trigger('click')
+
+    expect(wrapper.text()).not.toContain('Lower-body fallback')
+    expect(wrapper.text()).not.toContain('Fallback reps')
+  })
+
+  it('shows the lower-body fallback when barbell squat data is missing', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(
+        jsonResponse(
+          onboardingResponse({
+            current_level_tests: {
+              ...onboardingResponse().data.current_level_tests,
+              squat: {
+                barbell_load_value: null,
+                barbell_reps: null,
+              },
+            },
+          }),
+        ),
+      ),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Baseline'))
+      ?.trigger('click')
+
+    expect(wrapper.text()).toContain('Lower-body fallback')
+    expect(wrapper.text()).toContain('Fallback reps')
+  })
+
   it('shows the Roadmap V2 review and completes onboarding from the review step', async () => {
     const fetcher = vi
       .fn<typeof fetch>()

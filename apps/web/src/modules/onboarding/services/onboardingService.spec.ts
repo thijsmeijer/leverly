@@ -184,7 +184,7 @@ describe('onboardingService', () => {
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"rows":{"max_reps":12,"variant":"ring_row"}')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"fallback_variant":"eccentric"')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain(
-      '"lower_body":{"load_unit":"kg","load_value":null,"reps":12,"variant":"split_squat"}',
+      '"lower_body":{"load_unit":"kg","load_value":null,"reps":null,"variant":"bodyweight_squat"}',
     )
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"barbell_load_value":100')
     expect(String(fetcher.mock.calls[1]?.[1]?.body)).toContain('"weight_trend":"maintaining"')
@@ -291,9 +291,87 @@ describe('onboardingService', () => {
       'currentLevelTests.pullUpMaxReps': 'Enter a number from 0 to 100.',
       'currentLevelTests.pushUpMaxReps': 'Enter a number from 0 to 200.',
       'currentLevelTests.rowMaxReps': 'Enter a number from 0 to 100.',
-      'currentLevelTests.squatBarbellLoadValue': 'Enter a number from 0 to 1000.',
-      'currentLevelTests.squatBarbellReps': 'Enter a number from 0 to 30.',
       'currentLevelTests.topSupportHoldSeconds': 'Enter a number from 0 to 600.',
+    })
+  })
+
+  it('uses lower-body fallback only when complete barbell squat data is missing', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(jsonResponse(onboardingResponse()))
+
+    configureLeverlyApiClient({
+      fetcher,
+      getCsrfToken: () => 'csrf-token',
+    })
+
+    const currentLevelTests = {
+      ...defaultOnboardingForm().currentLevelTests,
+      dipMaxReps: '6',
+      hollowHoldSeconds: '35',
+      lowerBodyReps: '',
+      passiveHangSeconds: '45',
+      pullUpMaxReps: '4',
+      pushUpMaxReps: '18',
+      rowMaxReps: '12',
+      squatBarbellLoadValue: '100',
+      squatBarbellReps: '5',
+      topSupportHoldSeconds: '25',
+    }
+
+    expect(
+      validateOnboardingStep(
+        {
+          ...defaultOnboardingForm(),
+          currentLevelTests,
+        },
+        'level',
+      ),
+    ).not.toHaveProperty('currentLevelTests.lowerBodyReps')
+
+    expect(
+      validateOnboardingStep(
+        {
+          ...defaultOnboardingForm(),
+          currentLevelTests: {
+            ...currentLevelTests,
+            squatBarbellLoadValue: '',
+            squatBarbellReps: '',
+          },
+        },
+        'level',
+      ),
+    ).toMatchObject({
+      'currentLevelTests.lowerBodyReps': 'Enter a number from 0 to 100.',
+    })
+
+    await expect(
+      saveOnboarding({
+        ...defaultOnboardingForm(),
+        currentLevelTests: {
+          ...currentLevelTests,
+          lowerBodyLoadValue: '20',
+          lowerBodyReps: '12',
+          lowerBodyVariant: 'split_squat',
+        },
+        priorSportBackground: ['none'],
+      }),
+    ).resolves.toMatchObject({
+      onboardingId: '01kb0b6h4az3er8g7vnh9k5m1a',
+    })
+
+    const body = JSON.parse(String(fetcher.mock.calls[1]?.[1]?.body)) as {
+      current_level_tests: {
+        lower_body: Record<string, unknown>
+      }
+    }
+
+    expect(body.current_level_tests.lower_body).toEqual({
+      load_unit: 'kg',
+      load_value: null,
+      reps: null,
+      variant: 'bodyweight_squat',
     })
   })
 

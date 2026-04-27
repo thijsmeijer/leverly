@@ -30,7 +30,7 @@ import {
   trainingDayOptions,
   trainingLocationOptions,
 } from '../data/onboardingOptions'
-import { validateOnboardingStep } from '../services/onboardingService'
+import { hasCompleteBarbellSquatData, validateOnboardingStep } from '../services/onboardingService'
 import { useOnboardingStore } from '../stores/onboardingStore'
 import type { OnboardingFieldErrors, OnboardingStepId } from '../types'
 
@@ -123,6 +123,7 @@ const chosenSchedule = computed(() =>
     ? `${onboarding.form.preferredTrainingDays.length} days, max ${onboarding.form.weeklySessionGoal || '...'} sessions`
     : 'Schedule not set',
 )
+const showLowerBodyFallback = computed(() => !hasCompleteBarbellSquatData(onboarding.form.currentLevelTests))
 const redirectPath = computed(() =>
   typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/app')
     ? route.query.redirect
@@ -295,7 +296,6 @@ const lowerBodyVariantOptions = [
   { label: 'Split squat', value: 'split_squat' },
   { label: 'Pistol progression', value: 'pistol_progression' },
   { label: 'Step-down', value: 'step_down' },
-  { label: 'Barbell squat', value: 'barbell_squat' },
 ]
 </script>
 
@@ -619,7 +619,8 @@ const lowerBodyVariantOptions = [
                 <div class="mb-4">
                   <h4 class="text-ink-primary text-base font-semibold">Legs and bodyline</h4>
                   <p class="text-ink-muted mt-1 text-sm leading-5">
-                    Use barbell squat if you know it, plus a bodyweight lower-body fallback and trunk control.
+                    Use your barbell squat if you know it. If not, add the best lower-body fallback you can test
+                    cleanly, plus trunk control.
                   </p>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-3">
@@ -654,7 +655,7 @@ const lowerBodyVariantOptions = [
                     suffix="sec"
                   />
                 </div>
-                <div class="mt-4 grid gap-3 sm:grid-cols-[1.2fr_0.9fr_0.9fr]">
+                <div v-if="showLowerBodyFallback" class="mt-4 grid gap-3 sm:grid-cols-[1.2fr_0.9fr_0.9fr]">
                   <label class="block space-y-2">
                     <span class="text-ink-primary text-sm font-semibold">Lower-body fallback</span>
                     <select

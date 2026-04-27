@@ -15,7 +15,13 @@ import {
   skillStatusMeasurements,
   skillStatusOptions,
 } from '../data/onboardingOptions'
-import type { OnboardingFieldErrors, OnboardingForm, OnboardingRoadmapSuggestions, OnboardingState } from '../types'
+import type {
+  OnboardingFieldErrors,
+  OnboardingForm,
+  OnboardingLevelTestsForm,
+  OnboardingRoadmapSuggestions,
+  OnboardingState,
+} from '../types'
 
 const onboardingSkillStatusKeys = new Set<string>(skillStatusKeys)
 const painRegions = ['wrist', 'elbow', 'shoulder', 'low_back', 'knee', 'ankle'] as const
@@ -240,6 +246,12 @@ export async function saveOnboarding(
   }
 }
 
+export function hasCompleteBarbellSquatData(
+  tests: Pick<OnboardingLevelTestsForm, 'squatBarbellLoadValue' | 'squatBarbellReps'>,
+): boolean {
+  return textValue(tests.squatBarbellLoadValue) !== '' && textValue(tests.squatBarbellReps) !== ''
+}
+
 export function validateOnboardingStep(form: OnboardingForm, step: string): OnboardingFieldErrors {
   const errors: OnboardingFieldErrors = {}
 
@@ -308,26 +320,38 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
   }
 
   if (step === 'level') {
+    const hasAnyBarbellSquatData =
+      textValue(form.currentLevelTests.squatBarbellLoadValue) !== '' ||
+      textValue(form.currentLevelTests.squatBarbellReps) !== ''
+    const hasCompleteBarbellSquat = hasCompleteBarbellSquatData(form.currentLevelTests)
+
     addNumberError(errors, 'currentLevelTests.pushUpMaxReps', form.currentLevelTests.pushUpMaxReps, 0, 200)
     addNumberError(errors, 'currentLevelTests.pullUpMaxReps', form.currentLevelTests.pullUpMaxReps, 0, 100)
     addNumberError(errors, 'currentLevelTests.dipMaxReps', form.currentLevelTests.dipMaxReps, 0, 100)
     addNumberError(errors, 'currentLevelTests.rowMaxReps', form.currentLevelTests.rowMaxReps, 0, 100)
-    addNumberError(errors, 'currentLevelTests.lowerBodyReps', form.currentLevelTests.lowerBodyReps, 0, 100)
-    addOptionalNumberError(
-      errors,
-      'currentLevelTests.lowerBodyLoadValue',
-      form.currentLevelTests.lowerBodyLoadValue,
-      0,
-      1000,
-    )
-    addNumberError(
-      errors,
-      'currentLevelTests.squatBarbellLoadValue',
-      form.currentLevelTests.squatBarbellLoadValue,
-      0,
-      1000,
-    )
-    addNumberError(errors, 'currentLevelTests.squatBarbellReps', form.currentLevelTests.squatBarbellReps, 0, 30)
+
+    if (!hasCompleteBarbellSquat) {
+      addNumberError(errors, 'currentLevelTests.lowerBodyReps', form.currentLevelTests.lowerBodyReps, 0, 100)
+      addOptionalNumberError(
+        errors,
+        'currentLevelTests.lowerBodyLoadValue',
+        form.currentLevelTests.lowerBodyLoadValue,
+        0,
+        1000,
+      )
+    }
+
+    if (hasAnyBarbellSquatData) {
+      addNumberError(
+        errors,
+        'currentLevelTests.squatBarbellLoadValue',
+        form.currentLevelTests.squatBarbellLoadValue,
+        0,
+        1000,
+      )
+      addNumberError(errors, 'currentLevelTests.squatBarbellReps', form.currentLevelTests.squatBarbellReps, 0, 30)
+    }
+
     addNumberError(errors, 'currentLevelTests.hollowHoldSeconds', form.currentLevelTests.hollowHoldSeconds, 0, 600)
     addNumberError(errors, 'currentLevelTests.passiveHangSeconds', form.currentLevelTests.passiveHangSeconds, 0, 600)
     addNumberError(
@@ -538,6 +562,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
 
 function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean }): OnboardingUpdateBody {
   const requiredGoalModules = activeRequiredGoalModules(form)
+  const hasCompleteBarbellSquat = hasCompleteBarbellSquatData(form.currentLevelTests)
 
   const body: OnboardingUpdateBody = {
     age_years: nullableInteger(form.ageYears),
@@ -553,12 +578,19 @@ function mapFormToUpdateBody(form: OnboardingForm, options: { complete?: boolean
         max_strict_reps: nullableInteger(form.currentLevelTests.dipMaxReps),
       },
       hollow_hold_seconds: nullableInteger(form.currentLevelTests.hollowHoldSeconds),
-      lower_body: {
-        load_unit: form.currentLevelTests.lowerBodyLoadUnit,
-        load_value: nullableNumber(form.currentLevelTests.lowerBodyLoadValue),
-        reps: nullableInteger(form.currentLevelTests.lowerBodyReps),
-        variant: form.currentLevelTests.lowerBodyVariant,
-      },
+      lower_body: hasCompleteBarbellSquat
+        ? {
+            load_unit: form.currentLevelTests.lowerBodyLoadUnit,
+            load_value: null,
+            reps: null,
+            variant: 'bodyweight_squat',
+          }
+        : {
+            load_unit: form.currentLevelTests.lowerBodyLoadUnit,
+            load_value: nullableNumber(form.currentLevelTests.lowerBodyLoadValue),
+            reps: nullableInteger(form.currentLevelTests.lowerBodyReps),
+            variant: form.currentLevelTests.lowerBodyVariant,
+          },
       passive_hang_seconds: nullableInteger(form.currentLevelTests.passiveHangSeconds),
       pull_ups: {
         fallback_reps: nullableInteger(form.currentLevelTests.pullUpFallbackReps),
