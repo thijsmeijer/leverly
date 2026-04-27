@@ -270,6 +270,29 @@ export interface RoadmapPortfolioExplanation {
   readonly whyThisMix: readonly string[]
 }
 
+export interface RoadmapMicroTestConfidenceImpact {
+  readonly completedDelta: number
+  readonly missingDelta: number
+  readonly notTestedLowersConfidence: boolean
+}
+
+export interface RoadmapMicroTestRequest {
+  readonly blocking: boolean
+  readonly confidenceImpact: RoadmapMicroTestConfidenceImpact
+  readonly key: string
+  readonly materiality: string
+  readonly measurementType: string
+  readonly notTestedBehavior: string
+  readonly prompt: string
+  readonly relatedNode: RoadmapNode
+  readonly responseShape: Readonly<Record<string, unknown>>
+  readonly skipBehavior: string
+  readonly state: string
+  readonly targetLabel: string
+  readonly targetSkill: string
+  readonly whyItMatters: string
+}
+
 export interface RoadmapPortfolioProgressionRule {
   readonly moduleId: string
   readonly skillTrackId: string
@@ -339,7 +362,7 @@ export interface RoadmapPortfolio {
   readonly longTermAspirations: readonly RoadmapPortfolioTrack[]
   readonly notRecommendedNow: readonly RoadmapPortfolioTrack[]
   readonly onboardingGoalChoices: RoadmapPortfolioGoalChoices
-  readonly pendingTests: readonly Record<string, unknown>[]
+  readonly pendingTests: readonly RoadmapMicroTestRequest[]
   readonly sourceVersion: string
   readonly summary: string
   readonly version: string

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mapRoadmapSuggestions } from '@/modules/roadmap'
+import { mapRoadmapPortfolio, mapRoadmapSuggestions } from '@/modules/roadmap'
 import { configureLeverlyApiClient, resetLeverlyApiClient } from '@/shared/api/leverlyApi/runtimeClient'
 import { jsonResponse } from '@/tests/http'
 
@@ -86,7 +86,35 @@ describe('onboardingService', () => {
           primaryGoal: {
             skill: 'handstand',
           },
-          version: 'roadmap.v2',
+          version: 'roadmap.portfolio.v3',
+        },
+        roadmapPortfolio: {
+          activeSkillPortfolio: {
+            accessoryTracks: [{ skillTrackId: 'l_sit' }],
+            developmentTracks: [{ displayName: 'Handstand', skillTrackId: 'handstand', weeklyExposures: 3 }],
+            foundationTracks: [{ skillTrackId: 'strict_dip' }],
+            futureQueue: [{ skillTrackId: 'planche' }],
+            maintenanceTracks: [{ skillTrackId: 'strict_pull_up' }],
+            technicalPracticeTracks: [{ skillTrackId: 'l_sit' }],
+            timeLedger: {
+              estimatedMinutesPerWeek: 132,
+              maxSessionsPerWeek: 3,
+            },
+          },
+          blocked: [{ skillTrackId: 'human_flag' }],
+          notRecommendedNow: [{ skillTrackId: 'one_arm_pull_up' }],
+          onboardingGoalChoices: {
+            development: ['handstand'],
+            future: ['planche'],
+            technicalPractice: ['l_sit'],
+          },
+          pendingTests: [
+            {
+              key: 'handstand.freestanding_balance',
+              targetLabel: 'Handstand',
+            },
+          ],
+          version: 'roadmap.portfolio.v3',
         },
         targetSkills: ['handstand'],
         trainingAgeMonths: '18',
@@ -375,7 +403,7 @@ describe('onboardingService', () => {
     })
   })
 
-  it('validates Roadmap V2 goal and module steps separately', () => {
+  it('validates Roadmap V3 goal priorities and module steps separately', () => {
     const form = {
       ...defaultOnboardingForm(),
       baseFocusAreas: ['core_bodyline'],
@@ -448,6 +476,61 @@ describe('onboardingService', () => {
       ),
     ).toMatchObject({
       secondaryTargetSkills: 'Secondary interests must come from compatible or foundation support candidates.',
+    })
+  })
+
+  it('validates goal priorities against portfolio choices when candidate buckets are not available', () => {
+    const portfolio = mapRoadmapPortfolio({
+      active_skill_portfolio: {
+        development_tracks: [portfolioTrack('front_lever', 'Front lever', 'development')],
+        technical_practice_tracks: [portfolioTrack('handstand', 'Handstand', 'technical_practice')],
+        accessory_tracks: [portfolioTrack('l_sit', 'L-sit', 'accessory_transfer')],
+        maintenance_tracks: [],
+        foundation_tracks: [],
+        future_queue: [portfolioTrack('planche', 'Planche', 'future')],
+      },
+      onboarding_goal_choices: {
+        accessories: ['l_sit'],
+        blocked: ['one_arm_pull_up'],
+        development: ['front_lever'],
+        future: ['planche'],
+        technical_practice: ['handstand'],
+      },
+      version: 'roadmap.portfolio.v3',
+    })
+    const form = {
+      ...defaultOnboardingForm(),
+      baseFocusAreas: ['pull_capacity'],
+      primaryGoal: 'skill',
+      primaryTargetSkill: 'front_lever',
+      roadmapPortfolio: portfolio,
+      secondaryTargetSkills: ['handstand', 'l_sit'],
+      targetSkills: ['front_lever'],
+    }
+
+    expect(validateOnboardingStep(form, 'goal')).toEqual({})
+    expect(
+      validateOnboardingStep(
+        {
+          ...form,
+          primaryTargetSkill: 'strict_pull_up',
+          targetSkills: ['strict_pull_up'],
+        },
+        'goal',
+      ),
+    ).toMatchObject({
+      primaryTargetSkill: 'Primary target must come from the development priorities the roadmap engine can load now.',
+    })
+    expect(
+      validateOnboardingStep(
+        {
+          ...form,
+          secondaryTargetSkills: ['one_arm_pull_up'],
+        },
+        'goal',
+      ),
+    ).toMatchObject({
+      secondaryTargetSkills: 'Secondary interests must come from practice, accessory, or foundation portfolio options.',
     })
   })
 
@@ -584,7 +667,9 @@ function onboardingResponse(overrides: Partial<Record<string, unknown>> = {}) {
 
 function roadmapSuggestions() {
   return {
-    version: 'roadmap.v2',
+    ...roadmapPortfolioFields(),
+    version: 'roadmap.portfolio.v3',
+    source_version: 'roadmap.v2',
     base_focus_areas: ['pull_capacity', 'core_bodyline'],
     body_context: {
       notes: [],
@@ -733,5 +818,115 @@ function goalCandidate(skill: string, label: string, role: string) {
     stress_class: role === 'low_fatigue_accessory' ? 'low_fatigue' : 'moderate',
     stress_tags: [],
     unlock_conditions: [],
+  }
+}
+
+function roadmapPortfolioFields() {
+  return {
+    active_skill_portfolio: {
+      accessory_tracks: [portfolioTrack('l_sit', 'L-sit', 'accessory_transfer')],
+      development_tracks: [portfolioTrack('handstand', 'Handstand', 'development')],
+      explanation: {
+        fallback: 'Keep handstand as line practice if wrists feel irritated.',
+        summary: 'A skill-first week with light compression support.',
+        watch_out_for: ['Keep wrist loading progressive.'],
+        why_this_mix: ['Handstand can progress while L-sit stays low fatigue.'],
+      },
+      foundation_tracks: [portfolioTrack('strict_dip', 'Dip support', 'foundation')],
+      future_queue: [portfolioTrack('planche', 'Planche', 'future')],
+      maintenance_tracks: [portfolioTrack('strict_pull_up', 'Pull-up', 'maintenance')],
+      phase_plan: {
+        deload_guidance: {},
+        duration_reason: 'A four-week first block leaves room to retest skill placement.',
+        duration_weeks: { max: 6, min: 4, target: 4 },
+        foundation_layer: [],
+        phase_id: 'onboarding-first-block',
+        progression_rules: [],
+        retest_timing: {},
+        roles: {},
+        safety_notes: [],
+        weekly_emphasis: ['Handstand line', 'Compression support'],
+      },
+      stress_ledger: {
+        axes: [{ axis: 'wrist_extension', budget: 10, load: 6, status: 'watch' }],
+        notes: ['Wrist extension is monitored.'],
+      },
+      technical_practice_tracks: [portfolioTrack('l_sit', 'L-sit', 'technical_practice')],
+      time_ledger: {
+        estimated_minutes_per_week: 132,
+        max_sessions_per_week: 3,
+        notes: ['Fits the selected weekly cap.'],
+        remaining_minutes_per_week: 48,
+      },
+      weekly_schedule: {
+        days: [],
+        rest_days: [],
+        stress_ledger: { axes: [], warnings: [] },
+        template: { day_types: [], sessions_per_week: 3, slot_order: [] },
+        time_ledger: {
+          budget_minutes_per_week: 180,
+          estimated_minutes_per_week: 132,
+          overflow_minutes_per_week: 0,
+        },
+        warnings: [],
+      },
+    },
+    blocked: [portfolioTrack('human_flag', 'Human flag', 'blocked')],
+    foundation_layer: {
+      focus_areas: ['pull_capacity', 'core_bodyline'],
+      summary: 'Pulling, support, and trunk work stay in the week.',
+      tracks: [portfolioTrack('strict_dip', 'Dip support', 'foundation')],
+    },
+    long_term_aspirations: [portfolioTrack('planche', 'Planche', 'future')],
+    not_recommended_now: [portfolioTrack('one_arm_pull_up', 'One-arm pull-up', 'not_now')],
+    onboarding_goal_choices: {
+      accessories: ['l_sit'],
+      blocked: ['human_flag'],
+      development: ['handstand'],
+      future: ['planche'],
+      technical_practice: ['l_sit'],
+    },
+    pending_tests: [
+      {
+        blocking: false,
+        confidence_impact: {
+          completed_delta: 0.08,
+          missing_delta: -0.08,
+          not_tested_lowers_confidence: true,
+        },
+        key: 'handstand.freestanding_balance',
+        materiality: 'selected_primary',
+        measurement_type: 'hold_seconds',
+        not_tested_behavior: 'bridge_recommendation',
+        prompt: 'What is your best controlled freestanding handstand hold?',
+        related_node: { id: 'handstand.freestanding_hold', label: 'Freestanding handstand' },
+        response_shape: { max: 60, min: 0, type: 'seconds' },
+        skip_behavior:
+          'Skipping keeps confidence lower, can choose a bridge recommendation, and is not counted as zero ability.',
+        state: 'missing',
+        target_label: 'Handstand',
+        target_skill: 'handstand',
+        why_it_matters: 'This separates wall line practice from balance work.',
+      },
+    ],
+  }
+}
+
+function portfolioTrack(skillTrackId: string, displayName: string, mode: string) {
+  return {
+    confidence: { level: 'medium', reasons: [`${displayName} has enough data for first placement.`], score: 0.72 },
+    current_node: { id: `${skillTrackId}.current`, label: `${displayName} current` },
+    display_name: displayName,
+    estimated_minutes_per_week: 24,
+    eta_to_next_node: { label: '4-8 weeks', max_weeks: 8, min_weeks: 4 },
+    mode,
+    modules: [],
+    next_node: { id: `${skillTrackId}.next`, label: `${displayName} next` },
+    primary_stress_axes: [],
+    skill_track_id: skillTrackId,
+    target_node: { id: `${skillTrackId}.target`, label: `${displayName} target` },
+    weekly_exposures: 3,
+    why_included: [`${displayName} fits the current readiness and schedule.`],
+    why_not_higher_priority: mode === 'future' ? ['Kept visible until the foundation is stronger.'] : [],
   }
 }

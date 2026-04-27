@@ -1,9 +1,11 @@
 import { ApiRequestError, leverlyApiRequest, type ApiResponseBody } from '@/shared/api/leverlyApi/runtimeClient'
 import {
   defaultGoalModules,
+  emptyRoadmapPortfolio,
   emptyRoadmapSuggestions,
   isGoalModuleTested,
   mapGoalModulesToForm,
+  mapRoadmapPortfolio,
   mapRoadmapSuggestions,
   requiredGoalModulesForGoal,
   serializeGoalModules,
@@ -178,6 +180,7 @@ export function defaultOnboardingForm(): OnboardingForm {
     primaryGoal: 'skill',
     readinessRating: '3',
     requiredGoalModules: [],
+    roadmapPortfolio: emptyRoadmapPortfolio(),
     roadmapSuggestions: emptyRoadmapSuggestions(),
     secondaryGoals: [],
     secondaryTargetSkills: [],
@@ -273,8 +276,9 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
   }
 
   if (step === 'goal') {
-    const activeSkills = activeRoadmapSkills(form.roadmapSuggestions)
+    const activeSkills = activeRoadmapSkills(form)
     const primaryTarget = form.primaryTargetSkill
+    const usesPortfolioChoices = hasPortfolioChoices(form) && !hasGoalCandidates(form.roadmapSuggestions)
 
     if (!form.primaryGoal) {
       errors.primaryGoal = 'Choose the main outcome for your first plan.'
@@ -285,9 +289,11 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
     }
 
     if (primaryTarget && !activeSkills.includes(primaryTarget)) {
-      errors.primaryTargetSkill = hasGoalCandidates(form.roadmapSuggestions)
-        ? 'Primary target must come from the recommended roadmap candidates.'
-        : 'Primary target must come from the suggested current or bridge roadmap.'
+      errors.primaryTargetSkill = usesPortfolioChoices
+        ? 'Primary target must come from the development priorities the roadmap engine can load now.'
+        : hasGoalCandidates(form.roadmapSuggestions)
+          ? 'Primary target must come from the recommended roadmap candidates.'
+          : 'Primary target must come from the suggested current or bridge roadmap.'
     }
 
     if (form.targetSkills.length > 1 || (form.targetSkills.length === 1 && form.targetSkills[0] !== primaryTarget)) {
@@ -300,9 +306,11 @@ export function validateOnboardingStep(form: OnboardingForm, step: string): Onbo
       errors.secondaryTargetSkills = 'Secondary interests must differ from the primary and long-term targets.'
     }
 
-    const secondarySkills = secondaryRoadmapSkills(form.roadmapSuggestions)
+    const secondarySkills = secondaryRoadmapSkills(form)
     if (secondarySkills.length > 0 && form.secondaryTargetSkills.some((skill) => !secondarySkills.includes(skill))) {
-      errors.secondaryTargetSkills = 'Secondary interests must come from compatible or foundation support candidates.'
+      errors.secondaryTargetSkills = usesPortfolioChoices
+        ? 'Secondary interests must come from practice, accessory, or foundation portfolio options.'
+        : 'Secondary interests must come from compatible or foundation support candidates.'
     }
 
     if (form.baseFocusAreas.length === 0) {
@@ -517,6 +525,7 @@ function mapOnboardingToForm(onboarding: AthleteOnboarding): OnboardingForm {
     readinessRating:
       onboarding.readiness_rating === null ? defaults.readinessRating : String(onboarding.readiness_rating),
     requiredGoalModules,
+    roadmapPortfolio: mapRoadmapPortfolio(onboarding.roadmap_suggestions),
     roadmapSuggestions: mapRoadmapSuggestions(onboarding.roadmap_suggestions),
     secondaryGoals: [...onboarding.secondary_goals],
     secondaryTargetSkills: [...onboarding.secondary_target_skills],
@@ -887,7 +896,14 @@ function isServerValidationBody(body: unknown): body is ServerValidationBody {
   return typeof body === 'object' && body !== null
 }
 
-function activeRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
+function activeRoadmapSkills(form: OnboardingForm): string[] {
+  const portfolioSkills = form.roadmapPortfolio.onboardingGoalChoices.development
+
+  if (portfolioSkills.length > 0 && !hasGoalCandidates(form.roadmapSuggestions)) {
+    return [...portfolioSkills]
+  }
+
+  const suggestions = form.roadmapSuggestions
   const candidateSkills = suggestions.goalCandidates.primary.map((candidate) => candidate.skill)
 
   if (candidateSkills.length > 0) {
@@ -897,12 +913,31 @@ function activeRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[
   return [...suggestions.unlockedTracks, ...suggestions.bridgeTracks].map((track) => track.skill)
 }
 
-function secondaryRoadmapSkills(suggestions: OnboardingRoadmapSuggestions): string[] {
+function secondaryRoadmapSkills(form: OnboardingForm): string[] {
+  if (hasPortfolioChoices(form) && !hasGoalCandidates(form.roadmapSuggestions)) {
+    return [
+      ...form.roadmapPortfolio.onboardingGoalChoices.technicalPractice,
+      ...form.roadmapPortfolio.onboardingGoalChoices.accessories,
+      ...form.roadmapPortfolio.foundationLayer.tracks.map((track) => track.skillTrackId),
+      ...form.roadmapPortfolio.activeSkillPortfolio.foundationTracks.map((track) => track.skillTrackId),
+    ]
+  }
+
   return [
-    ...suggestions.goalCandidates.secondary,
-    ...suggestions.goalCandidates.accessories,
-    ...suggestions.goalCandidates.foundation.filter((candidate) => candidate.role === 'foundation_bridge'),
+    ...form.roadmapSuggestions.goalCandidates.secondary,
+    ...form.roadmapSuggestions.goalCandidates.accessories,
+    ...form.roadmapSuggestions.goalCandidates.foundation.filter((candidate) => candidate.role === 'foundation_bridge'),
   ].map((candidate) => candidate.skill)
+}
+
+function hasPortfolioChoices(form: OnboardingForm): boolean {
+  return [
+    ...form.roadmapPortfolio.onboardingGoalChoices.development,
+    ...form.roadmapPortfolio.onboardingGoalChoices.technicalPractice,
+    ...form.roadmapPortfolio.onboardingGoalChoices.accessories,
+    ...form.roadmapPortfolio.onboardingGoalChoices.future,
+    ...form.roadmapPortfolio.onboardingGoalChoices.blocked,
+  ].some(Boolean)
 }
 
 function hasGoalCandidates(suggestions: OnboardingRoadmapSuggestions): boolean {

@@ -6,7 +6,12 @@ export {
   requiredGoalModulesForGoal,
   serializeGoalModules,
 } from './services/goalModuleMapper'
-export { emptyRoadmapSuggestions, mapRoadmapSuggestions } from './services/roadmapMapper'
+export {
+  emptyRoadmapPortfolio,
+  emptyRoadmapSuggestions,
+  mapRoadmapPortfolio,
+  mapRoadmapSuggestions,
+} from './services/roadmapMapper'
 export type { GoalModuleForm } from './services/goalModuleMapper'
 export type {
   RoadmapBlocker,
@@ -18,7 +23,11 @@ export type {
   RoadmapGoalCandidate,
   RoadmapGoalCandidates,
   RoadmapIntermediate,
+  RoadmapMicroTestRequest,
   RoadmapNode,
+  RoadmapActiveSkillPortfolio,
+  RoadmapPortfolio,
+  RoadmapPortfolioTrack,
   RoadmapSuggestions,
   RoadmapTrack,
   RoadmapUnlockCondition,

@@ -10,6 +10,7 @@ import type {
   RoadmapGoalCandidate,
   RoadmapGoalCandidates,
   RoadmapIntermediate,
+  RoadmapMicroTestRequest,
   RoadmapNode,
   RoadmapPortfolio,
   RoadmapPortfolioDayTimeLedger,
@@ -117,10 +118,41 @@ export function mapRoadmapPortfolio(value: unknown): RoadmapPortfolio {
     longTermAspirations: recordArray(source.long_term_aspirations ?? source.longTermAspirations).map(mapPortfolioTrack),
     notRecommendedNow: recordArray(source.not_recommended_now ?? source.notRecommendedNow).map(mapPortfolioTrack),
     onboardingGoalChoices: mapPortfolioGoalChoices(source.onboarding_goal_choices ?? source.onboardingGoalChoices),
-    pendingTests: recordArray(source.pending_tests ?? source.pendingTests),
+    pendingTests: recordArray(source.pending_tests ?? source.pendingTests).map(mapMicroTestRequest),
     sourceVersion: stringValue(source.source_version ?? source.sourceVersion, 'roadmap.v2'),
     summary: stringValue(source.summary, 'Complete the baseline tests to unlock a useful roadmap.'),
     version: stringValue(source.version, 'roadmap.portfolio.v3'),
+  }
+}
+
+function mapMicroTestRequest(value: UnknownRecord): RoadmapMicroTestRequest {
+  const confidenceImpact = recordValue(value.confidence_impact ?? value.confidenceImpact)
+
+  return {
+    blocking: booleanValue(value.blocking, false),
+    confidenceImpact: {
+      completedDelta: numberValue(confidenceImpact.completed_delta ?? confidenceImpact.completedDelta, 0),
+      missingDelta: numberValue(confidenceImpact.missing_delta ?? confidenceImpact.missingDelta, 0),
+      notTestedLowersConfidence: booleanValue(
+        confidenceImpact.not_tested_lowers_confidence ?? confidenceImpact.notTestedLowersConfidence,
+        true,
+      ),
+    },
+    key: stringValue(value.key, ''),
+    materiality: stringValue(value.materiality, ''),
+    measurementType: stringValue(value.measurement_type ?? value.measurementType, 'status'),
+    notTestedBehavior: stringValue(value.not_tested_behavior ?? value.notTestedBehavior, ''),
+    prompt: stringValue(value.prompt, ''),
+    relatedNode: mapNode(value.related_node ?? value.relatedNode, 'roadmap.micro_test', 'Placement test'),
+    responseShape: recordValue(value.response_shape ?? value.responseShape),
+    skipBehavior: stringValue(value.skip_behavior ?? value.skipBehavior, ''),
+    state: stringValue(value.state, 'missing'),
+    targetLabel: stringValue(
+      value.target_label ?? value.targetLabel,
+      stringValue(value.target_skill ?? value.targetSkill, 'Skill'),
+    ),
+    targetSkill: stringValue(value.target_skill ?? value.targetSkill, ''),
+    whyItMatters: stringValue(value.why_it_matters ?? value.whyItMatters, ''),
   }
 }
 

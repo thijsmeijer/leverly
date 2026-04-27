@@ -121,12 +121,12 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).not.toContain('Lower-body skill check')
   })
 
-  it('uses roadmap candidates for the goal step instead of a flat skill picker', async () => {
+  it('uses portfolio priorities for the goal step instead of a flat skill picker', async () => {
     configureLeverlyApiClient({
       fetcher: vi.fn<typeof fetch>().mockResolvedValue(
         jsonResponse(
           onboardingResponse({
-            primary_target_skill: 'front_lever',
+            primary_target_skill: 'handstand',
             roadmap_suggestions: {
               ...roadmapSuggestions(),
               goal_candidates: {
@@ -144,7 +144,7 @@ describe('OnboardingPage', () => {
                 secondary: [goalCandidate('handstand', 'Handstand', 'secondary_candidate')],
               },
             },
-            target_skills: ['front_lever'],
+            target_skills: ['handstand'],
           }),
         ),
       ),
@@ -164,13 +164,48 @@ describe('OnboardingPage', () => {
       .findAll('input[name="onboarding-primary-target-skill"]')
       .map((input) => (input.element as HTMLInputElement).value)
 
-    expect(wrapper.text()).toContain('Recommended mix')
-    expect(wrapper.text()).toContain('Main emphasis')
-    expect(wrapper.text()).toContain('Compatible side goals')
-    expect(wrapper.text()).toContain('Foundation kept in every plan')
-    expect(primaryValues).toContain('front_lever')
+    expect(wrapper.find('[aria-label="Roadmap portfolio preview"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Choose your priorities')
+    expect(wrapper.text()).toContain('weekly skill portfolio')
+    expect(wrapper.text()).toContain('Development focus')
+    expect(wrapper.text()).toContain('Also training')
+    expect(wrapper.text()).toContain('Foundation')
+    expect(wrapper.text()).toContain('Maintenance')
+    expect(wrapper.text()).toContain('Future queue')
+    expect(wrapper.text()).toContain('Not this phase')
+    expect(wrapper.text()).toContain('Active roles are calculated after the engine checks stress, recovery, and time.')
+    expect(primaryValues).toContain('handstand')
     expect(primaryValues).toContain('planche')
     expect(primaryValues).not.toContain('strict_pull_up')
+  })
+
+  it('shows material micro-tests and lets athletes skip them with lower-confidence copy', async () => {
+    configureLeverlyApiClient({
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(onboardingResponse())),
+    })
+
+    const { wrapper } = await mountWithApp(OnboardingPage, {
+      route: '/onboarding',
+    })
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Goal'))
+      ?.trigger('click')
+
+    expect(wrapper.text()).toContain('Micro-tests that sharpen placement')
+    expect(wrapper.text()).toContain('What is your best controlled freestanding handstand hold?')
+    expect(wrapper.text()).toContain('This separates wall line practice from balance work.')
+    expect(wrapper.text()).toContain('Skipping keeps confidence lower')
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Skip micro-test'))
+      ?.trigger('click')
+
+    expect(wrapper.text()).toContain('Skipped for now')
+    expect(wrapper.text()).toContain('This stays usable, but confidence remains lower until the test is filled in.')
   })
 
   it('uses roomy option cards for pain and recovery controls', async () => {
@@ -266,7 +301,7 @@ describe('OnboardingPage', () => {
     expect(wrapper.text()).toContain('Fallback reps')
   })
 
-  it('shows the Roadmap V2 review and completes onboarding from the review step', async () => {
+  it('shows the portfolio review and completes onboarding from the review step', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse(onboardingResponse()))
@@ -288,15 +323,16 @@ describe('OnboardingPage', () => {
       .find((button) => button.text().includes('Review'))
       ?.trigger('click')
 
-    expect(wrapper.text()).toContain('Primary roadmap')
+    expect(wrapper.text()).toContain('Active skill portfolio')
+    expect(wrapper.text()).toContain('Development focus')
     expect(wrapper.text()).toContain('Handstand')
-    expect(wrapper.text()).toContain('Secondary lane')
-    expect(wrapper.text()).toContain('Pull-up')
-    expect(wrapper.text()).toContain('Deferred for later')
+    expect(wrapper.text()).toContain('Also training')
+    expect(wrapper.text()).toContain('L-sit')
+    expect(wrapper.text()).toContain('Future queue')
     expect(wrapper.text()).toContain('One-arm pull-up')
-    expect(wrapper.text()).toContain('8-16 weeks')
+    expect(wrapper.text()).toContain('4-8 weeks')
     expect(wrapper.text()).toContain('Medium confidence')
-    expect(wrapper.text()).toContain('First block')
+    expect(wrapper.text()).toContain('First phase')
     expect(wrapper.text()).toContain('Wrist extension')
 
     await wrapper.find('form').trigger('submit')
@@ -435,6 +471,9 @@ function painFlags() {
 
 function roadmapSuggestions() {
   return {
+    ...roadmapPortfolioFields(),
+    version: 'roadmap.portfolio.v3',
+    source_version: 'roadmap.v2',
     base_focus_areas: ['pull_capacity', 'core_bodyline'],
     body_context: {
       notes: [],
@@ -581,5 +620,116 @@ function goalCandidate(skill: string, label: string, role: string) {
     stress_class: role === 'low_fatigue_accessory' ? 'low_fatigue' : 'moderate',
     stress_tags: [],
     unlock_conditions: [],
+  }
+}
+
+function roadmapPortfolioFields() {
+  return {
+    active_skill_portfolio: {
+      accessory_tracks: [portfolioTrack('l_sit', 'L-sit', 'accessory_transfer')],
+      development_tracks: [portfolioTrack('handstand', 'Handstand', 'development')],
+      explanation: {
+        fallback: 'Keep handstand as line practice if wrists feel irritated.',
+        summary: 'A skill-first week with light compression support.',
+        watch_out_for: ['Keep wrist loading progressive.'],
+        why_this_mix: ['Handstand can progress while L-sit stays low fatigue.'],
+      },
+      foundation_tracks: [portfolioTrack('strict_dip', 'Dip support', 'foundation')],
+      future_queue: [portfolioTrack('planche', 'Planche', 'future')],
+      maintenance_tracks: [portfolioTrack('strict_pull_up', 'Pull-up', 'maintenance')],
+      phase_plan: {
+        deload_guidance: {},
+        duration_reason: 'A four-week first block leaves room to retest skill placement.',
+        duration_weeks: { max: 6, min: 4, target: 4 },
+        foundation_layer: [],
+        phase_id: 'onboarding-first-block',
+        progression_rules: [],
+        retest_timing: {},
+        roles: {},
+        safety_notes: ['Keep wrist loading progressive.'],
+        weekly_emphasis: ['Handstand line', 'Compression support'],
+      },
+      stress_ledger: {
+        axes: [{ axis: 'wrist_extension', budget: 10, load: 6, status: 'watch' }],
+        notes: ['Wrist extension is monitored.'],
+      },
+      technical_practice_tracks: [portfolioTrack('l_sit', 'L-sit', 'technical_practice')],
+      time_ledger: {
+        estimated_minutes_per_week: 132,
+        max_sessions_per_week: 3,
+        notes: ['Fits the selected weekly cap.'],
+        remaining_minutes_per_week: 48,
+      },
+      weekly_schedule: {
+        days: [],
+        rest_days: [],
+        stress_ledger: { axes: [], warnings: [] },
+        template: { day_types: [], sessions_per_week: 3, slot_order: [] },
+        time_ledger: {
+          budget_minutes_per_week: 180,
+          estimated_minutes_per_week: 132,
+          overflow_minutes_per_week: 0,
+        },
+        warnings: [],
+      },
+    },
+    blocked: [portfolioTrack('human_flag', 'Human flag', 'blocked')],
+    foundation_layer: {
+      focus_areas: ['pull_capacity', 'core_bodyline'],
+      summary: 'Pulling, support, and trunk work stay in the week.',
+      tracks: [portfolioTrack('strict_dip', 'Dip support', 'foundation')],
+    },
+    long_term_aspirations: [portfolioTrack('planche', 'Planche', 'future')],
+    not_recommended_now: [portfolioTrack('one_arm_pull_up', 'One-arm pull-up', 'not_now')],
+    onboarding_goal_choices: {
+      accessories: ['l_sit'],
+      blocked: ['human_flag'],
+      development: ['handstand', 'planche'],
+      future: ['planche'],
+      technical_practice: ['l_sit'],
+    },
+    pending_tests: [
+      {
+        blocking: false,
+        confidence_impact: {
+          completed_delta: 0.08,
+          missing_delta: -0.08,
+          not_tested_lowers_confidence: true,
+        },
+        key: 'handstand.freestanding_balance',
+        materiality: 'selected_primary',
+        measurement_type: 'hold_seconds',
+        not_tested_behavior: 'bridge_recommendation',
+        prompt: 'What is your best controlled freestanding handstand hold?',
+        related_node: { id: 'handstand.freestanding_hold', label: 'Freestanding handstand' },
+        response_shape: { max: 60, min: 0, type: 'seconds' },
+        skip_behavior:
+          'Skipping keeps confidence lower, can choose a bridge recommendation, and is not counted as zero ability.',
+        state: 'missing',
+        target_label: 'Handstand',
+        target_skill: 'handstand',
+        why_it_matters: 'This separates wall line practice from balance work.',
+      },
+    ],
+  }
+}
+
+function portfolioTrack(skillTrackId: string, displayName: string, mode: string) {
+  return {
+    confidence: { level: 'medium', reasons: [`${displayName} has enough data for first placement.`], score: 0.72 },
+    current_node: { id: `${skillTrackId}.current`, label: `${displayName} current` },
+    display_name: displayName,
+    estimated_minutes_per_week: 24,
+    eta_to_next_node: { label: '4-8 weeks', max_weeks: 8, min_weeks: 4 },
+    mode,
+    modules: [],
+    next_node: { id: `${skillTrackId}.next`, label: `${displayName} next` },
+    primary_stress_axes: [],
+    skill_track_id: skillTrackId,
+    target_node: { id: `${skillTrackId}.target`, label: `${displayName} target` },
+    weekly_exposures: 3,
+    why_included: [`${displayName} fits the current readiness and schedule.`],
+    why_not_higher_priority:
+      mode === 'future' || mode === 'not_now' ? ['Kept visible until the foundation is stronger.'] : [],
   }
 }

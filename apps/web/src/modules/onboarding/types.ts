@@ -1,4 +1,4 @@
-import type { GoalModuleForm, RoadmapSuggestions, RoadmapTrack } from '@/modules/roadmap'
+import type { GoalModuleForm, RoadmapPortfolio, RoadmapSuggestions, RoadmapTrack } from '@/modules/roadmap'
 
 export type OnboardingStepId =
   | 'context'
@@ -72,6 +72,7 @@ export interface OnboardingForm {
   primaryGoal: string
   readinessRating: string
   requiredGoalModules: string[]
+  roadmapPortfolio: OnboardingRoadmapPortfolio
   roadmapSuggestions: OnboardingRoadmapSuggestions
   secondaryGoals: string[]
   secondaryTargetSkills: string[]
@@ -97,6 +98,8 @@ export interface OnboardingForm {
 }
 
 export type OnboardingRoadmapTrack = RoadmapTrack
+
+export type OnboardingRoadmapPortfolio = RoadmapPortfolio
 
 export type OnboardingRoadmapSuggestions = RoadmapSuggestions
 
