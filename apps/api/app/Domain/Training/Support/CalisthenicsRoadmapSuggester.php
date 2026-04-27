@@ -6,6 +6,7 @@ namespace App\Domain\Training\Support;
 
 use App\Domain\Training\Roadmap\RoadmapInput;
 use App\Domain\Training\Roadmap\RoadmapInputMapper;
+use App\Domain\Training\Roadmap\RoadmapPortfolioResult;
 use App\Domain\Training\Roadmap\RoadmapResult;
 
 final class CalisthenicsRoadmapSuggester
@@ -171,6 +172,23 @@ final class CalisthenicsRoadmapSuggester
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public static function portfolio(RoadmapInput $input, bool $includeIntermediate = false): array
+    {
+        return RoadmapPortfolioResult::fromRoadmapSuggestions(self::suggest($input, $includeIntermediate), $input)->toArray();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function portfolioFromAthleteData(array $data, bool $includeIntermediate = false): array
+    {
+        return self::portfolio(RoadmapInputMapper::fromAthleteData($data), $includeIntermediate);
+    }
+
+    /**
      * @return list<string>
      */
     public static function activeSkillSlugs(array $suggestions): array
@@ -195,6 +213,14 @@ final class CalisthenicsRoadmapSuggester
     public static function empty(): array
     {
         return RoadmapResult::empty()->toArray();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function emptyPortfolio(): array
+    {
+        return RoadmapPortfolioResult::empty()->toArray();
     }
 
     /**

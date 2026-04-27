@@ -11,6 +11,16 @@ import type {
   RoadmapGoalCandidates,
   RoadmapIntermediate,
   RoadmapNode,
+  RoadmapPortfolio,
+  RoadmapPortfolioExplanation,
+  RoadmapPortfolioFoundationLayer,
+  RoadmapPortfolioGoalChoices,
+  RoadmapPortfolioScheduledDay,
+  RoadmapPortfolioStressAxis,
+  RoadmapPortfolioStressLedger,
+  RoadmapPortfolioTimeLedger,
+  RoadmapPortfolioTrack,
+  RoadmapPortfolioWeeklySchedule,
   RoadmapSuggestions,
   RoadmapTrack,
   RoadmapUnlockCondition,
@@ -20,6 +30,10 @@ type UnknownRecord = Record<string, unknown>
 
 export function emptyRoadmapSuggestions(): RoadmapSuggestions {
   return mapRoadmapSuggestions(null)
+}
+
+export function emptyRoadmapPortfolio(): RoadmapPortfolio {
+  return mapRoadmapPortfolio(null)
 }
 
 export function mapRoadmapSuggestions(value: unknown): RoadmapSuggestions {
@@ -58,6 +72,148 @@ export function mapRoadmapSuggestions(value: unknown): RoadmapSuggestions {
     unlockConditions: recordArray(source.unlock_conditions ?? source.unlockConditions).map(mapUnlockCondition),
     unlockedTracks: recordArray(source.unlocked_tracks ?? source.unlockedTracks).map(mapTrack),
     version: stringValue(source.version, 'roadmap.v2'),
+  }
+}
+
+export function mapRoadmapPortfolio(value: unknown): RoadmapPortfolio {
+  const source = recordValue(value)
+  const activePortfolio = recordValue(source.active_skill_portfolio ?? source.activeSkillPortfolio)
+
+  return {
+    activeSkillPortfolio: {
+      accessoryTracks: recordArray(activePortfolio.accessory_tracks ?? activePortfolio.accessoryTracks).map(
+        mapPortfolioTrack,
+      ),
+      developmentTracks: recordArray(activePortfolio.development_tracks ?? activePortfolio.developmentTracks).map(
+        mapPortfolioTrack,
+      ),
+      explanation: mapPortfolioExplanation(activePortfolio.explanation),
+      foundationTracks: recordArray(activePortfolio.foundation_tracks ?? activePortfolio.foundationTracks).map(
+        mapPortfolioTrack,
+      ),
+      futureQueue: recordArray(activePortfolio.future_queue ?? activePortfolio.futureQueue).map(mapPortfolioTrack),
+      maintenanceTracks: recordArray(activePortfolio.maintenance_tracks ?? activePortfolio.maintenanceTracks).map(
+        mapPortfolioTrack,
+      ),
+      stressLedger: mapPortfolioStressLedger(activePortfolio.stress_ledger ?? activePortfolio.stressLedger),
+      technicalPracticeTracks: recordArray(
+        activePortfolio.technical_practice_tracks ?? activePortfolio.technicalPracticeTracks,
+      ).map(mapPortfolioTrack),
+      timeLedger: mapPortfolioTimeLedger(activePortfolio.time_ledger ?? activePortfolio.timeLedger),
+      weeklySchedule: mapPortfolioWeeklySchedule(activePortfolio.weekly_schedule ?? activePortfolio.weeklySchedule),
+    },
+    blocked: recordArray(source.blocked).map(mapPortfolioTrack),
+    foundationLayer: mapPortfolioFoundationLayer(source.foundation_layer ?? source.foundationLayer),
+    goalCandidates: mapGoalCandidates(source.goal_candidates ?? source.goalCandidates),
+    longTermAspirations: recordArray(source.long_term_aspirations ?? source.longTermAspirations).map(mapPortfolioTrack),
+    notRecommendedNow: recordArray(source.not_recommended_now ?? source.notRecommendedNow).map(mapPortfolioTrack),
+    onboardingGoalChoices: mapPortfolioGoalChoices(source.onboarding_goal_choices ?? source.onboardingGoalChoices),
+    pendingTests: recordArray(source.pending_tests ?? source.pendingTests),
+    sourceVersion: stringValue(source.source_version ?? source.sourceVersion, 'roadmap.v2'),
+    summary: stringValue(source.summary, 'Complete the baseline tests to unlock a useful roadmap.'),
+    version: stringValue(source.version, 'roadmap.portfolio.v3'),
+  }
+}
+
+function mapPortfolioTrack(value: UnknownRecord): RoadmapPortfolioTrack {
+  const skillTrackId = stringValue(value.skill_track_id ?? value.skillTrackId, '')
+
+  return {
+    confidence: mapConfidence(value.confidence),
+    currentNode: mapNode(value.current_node ?? value.currentNode, `${skillTrackId}.current`, 'Current placement'),
+    displayName: stringValue(value.display_name ?? value.displayName, stringValue(value.label, 'Roadmap target')),
+    estimatedMinutesPerWeek: numberValue(value.estimated_minutes_per_week ?? value.estimatedMinutesPerWeek, 0),
+    etaToNextNode: mapEtaRange(value.eta_to_next_node ?? value.etaToNextNode),
+    mode: stringValue(value.mode, 'future_queue'),
+    modules: recordArray(value.modules),
+    nextNode: mapNode(value.next_node ?? value.nextNode, `${skillTrackId}.next`, 'Next progression'),
+    primaryStressAxes: stringArray(value.primary_stress_axes ?? value.primaryStressAxes),
+    skillTrackId,
+    targetNode: mapNode(value.target_node ?? value.targetNode, `${skillTrackId}.target`, 'Target progression'),
+    weeklyExposures: numberValue(value.weekly_exposures ?? value.weeklyExposures, 0),
+    whyIncluded: stringArray(value.why_included ?? value.whyIncluded),
+    whyNotHigherPriority: stringArray(value.why_not_higher_priority ?? value.whyNotHigherPriority),
+  }
+}
+
+function mapPortfolioWeeklySchedule(value: unknown): RoadmapPortfolioWeeklySchedule {
+  const source = recordValue(value)
+
+  return {
+    days: recordArray(source.days).map(mapPortfolioScheduledDay),
+    warnings: stringArray(source.warnings),
+  }
+}
+
+function mapPortfolioScheduledDay(value: UnknownRecord): RoadmapPortfolioScheduledDay {
+  return {
+    dayIndex: numberValue(value.day_index ?? value.dayIndex, 0),
+    dayType: stringValue(value.day_type ?? value.dayType, 'rest'),
+    label: stringValue(value.label, 'Day'),
+    modules: recordArray(value.modules),
+    warnings: stringArray(value.warnings),
+  }
+}
+
+function mapPortfolioStressLedger(value: unknown): RoadmapPortfolioStressLedger {
+  const source = recordValue(value)
+
+  return {
+    axes: recordArray(source.axes).map(mapPortfolioStressAxis),
+    notes: stringArray(source.notes),
+  }
+}
+
+function mapPortfolioStressAxis(value: UnknownRecord): RoadmapPortfolioStressAxis {
+  return {
+    axis: stringValue(value.axis, ''),
+    budget: numberValue(value.budget, 0),
+    load: numberValue(value.load, 0),
+    status: stringValue(value.status, 'green'),
+  }
+}
+
+function mapPortfolioTimeLedger(value: unknown): RoadmapPortfolioTimeLedger {
+  const source = recordValue(value)
+
+  return {
+    estimatedMinutesPerWeek: numberValue(source.estimated_minutes_per_week ?? source.estimatedMinutesPerWeek, 0),
+    maxSessionsPerWeek: numberValue(source.max_sessions_per_week ?? source.maxSessionsPerWeek, 0),
+    notes: stringArray(source.notes),
+    remainingMinutesPerWeek: numberValue(source.remaining_minutes_per_week ?? source.remainingMinutesPerWeek, 0),
+  }
+}
+
+function mapPortfolioExplanation(value: unknown): RoadmapPortfolioExplanation {
+  const source = recordValue(value)
+
+  return {
+    fallback: stringValue(source.fallback, ''),
+    summary: stringValue(source.summary, ''),
+    watchOutFor: stringArray(source.watch_out_for ?? source.watchOutFor),
+    whyThisMix: stringArray(source.why_this_mix ?? source.whyThisMix),
+  }
+}
+
+function mapPortfolioGoalChoices(value: unknown): RoadmapPortfolioGoalChoices {
+  const source = recordValue(value)
+
+  return {
+    accessories: stringArray(source.accessories),
+    blocked: stringArray(source.blocked),
+    development: stringArray(source.development),
+    future: stringArray(source.future),
+    technicalPractice: stringArray(source.technical_practice ?? source.technicalPractice),
+  }
+}
+
+function mapPortfolioFoundationLayer(value: unknown): RoadmapPortfolioFoundationLayer {
+  const source = recordValue(value)
+
+  return {
+    focusAreas: stringArray(source.focus_areas ?? source.focusAreas),
+    summary: stringValue(source.summary, ''),
+    tracks: recordArray(source.tracks).map(mapPortfolioTrack),
   }
 }
 
