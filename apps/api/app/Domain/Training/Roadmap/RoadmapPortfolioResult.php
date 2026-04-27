@@ -77,6 +77,10 @@ final readonly class RoadmapPortfolioResult
         $maxSessions = self::maxSessions($input);
         $estimatedMinutes = self::estimatedMinutes($activeTracks);
 
+        $pendingTests = $input === null
+            ? []
+            : RoadmapMicroTestRequestGenerator::fromInput($input, $goalCandidates);
+
         $payload = [
             'version' => self::VERSION,
             'source_version' => self::stringValue($suggestions['version'] ?? null, RoadmapResult::VERSION),
@@ -114,7 +118,7 @@ final readonly class RoadmapPortfolioResult
                 static fn (array $track): bool => ! in_array($track['skill_track_id'], $blockedIds, true),
             )),
             'blocked' => $blockedTracks,
-            'pending_tests' => [],
+            'pending_tests' => $pendingTests,
             'goal_candidates' => $goalCandidates,
         ];
 
