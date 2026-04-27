@@ -171,17 +171,6 @@ final class CalisthenicsRoadmapSuggester
     }
 
     /**
-     * @param  array<string, mixed>  $suggestions
-     * @return array<string, mixed>
-     */
-    public static function withoutIntermediate(array $suggestions): array
-    {
-        unset($suggestions['intermediate']);
-
-        return $suggestions;
-    }
-
-    /**
      * @return list<string>
      */
     public static function activeSkillSlugs(array $suggestions): array

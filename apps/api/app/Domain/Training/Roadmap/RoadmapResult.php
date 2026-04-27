@@ -70,16 +70,16 @@ final readonly class RoadmapResult
 
     /**
      * @param  array<string, mixed>  $signals
-     * @param  array<string, mixed>  $legacy
+     * @param  array<string, mixed>  $trackBuckets
      */
-    public static function fromTrackBuckets(RoadmapInput $input, array $signals, array $legacy, bool $includeIntermediate = false): self
+    public static function fromTrackBuckets(RoadmapInput $input, array $signals, array $trackBuckets, bool $includeIntermediate = false): self
     {
         $activeTracks = [
-            ...self::trackList($legacy['unlocked_tracks'] ?? []),
-            ...self::trackList($legacy['bridge_tracks'] ?? []),
+            ...self::trackList($trackBuckets['unlocked_tracks'] ?? []),
+            ...self::trackList($trackBuckets['bridge_tracks'] ?? []),
         ];
-        $longTermTracks = self::trackList($legacy['long_term_tracks'] ?? []);
-        $deferredTracks = self::trackList($legacy['deferred_tracks'] ?? []);
+        $longTermTracks = self::trackList($trackBuckets['long_term_tracks'] ?? []);
+        $deferredTracks = self::trackList($trackBuckets['deferred_tracks'] ?? []);
         $trackCatalog = self::trackCatalog($activeTracks, $longTermTracks, $deferredTracks);
         $placements = BaselineNodeMapper::fromInput($input);
         $domainScores = DomainScoreCalculator::fromPlacements($placements, $input);
@@ -90,7 +90,7 @@ final readonly class RoadmapResult
         $secondaryReadiness = $laneSelection->secondaryLane;
         $primaryTrack = self::trackForReadiness($primaryReadiness, $trackCatalog) ?? self::primaryTrack($input, $activeTracks);
         $secondaryTrack = self::trackForReadiness($secondaryReadiness, $trackCatalog) ?? self::secondaryTrack($input, $activeTracks, $primaryTrack);
-        $baseFocusAreas = self::stringList($legacy['base_focus_areas'] ?? []);
+        $baseFocusAreas = self::stringList($trackBuckets['base_focus_areas'] ?? []);
         $primarySkill = $primaryReadiness?->skill ?? self::trackSkill($primaryTrack) ?? 'foundation';
         $primaryLabel = $primaryReadiness?->label ?? self::trackLabel($primaryTrack, 'Foundation strength');
         $etaRange = self::etaRangeFromEstimate($layerEstimate->primaryEta);
@@ -114,7 +114,7 @@ final readonly class RoadmapResult
             input: $input,
         );
         $payload = [
-            ...$legacy,
+            ...$trackBuckets,
             'version' => self::VERSION,
             'primary_goal' => $primaryReadiness === null && $primaryTrack === null ? null : self::goal(
                 $primaryTrack ?? self::trackFromReadiness($primaryReadiness, $primarySkill, $primaryLabel),
@@ -349,14 +349,14 @@ final readonly class RoadmapResult
             );
         }
 
-        foreach (self::deferredGoals([], $longTermTracks) as $legacyGoal) {
-            $skill = self::stringValue($legacyGoal['skill'] ?? null, '');
+        foreach (self::deferredGoals([], $longTermTracks) as $fallbackGoal) {
+            $skill = self::stringValue($fallbackGoal['skill'] ?? null, '');
 
             if ($skill === '' || self::hasGoal($goals, $skill)) {
                 continue;
             }
 
-            $goals[] = $legacyGoal;
+            $goals[] = $fallbackGoal;
         }
 
         return $goals;

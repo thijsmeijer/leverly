@@ -142,6 +142,30 @@ class AthleteProfileApiTest extends TestCase
         $this->assertContains('handstand', $skills);
     }
 
+    public function test_profile_read_recalculates_roadmap_instead_of_returning_stale_cached_payload(): void
+    {
+        $user = User::factory()->create();
+
+        AthleteProfile::factory()->create([
+            'user_id' => $user->id,
+            'roadmap_suggestions' => [
+                'version' => 'roadmap.legacy',
+                'summary' => 'Old cached roadmap copy.',
+                'intermediate' => ['stale' => true],
+            ],
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/v1/me/profile')
+            ->assertOk()
+            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
+            ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
+            ->assertJsonMissingPath('data.roadmap_suggestions.intermediate');
+
+        $this->assertNotSame('Old cached roadmap copy.', $response->json('data.roadmap_suggestions.summary'));
+    }
+
     public function test_profile_data_is_scoped_to_the_signed_in_user(): void
     {
         $signedInUser = User::factory()->create();

@@ -166,6 +166,30 @@ class AthleteOnboardingApiTest extends TestCase
         $this->assertContains('handstand', $skills);
     }
 
+    public function test_onboarding_read_recalculates_roadmap_instead_of_returning_stale_cached_payload(): void
+    {
+        $user = User::factory()->create();
+
+        AthleteOnboarding::factory()->create([
+            'user_id' => $user->id,
+            'roadmap_suggestions' => [
+                'version' => 'roadmap.legacy',
+                'summary' => 'Old cached onboarding roadmap.',
+                'intermediate' => ['stale' => true],
+            ],
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/v1/me/onboarding')
+            ->assertOk()
+            ->assertJsonPath('data.roadmap_suggestions.version', 'roadmap.v2')
+            ->assertJsonPath('data.roadmap_suggestions.primary_goal.skill', 'handstand')
+            ->assertJsonMissingPath('data.roadmap_suggestions.intermediate');
+
+        $this->assertNotSame('Old cached onboarding roadmap.', $response->json('data.roadmap_suggestions.summary'));
+    }
+
     public function test_roadmap_explains_safety_deferral_and_missing_data(): void
     {
         Sanctum::actingAs(User::factory()->create());
