@@ -83,6 +83,9 @@ final readonly class RoadmapPortfolioResult
         $foundationModules = $input === null
             ? []
             : RoadmapTrainingModuleGenerator::foundationModules($input, self::foundationTargetSkills($goalCandidates, $input));
+        $stressBudget = $input === null
+            ? RoadmapStressBudgetFactory::empty()
+            : RoadmapStressBudgetFactory::fromInput($input);
         $maxSessions = self::maxSessions($input);
         $estimatedMinutes = self::estimatedMinutes($activeTracks) + self::estimatedModuleMinutes($foundationModules);
 
@@ -106,7 +109,9 @@ final readonly class RoadmapPortfolioResult
                 'foundation_modules' => $foundationModules,
                 'future_queue' => $futureQueue,
                 'weekly_schedule' => self::weeklySchedule($maxSessions),
-                'stress_ledger' => self::stressLedger($activeTracks, $maxSessions),
+                'stress_ledger' => self::stressLedger($activeTracks, $maxSessions, $stressBudget),
+                'stress_budget' => $stressBudget->toArray(),
+                'module_compatibility' => self::moduleCompatibility($activeTracks, $stressBudget),
                 'time_ledger' => self::timeLedger($input, $maxSessions, $estimatedMinutes),
                 'explanation' => self::portfolioExplanation($suggestions, $developmentTracks, $futureQueue, $blockedTracks),
             ],
@@ -613,11 +618,25 @@ final readonly class RoadmapPortfolioResult
      * @param  list<array<string, mixed>>  $tracks
      * @return array{axes: list<array<string, mixed>>, notes: list<string>}
      */
-    private static function stressLedger(array $tracks, int $maxSessions): array
+    private static function stressLedger(array $tracks, int $maxSessions, RoadmapStressBudget $stressBudget): array
     {
         $loads = [];
 
         foreach ($tracks as $track) {
+            foreach (self::arrayList($track['modules'] ?? []) as $module) {
+                $stressVector = is_array($module['stress_vector'] ?? null) ? $module['stress_vector'] : [];
+                $exposures = is_array($module['exposure_targets'] ?? null) ? $module['exposure_targets'] : [];
+                $targetExposures = max(1, self::intOrNull($exposures['target_per_week'] ?? null) ?? 1);
+
+                foreach ($stressVector as $axis => $load) {
+                    $loads[(string) $axis] = ($loads[(string) $axis] ?? 0) + max(1, (self::intOrNull($load) ?? 0) * $targetExposures);
+                }
+            }
+
+            if (self::arrayList($track['modules'] ?? []) !== []) {
+                continue;
+            }
+
             foreach (self::stringList($track['primary_stress_axes'] ?? []) as $axis) {
                 $loads[$axis] = ($loads[$axis] ?? 0) + max(1, self::intOrNull($track['weekly_exposures'] ?? null) ?? 1);
             }
@@ -626,11 +645,13 @@ final readonly class RoadmapPortfolioResult
         $axes = [];
         $budget = max(2, $maxSessions);
         foreach ($loads as $axis => $load) {
+            $weeklyBudget = $stressBudget->weeklyBudget[$axis] ?? $budget;
+
             $axes[] = [
                 'axis' => $axis,
                 'load' => $load,
-                'budget' => $budget,
-                'status' => $load > $budget ? 'yellow' : 'green',
+                'budget' => $weeklyBudget,
+                'status' => $load > $weeklyBudget ? 'yellow' : 'green',
             ];
         }
 
@@ -638,6 +659,36 @@ final readonly class RoadmapPortfolioResult
             'axes' => $axes,
             'notes' => $axes === [] ? ['No portfolio stress has been assigned yet.'] : ['Portfolio stress is estimated from current track roles.'],
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $tracks
+     * @return list<array<string, mixed>>
+     */
+    private static function moduleCompatibility(array $tracks, RoadmapStressBudget $stressBudget): array
+    {
+        $modules = [];
+
+        foreach ($tracks as $track) {
+            foreach (self::arrayList($track['modules'] ?? []) as $module) {
+                $modules[] = $module;
+            }
+        }
+
+        $compatibility = [];
+        $count = count($modules);
+
+        for ($left = 0; $left < $count; $left++) {
+            for ($right = $left + 1; $right < $count; $right++) {
+                $compatibility[] = RoadmapModuleCompatibilityEngine::compare(
+                    $modules[$left],
+                    $modules[$right],
+                    $stressBudget,
+                )->toArray();
+            }
+        }
+
+        return $compatibility;
     }
 
     /**
